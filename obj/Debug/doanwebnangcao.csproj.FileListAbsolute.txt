@@ -129,3 +129,5 @@ C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.csproj.CoreCompil
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.csproj.CopyComplete
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.dll
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.pdb
+C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.MigrationName.resources
+C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.AddSizeColorProductVariantAndUpdateModels.resources

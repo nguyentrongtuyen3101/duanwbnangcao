@@ -212,12 +212,21 @@
     <Compile Include="Migrations\202504141608433_AddProductCodeToProducts.designer.cs">
       <DependentUpon>202504141608433_AddProductCodeToProducts.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202504181002506_MigrationName.cs" />
+    <Compile Include="Migrations\202504181002506_MigrationName.designer.cs">
+      <DependentUpon>202504181002506_MigrationName.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202504181014290_AddSizeColorProductVariantAndUpdateModels.cs" />
+    <Compile Include="Migrations\202504181014290_AddSizeColorProductVariantAndUpdateModels.designer.cs">
+      <DependentUpon>202504181014290_AddSizeColorProductVariantAndUpdateModels.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Address.cs" />
     <Compile Include="Models\ApplicationDbContext.cs" />
     <Compile Include="Models\Cart.cs" />
     <Compile Include="Models\CartDetail.cs" />
     <Compile Include="Models\Category.cs" />
+    <Compile Include="Models\Color.cs" />
     <Compile Include="Models\Coupon.cs" />
     <Compile Include="DTO\LoginViewModel.cs" />
     <Compile Include="Models\Order.cs" />
@@ -227,7 +236,9 @@
     <Compile Include="Models\Product.cs" />
     <Compile Include="Models\ProductImage.cs" />
     <Compile Include="DTO\RegisterViewModel.cs" />
+    <Compile Include="Models\ProductVariant.cs" />
     <Compile Include="Models\ShippingMethod.cs" />
+    <Compile Include="Models\Size.cs" />
     <Compile Include="Models\Subcategory.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\using System%3b.cs" />
@@ -574,6 +585,8 @@
     <Content Include="Views\Admin\danhmucon.cshtml" />
     <Content Include="Views\Shared\_AdminLayout.cshtml" />
     <Content Include="Views\Admin\_ViewStart.cshtml" />
+    <Content Include="Views\Admin\Sizes.cshtml" />
+    <Content Include="Views\Admin\Colors.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -588,6 +601,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202504141608433_AddProductCodeToProducts.resx">
       <DependentUpon>202504141608433_AddProductCodeToProducts.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202504181002506_MigrationName.resx">
+      <DependentUpon>202504181002506_MigrationName.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202504181014290_AddSizeColorProductVariantAndUpdateModels.resx">
+      <DependentUpon>202504181014290_AddSizeColorProductVariantAndUpdateModels.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

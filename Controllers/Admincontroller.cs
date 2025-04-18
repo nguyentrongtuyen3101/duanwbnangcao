@@ -10,11 +10,11 @@ using System.Data.Entity;
 namespace doanwebnangcao.Controllers
 {
     [Authorize(Roles = "Admin")]
-    public class Admincontroller : Controller
+    public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        public Admincontroller()
+        public AdminController()
         {
             _context = new ApplicationDbContext();
         }
@@ -22,9 +22,12 @@ namespace doanwebnangcao.Controllers
         // GET: Admin/SanPham
         public ActionResult SanPham()
         {
+            ViewBag.ActivePage = "SanPham";
             var products = _context.Products
                 .Include(p => p.Subcategory)
                 .Include(p => p.Subcategory.Category)
+                .Include(p => p.ProductVariants)
+                .Include(p => p.ProductImages)
                 .ToList();
 
             var subcategories = _context.Subcategories
@@ -32,7 +35,21 @@ namespace doanwebnangcao.Controllers
                 .Where(s => s.IsActive)
                 .ToList();
 
+            var sizes = _context.Sizes.Where(s => s.IsActive).ToList();
+            var colors = _context.Colors.Where(c => c.IsActive).ToList();
+
+            if (!sizes.Any())
+            {
+                TempData["WarningMessage"] = "Chưa có kích thước nào được thiết lập. Vui lòng thêm kích thước trước.";
+            }
+            if (!colors.Any())
+            {
+                TempData["WarningMessage"] = TempData["WarningMessage"]?.ToString() + " Chưa có màu sắc nào được thiết lập. Vui lòng thêm màu sắc trước.";
+            }
+
             ViewBag.Subcategories = subcategories ?? new List<Subcategory>();
+            ViewBag.Sizes = sizes ?? new List<Size>();
+            ViewBag.Colors = colors ?? new List<Color>();
             return View(products);
         }
 
@@ -40,475 +57,443 @@ namespace doanwebnangcao.Controllers
         [HttpPost]
         public ActionResult CreateProduct(Product product, HttpPostedFileBase ImageFile)
         {
+            ViewBag.ActivePage = "SanPham";
             if (!ModelState.IsValid)
             {
                 TempData["ErrorMessage"] = "Vui lòng kiểm tra lại thông tin nhập vào.";
-                var products = _context.Products
-                    .Include(p => p.Subcategory)
-                    .Include(p => p.Subcategory.Category)
-                    .ToList();
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .Where(s => s.IsActive)
-                    .ToList();
-                ViewBag.Subcategories = subcategories ?? new List<Subcategory>();
-                return View("SanPham", products);
+                return LoadSanPhamView();
             }
 
-            // Kiểm tra danh mục con có tồn tại không
+            // Kiểm tra danh mục con
             var subcategory = _context.Subcategories.Find(product.SubcategoryId);
             if (subcategory == null)
             {
                 TempData["ErrorMessage"] = "Danh mục con không tồn tại.";
-                var products = _context.Products
-                    .Include(p => p.Subcategory)
-                    .Include(p => p.Subcategory.Category)
-                    .ToList();
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .Where(s => s.IsActive)
-                    .ToList();
-                ViewBag.Subcategories = subcategories ?? new List<Subcategory>();
-                return View("SanPham", products);
+                return LoadSanPhamView();
             }
 
-            // Kiểm tra mã sản phẩm đã tồn tại chưa
+            // Kiểm tra mã sản phẩm
             if (_context.Products.Any(p => p.ProductCode == product.ProductCode))
             {
                 TempData["ErrorMessage"] = "Mã sản phẩm đã tồn tại.";
-                var products = _context.Products
-                    .Include(p => p.Subcategory)
-                    .Include(p => p.Subcategory.Category)
-                    .ToList();
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .Where(s => s.IsActive)
-                    .ToList();
-                ViewBag.Subcategories = subcategories ?? new List<Subcategory>();
-                return View("SanPham", products);
+                return LoadSanPhamView();
             }
 
-            // Xử lý upload file (không giới hạn định dạng)
+            // Xử lý ảnh chính (nếu có)
             if (ImageFile != null && ImageFile.ContentLength > 0)
             {
                 try
                 {
-                    // Kiểm tra và tạo thư mục nếu chưa tồn tại
                     var uploadDir = Server.MapPath("~/Uploads/Products");
                     if (!Directory.Exists(uploadDir))
                     {
                         Directory.CreateDirectory(uploadDir);
                     }
-
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName); // Giữ nguyên đuôi file
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
                     var path = Path.Combine(uploadDir, fileName);
-                    ImageFile.SaveAs(path); // Lưu file vào thư mục
-                    product.ImageUrl = "/Uploads/Products/" + fileName; // Lưu đường dẫn vào ImageUrl
+                    ImageFile.SaveAs(path);
+                    product.ImageUrl = "/Uploads/Products/" + fileName;
                 }
                 catch (Exception ex)
                 {
-                    TempData["ErrorMessage"] = "Lỗi khi upload file: " + ex.Message;
-                    var products = _context.Products
-                        .Include(p => p.Subcategory)
-                        .Include(p => p.Subcategory.Category)
-                        .ToList();
-                    var subcategories = _context.Subcategories
-                        .Include(s => s.Category)
-                        .Where(s => s.IsActive)
-                        .ToList();
-                    ViewBag.Subcategories = subcategories ?? new List<Subcategory>();
-                    return View("SanPham", products);
+                    TempData["ErrorMessage"] = "Lỗi khi upload ảnh: " + ex.Message;
+                    return LoadSanPhamView();
                 }
             }
+
+            // Đặt StockQuantity mặc định là 0 vì chưa có biến thể
+            product.StockQuantity = 0;
+            product.CreatedAt = DateTime.Now;
 
             _context.Products.Add(product);
             _context.SaveChanges();
 
-            TempData["SuccessMessage"] = "Thêm sản phẩm thành công!";
+            TempData["SuccessMessage"] = "Thêm sản phẩm thành công! Vui lòng chỉnh sửa để thêm biến thể.";
             return RedirectToAction("SanPham");
         }
 
-        // POST: Admin/EditProduct
-        [HttpPost]
-        public ActionResult EditProduct(Product product, HttpPostedFileBase ImageFile)
+        // GET: Admin/EditProduct
+        public ActionResult EditProduct(int id)
         {
-            if (!ModelState.IsValid)
-            {
-                TempData["ErrorMessage"] = "Vui lòng kiểm tra lại thông tin nhập vào.";
-                var products = _context.Products
-                    .Include(p => p.Subcategory)
-                    .Include(p => p.Subcategory.Category)
-                    .ToList();
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .Where(s => s.IsActive)
-                    .ToList();
-                ViewBag.Subcategories = subcategories ?? new List<Subcategory>();
-                return View("SanPham", products);
-            }
+            ViewBag.ActivePage = "SanPham";
+            var product = _context.Products
+                .Include(p => p.Subcategory)
+                .Include(p => p.ProductVariants)
+                .Include(p => p.ProductImages)
+                .SingleOrDefault(p => p.Id == id);
 
-            var existingProduct = _context.Products.Find(product.Id);
-            if (existingProduct == null)
-            {
-                TempData["ErrorMessage"] = "Sản phẩm không tồn tại.";
-                return RedirectToAction("SanPham");
-            }
-
-            // Kiểm tra danh mục con có tồn tại không
-            var subcategory = _context.Subcategories.Find(product.SubcategoryId);
-            if (subcategory == null)
-            {
-                TempData["ErrorMessage"] = "Danh mục con không tồn tại.";
-                var products = _context.Products
-                    .Include(p => p.Subcategory)
-                    .Include(p => p.Subcategory.Category)
-                    .ToList();
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .Where(s => s.IsActive)
-                    .ToList();
-                ViewBag.Subcategories = subcategories ?? new List<Subcategory>();
-                return View("SanPham", products);
-            }
-
-            // Kiểm tra mã sản phẩm đã tồn tại chưa (trừ sản phẩm hiện tại)
-            if (_context.Products.Any(p => p.ProductCode == product.ProductCode && p.Id != product.Id))
-            {
-                TempData["ErrorMessage"] = "Mã sản phẩm đã tồn tại.";
-                var products = _context.Products
-                    .Include(p => p.Subcategory)
-                    .Include(p => p.Subcategory.Category)
-                    .ToList();
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .Where(s => s.IsActive)
-                    .ToList();
-                ViewBag.Subcategories = subcategories ?? new List<Subcategory>();
-                return View("SanPham", products);
-            }
-
-            // Xử lý upload file nếu có (không giới hạn định dạng)
-            if (ImageFile != null && ImageFile.ContentLength > 0)
-            {
-                try
-                {
-                    // Kiểm tra và tạo thư mục nếu chưa tồn tại
-                    var uploadDir = Server.MapPath("~/Uploads/Products");
-                    if (!Directory.Exists(uploadDir))
-                    {
-                        Directory.CreateDirectory(uploadDir);
-                    }
-
-                    // Xóa file cũ nếu có
-                    if (!string.IsNullOrEmpty(existingProduct.ImageUrl))
-                    {
-                        var oldImagePath = Server.MapPath(existingProduct.ImageUrl);
-                        if (System.IO.File.Exists(oldImagePath))
-                        {
-                            System.IO.File.Delete(oldImagePath);
-                        }
-                    }
-
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName); // Giữ nguyên đuôi file
-                    var path = Path.Combine(uploadDir, fileName);
-                    ImageFile.SaveAs(path); // Lưu file mới
-                    existingProduct.ImageUrl = "/Uploads/Products/" + fileName; // Cập nhật đường dẫn
-                }
-                catch (Exception ex)
-                {
-                    TempData["ErrorMessage"] = "Lỗi khi upload file: " + ex.Message;
-                    var products = _context.Products
-                        .Include(p => p.Subcategory)
-                        .Include(p => p.Subcategory.Category)
-                        .ToList();
-                    var subcategories = _context.Subcategories
-                        .Include(s => s.Category)
-                        .Where(s => s.IsActive)
-                        .ToList();
-                    ViewBag.Subcategories = subcategories ?? new List<Subcategory>();
-                    return View("SanPham", products);
-                }
-            }
-
-            // Cập nhật thông tin sản phẩm
-            existingProduct.SubcategoryId = product.SubcategoryId;
-            existingProduct.ProductCode = product.ProductCode;
-            existingProduct.Name = product.Name;
-            existingProduct.Price = product.Price;
-            existingProduct.StockQuantity = product.StockQuantity;
-            existingProduct.Description = product.Description;
-            existingProduct.IsActive = product.IsActive;
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công!";
-            return RedirectToAction("SanPham");
-        }
-
-        // GET: Admin/DeleteProduct
-        public ActionResult DeleteProduct(int id)
-        {
-            var product = _context.Products.Find(id);
             if (product == null)
             {
                 TempData["ErrorMessage"] = "Sản phẩm không tồn tại.";
                 return RedirectToAction("SanPham");
             }
 
-            // Kiểm tra xem sản phẩm có liên quan đến các bảng khác không
-            if (_context.OrderDetails.Any(od => od.ProductId == id) ||
-                _context.CartDetails.Any(cd => cd.ProductId == id) ||
-                _context.Wishlists.Any(w => w.ProductId == id) ||
-                _context.Reviews.Any(r => r.ProductId == id) ||
-                _context.ProductImages.Any(pi => pi.ProductId == id))
-            {
-                TempData["ErrorMessage"] = "Không thể xóa sản phẩm vì vẫn còn dữ liệu liên quan (đơn hàng, giỏ hàng, danh sách yêu thích, đánh giá, hình ảnh).";
-                return RedirectToAction("SanPham");
-            }
-
-            // Xóa file nếu có
-            if (!string.IsNullOrEmpty(product.ImageUrl))
-            {
-                var imagePath = Server.MapPath(product.ImageUrl);
-                if (System.IO.File.Exists(imagePath))
-                {
-                    System.IO.File.Delete(imagePath);
-                }
-            }
-
-            _context.Products.Remove(product);
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Xóa sản phẩm thành công!";
-            return RedirectToAction("SanPham");
-        }
-
-        // GET: Admin/danhmuc
-        public ActionResult danhmuc()
-        {
-            var categories = _context.Categories.ToList();
-            return View(categories);
-        }
-
-        // POST: Admin/CreateCategory
-        [HttpPost]
-        public ActionResult CreateCategory(Category category)
-        {
-            if (!ModelState.IsValid)
-            {
-                var categories = _context.Categories.ToList();
-                return View("danhmuc", categories);
-            }
-
-            // Kiểm tra tên danh mục đã tồn tại chưa
-            if (_context.Categories.Any(c => c.Name == category.Name))
-            {
-                TempData["ErrorMessage"] = "Tên danh mục đã tồn tại.";
-                var categories = _context.Categories.ToList();
-                return View("danhmuc", categories);
-            }
-
-            category.IsActive = category.IsActive;
-            _context.Categories.Add(category);
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Thêm danh mục thành công!";
-            return RedirectToAction("danhmuc");
-        }
-
-        // POST: Admin/EditCategory
-        [HttpPost]
-        public ActionResult EditCategory(Category category)
-        {
-            if (!ModelState.IsValid)
-            {
-                var categories = _context.Categories.ToList();
-                return View("danhmuc", categories);
-            }
-
-            var existingCategory = _context.Categories.Find(category.Id);
-            if (existingCategory == null)
-            {
-                TempData["ErrorMessage"] = "Danh mục không tồn tại.";
-                return RedirectToAction("danhmuc");
-            }
-
-            // Kiểm tra tên danh mục đã tồn tại chưa (trừ danh mục hiện tại)
-            if (_context.Categories.Any(c => c.Name == category.Name && c.Id != category.Id))
-            {
-                TempData["ErrorMessage"] = "Tên danh mục đã tồn tại.";
-                var categories = _context.Categories.ToList();
-                return View("danhmuc", categories);
-            }
-
-            existingCategory.Name = category.Name;
-            existingCategory.Description = category.Description;
-            existingCategory.IsActive = category.IsActive;
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Cập nhật danh mục thành công!";
-            return RedirectToAction("danhmuc");
-        }
-
-        // GET: Admin/DeleteCategory
-        public ActionResult DeleteCategory(int id)
-        {
-            var category = _context.Categories.Find(id);
-            if (category == null)
-            {
-                TempData["ErrorMessage"] = "Danh mục không tồn tại.";
-                return RedirectToAction("danhmuc");
-            }
-
-            // Kiểm tra xem danh mục có danh mục con không
-            if (_context.Subcategories.Any(s => s.CategoryId == id))
-            {
-                TempData["ErrorMessage"] = "Không thể xóa danh mục vì vẫn còn danh mục con liên quan.";
-                return RedirectToAction("danhmuc");
-            }
-
-            _context.Categories.Remove(category);
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Xóa danh mục thành công!";
-            return RedirectToAction("danhmuc");
-        }
-
-        // GET: Admin/danhmucon
-        public ActionResult danhmucon()
-        {
             var subcategories = _context.Subcategories
                 .Include(s => s.Category)
+                .Where(s => s.IsActive)
                 .ToList();
-            var categories = _context.Categories.Where(c => c.IsActive).ToList();
-            ViewBag.Categories = categories ?? new List<Category>();
-            return View(subcategories);
+            var sizes = _context.Sizes.Where(s => s.IsActive).ToList();
+            var colors = _context.Colors.Where(c => c.IsActive).ToList();
+
+            ViewBag.Subcategories = subcategories ?? new List<Subcategory>();
+            ViewBag.Sizes = sizes ?? new List<Size>();
+            ViewBag.Colors = colors ?? new List<Color>();
+            return View(product);
         }
 
-        // POST: Admin/CreateSubcategory
+        // POST: Admin/EditProduct
         [HttpPost]
-        public ActionResult CreateSubcategory(Subcategory subcategory)
+        public ActionResult EditProduct(Product product, HttpPostedFileBase ImageFile, int[] VariantIds, int[] SizeIds, int[] ColorIds, int[] VariantQuantities, decimal[] VariantPrices, HttpPostedFileBase[] VariantImageFiles)
         {
+            ViewBag.ActivePage = "SanPham";
             if (!ModelState.IsValid)
             {
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .ToList();
-                var categories = _context.Categories.Where(c => c.IsActive).ToList();
-                ViewBag.Categories = categories ?? new List<Category>();
-                return View("danhmucon", subcategories);
+                TempData["ErrorMessage"] = "Vui lòng kiểm tra lại thông tin nhập vào.";
+                return LoadSanPhamView();
             }
 
-            // Kiểm tra danh mục cha có tồn tại không
-            var category = _context.Categories.Find(subcategory.CategoryId);
-            if (category == null)
+            var existingProduct = _context.Products
+                .Include(p => p.ProductVariants)
+                .Include(p => p.ProductImages)
+                .SingleOrDefault(p => p.Id == product.Id);
+
+            if (existingProduct == null)
             {
-                TempData["ErrorMessage"] = "Danh mục cha không tồn tại.";
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .ToList();
-                var categories = _context.Categories.Where(c => c.IsActive).ToList();
-                ViewBag.Categories = categories ?? new List<Category>();
-                return View("danhmucon", subcategories);
+                TempData["ErrorMessage"] = "Sản phẩm không tồn tại.";
+                return LoadSanPhamView();
             }
 
-            // Kiểm tra tên danh mục con đã tồn tại trong cùng danh mục cha chưa
-            if (_context.Subcategories.Any(s => s.Name == subcategory.Name && s.CategoryId == subcategory.CategoryId))
-            {
-                TempData["ErrorMessage"] = "Tên danh mục con đã tồn tại trong danh mục cha này.";
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .ToList();
-                var categories = _context.Categories.Where(c => c.IsActive).ToList();
-                ViewBag.Categories = categories ?? new List<Category>();
-                return View("danhmucon", subcategories);
-            }
-
-            subcategory.IsActive = subcategory.IsActive;
-            _context.Subcategories.Add(subcategory);
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Thêm danh mục con thành công!";
-            return RedirectToAction("danhmucon");
-        }
-
-        // POST: Admin/EditSubcategory
-        [HttpPost]
-        public ActionResult EditSubcategory(Subcategory subcategory)
-        {
-            if (!ModelState.IsValid)
-            {
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .ToList();
-                var categories = _context.Categories.Where(c => c.IsActive).ToList();
-                ViewBag.Categories = categories ?? new List<Category>();
-                return View("danhmucon", subcategories);
-            }
-
-            var existingSubcategory = _context.Subcategories.Find(subcategory.Id);
-            if (existingSubcategory == null)
-            {
-                TempData["ErrorMessage"] = "Danh mục con không tồn tại.";
-                return RedirectToAction("danhmucon");
-            }
-
-            // Kiểm tra danh mục cha có tồn tại không
-            var category = _context.Categories.Find(subcategory.CategoryId);
-            if (category == null)
-            {
-                TempData["ErrorMessage"] = "Danh mục cha không tồn tại.";
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .ToList();
-                var categories = _context.Categories.Where(c => c.IsActive).ToList();
-                ViewBag.Categories = categories ?? new List<Category>();
-                return View("danhmucon", subcategories);
-            }
-
-            // Kiểm tra tên danh mục con đã tồn tại trong cùng danh mục cha chưa (trừ danh mục con hiện tại)
-            if (_context.Subcategories.Any(s => s.Name == subcategory.Name && s.CategoryId == subcategory.CategoryId && s.Id != subcategory.Id))
-            {
-                TempData["ErrorMessage"] = "Tên danh mục con đã tồn tại trong danh mục cha này.";
-                var subcategories = _context.Subcategories
-                    .Include(s => s.Category)
-                    .ToList();
-                var categories = _context.Categories.Where(c => c.IsActive).ToList();
-                ViewBag.Categories = categories ?? new List<Category>();
-                return View("danhmucon", subcategories);
-            }
-
-            existingSubcategory.CategoryId = subcategory.CategoryId;
-            existingSubcategory.Name = subcategory.Name;
-            existingSubcategory.Description = subcategory.Description;
-            existingSubcategory.IsActive = subcategory.IsActive;
-            _context.SaveChanges();
-
-            TempData["SuccessMessage"] = "Cập nhật danh mục con thành công!";
-            return RedirectToAction("danhmucon");
-        }
-
-        // GET: Admin/DeleteSubcategory
-        public ActionResult DeleteSubcategory(int id)
-        {
-            var subcategory = _context.Subcategories.Find(id);
+            // Kiểm tra danh mục con
+            var subcategory = _context.Subcategories.Find(product.SubcategoryId);
             if (subcategory == null)
             {
                 TempData["ErrorMessage"] = "Danh mục con không tồn tại.";
-                return RedirectToAction("danhmucon");
+                return LoadSanPhamView();
             }
 
-            // Kiểm tra xem danh mục con có sản phẩm liên quan không
-            if (_context.Products.Any(p => p.SubcategoryId == id))
+            // Kiểm tra mã sản phẩm
+            if (_context.Products.Any(p => p.ProductCode == product.ProductCode && p.Id != product.Id))
             {
-                TempData["ErrorMessage"] = "Không thể xóa danh mục con vì vẫn còn sản phẩm liên quan.";
-                return RedirectToAction("danhmucon");
+                TempData["ErrorMessage"] = "Mã sản phẩm đã tồn tại.";
+                return LoadSanPhamView();
             }
 
-            _context.Subcategories.Remove(subcategory);
+            // Cập nhật thông tin cơ bản
+            existingProduct.SubcategoryId = product.SubcategoryId;
+            existingProduct.Name = product.Name;
+            existingProduct.Description = product.Description;
+            existingProduct.Price = product.Price;
+            existingProduct.DiscountedPrice = product.DiscountedPrice;
+            existingProduct.ProductCode = product.ProductCode;
+            existingProduct.IsActive = product.IsActive;
+
+            // Xử lý ảnh chính (nếu có)
+            if (ImageFile != null && ImageFile.ContentLength > 0)
+            {
+                try
+                {
+                    var uploadDir = Server.MapPath("~/Uploads/Products");
+                    if (!Directory.Exists(uploadDir))
+                    {
+                        Directory.CreateDirectory(uploadDir);
+                    }
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ImageFile.FileName);
+                    var path = Path.Combine(uploadDir, fileName);
+                    ImageFile.SaveAs(path);
+                    existingProduct.ImageUrl = "/Uploads/Products/" + fileName;
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = "Lỗi khi upload ảnh: " + ex.Message;
+                    return LoadSanPhamView();
+                }
+            }
+
+            // Xử lý ProductVariants
+            var newVariants = new List<ProductVariant>();
+            if (SizeIds != null && ColorIds != null && VariantQuantities != null)
+            {
+                for (int i = 0; i < SizeIds.Length; i++)
+                {
+                    var variantId = VariantIds != null && i < VariantIds.Length ? VariantIds[i] : 0;
+                    var variant = existingProduct.ProductVariants?.FirstOrDefault(v => v.Id == variantId) ?? new ProductVariant
+                    {
+                        ProductId = existingProduct.Id
+                    };
+
+                    variant.SizeId = SizeIds[i];
+                    variant.ColorId = ColorIds[i];
+                    variant.StockQuantity = VariantQuantities[i];
+                    variant.VariantPrice = VariantPrices != null && i < VariantPrices.Length ? (decimal?)VariantPrices[i] : null; // Sửa dòng này
+                    variant.IsActive = true;
+
+                    // Xử lý ảnh của biến thể
+                    if (VariantImageFiles != null && i < VariantImageFiles.Length && VariantImageFiles[i] != null && VariantImageFiles[i].ContentLength > 0)
+                    {
+                        try
+                        {
+                            var uploadDir = Server.MapPath("~/Uploads/Products");
+                            if (!Directory.Exists(uploadDir))
+                            {
+                                Directory.CreateDirectory(uploadDir);
+                            }
+                            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(VariantImageFiles[i].FileName);
+                            var path = Path.Combine(uploadDir, fileName);
+                            VariantImageFiles[i].SaveAs(path);
+                            variant.VariantImageUrl = "/Uploads/Products/" + fileName;
+
+                            // Thêm vào ProductImage
+                            var productImage = new ProductImage
+                            {
+                                ProductVariantId = variant.Id, // Sẽ cập nhật sau khi lưu variant
+                                ImageUrl = "/Uploads/Products/" + fileName,
+                                IsMain = true
+                            };
+                            existingProduct.ProductImages.Add(productImage);
+                        }
+                        catch (Exception ex)
+                        {
+                            TempData["ErrorMessage"] = "Lỗi khi upload ảnh biến thể: " + ex.Message;
+                            return LoadSanPhamView();
+                        }
+                    }
+
+                    if (variant.Id == 0)
+                    {
+                        _context.ProductVariants.Add(variant);
+                    }
+                    newVariants.Add(variant);
+                }
+            }
+
+            // Xóa các variant không còn trong danh sách
+            if (existingProduct.ProductVariants != null)
+            {
+                var variantsToRemove = existingProduct.ProductVariants
+                    .Where(v => !newVariants.Any(nv => nv.Id == v.Id && v.Id != 0))
+                    .ToList();
+                foreach (var variant in variantsToRemove)
+                {
+                    _context.ProductVariants.Remove(variant);
+                    var relatedImages = _context.ProductImages.Where(pi => pi.ProductVariantId == variant.Id).ToList();
+                    _context.ProductImages.RemoveRange(relatedImages);
+                }
+            }
+
+            // Cập nhật tổng StockQuantity
+            existingProduct.StockQuantity = newVariants.Sum(v => v.StockQuantity);
+            existingProduct.ProductVariants = newVariants;
+
             _context.SaveChanges();
 
-            TempData["SuccessMessage"] = "Xóa danh mục con thành công!";
-            return RedirectToAction("danhmucon");
+            TempData["SuccessMessage"] = "Cập nhật sản phẩm thành công!";
+            return RedirectToAction("SanPham");
+        }
+
+        // GET: Admin/Sizes
+        public ActionResult Sizes()
+        {
+            ViewBag.ActivePage = "Sizes";
+            var sizes = _context.Sizes.ToList();
+            return View(sizes);
+        }
+
+        // POST: Admin/CreateSize
+        [HttpPost]
+        public ActionResult CreateSize(Size size)
+        {
+            ViewBag.ActivePage = "Sizes";
+            if (!ModelState.IsValid)
+            {
+                var sizes = _context.Sizes.ToList();
+                return View("Sizes", sizes);
+            }
+
+            if (_context.Sizes.Any(s => s.Name == size.Name))
+            {
+                TempData["ErrorMessage"] = "Tên kích thước đã tồn tại.";
+                var sizes = _context.Sizes.ToList();
+                return View("Sizes", sizes);
+            }
+
+            size.IsActive = true;
+            _context.Sizes.Add(size);
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Thêm kích thước thành công!";
+            return RedirectToAction("Sizes");
+        }
+
+        // POST: Admin/EditSize
+        [HttpPost]
+        public ActionResult EditSize(Size size)
+        {
+            ViewBag.ActivePage = "Sizes";
+            if (!ModelState.IsValid)
+            {
+                var sizes = _context.Sizes.ToList();
+                return View("Sizes", sizes);
+            }
+
+            var existingSize = _context.Sizes.Find(size.Id);
+            if (existingSize == null)
+            {
+                TempData["ErrorMessage"] = "Kích thước không tồn tại.";
+                return RedirectToAction("Sizes");
+            }
+
+            if (_context.Sizes.Any(s => s.Name == size.Name && s.Id != size.Id))
+            {
+                TempData["ErrorMessage"] = "Tên kích thước đã tồn tại.";
+                var sizes = _context.Sizes.ToList();
+                return View("Sizes", sizes);
+            }
+
+            existingSize.Name = size.Name;
+            existingSize.Description = size.Description;
+            existingSize.IsActive = size.IsActive;
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Cập nhật kích thước thành công!";
+            return RedirectToAction("Sizes");
+        }
+
+        // GET: Admin/DeleteSize
+        public ActionResult DeleteSize(int id)
+        {
+            ViewBag.ActivePage = "Sizes";
+            var size = _context.Sizes.Find(id);
+            if (size == null)
+            {
+                TempData["ErrorMessage"] = "Kích thước không tồn tại.";
+                return RedirectToAction("Sizes");
+            }
+
+            if (_context.ProductVariants.Any(pv => pv.SizeId == id))
+            {
+                TempData["ErrorMessage"] = "Không thể xóa kích thước vì vẫn còn biến thể sản phẩm liên quan.";
+                return RedirectToAction("Sizes");
+            }
+
+            _context.Sizes.Remove(size);
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Xóa kích thước thành công!";
+            return RedirectToAction("Sizes");
+        }
+
+        // GET: Admin/Colors
+        public ActionResult Colors()
+        {
+            ViewBag.ActivePage = "Colors";
+            var colors = _context.Colors.ToList();
+            return View(colors);
+        }
+
+        // POST: Admin/CreateColor
+        [HttpPost]
+        public ActionResult CreateColor(Color color)
+        {
+            ViewBag.ActivePage = "Colors";
+            if (!ModelState.IsValid)
+            {
+                var colors = _context.Colors.ToList();
+                return View("Colors", colors);
+            }
+
+            if (_context.Colors.Any(c => c.Name == color.Name))
+            {
+                TempData["ErrorMessage"] = "Tên màu sắc đã tồn tại.";
+                var colors = _context.Colors.ToList();
+                return View("Colors", colors);
+            }
+
+            color.IsActive = true;
+            _context.Colors.Add(color);
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Thêm màu sắc thành công!";
+            return RedirectToAction("Colors");
+        }
+
+        // POST: Admin/EditColor
+        [HttpPost]
+        public ActionResult EditColor(Color color)
+        {
+            ViewBag.ActivePage = "Colors";
+            if (!ModelState.IsValid)
+            {
+                var colors = _context.Colors.ToList();
+                return View("Colors", colors);
+            }
+
+            var existingColor = _context.Colors.Find(color.Id);
+            if (existingColor == null)
+            {
+                TempData["ErrorMessage"] = "Màu sắc không tồn tại.";
+                return RedirectToAction("Colors");
+            }
+
+            if (_context.Colors.Any(c => c.Name == color.Name && c.Id != color.Id))
+            {
+                TempData["ErrorMessage"] = "Tên màu sắc đã tồn tại.";
+                var colors = _context.Colors.ToList();
+                return View("Colors", colors);
+            }
+
+            existingColor.Name = color.Name;
+            existingColor.Description = color.Description;
+            existingColor.IsActive = color.IsActive;
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Cập nhật màu sắc thành công!";
+            return RedirectToAction("Colors");
+        }
+
+        // GET: Admin/DeleteColor
+        public ActionResult DeleteColor(int id)
+        {
+            ViewBag.ActivePage = "Colors";
+            var color = _context.Colors.Find(id);
+            if (color == null)
+            {
+                TempData["ErrorMessage"] = "Màu sắc không tồn tại.";
+                return RedirectToAction("Colors");
+            }
+
+            if (_context.ProductVariants.Any(pv => pv.ColorId == id))
+            {
+                TempData["ErrorMessage"] = "Không thể xóa màu sắc vì vẫn còn biến thể sản phẩm liên quan.";
+                return RedirectToAction("Colors");
+            }
+
+            _context.Colors.Remove(color);
+            _context.SaveChanges();
+
+            TempData["SuccessMessage"] = "Xóa màu sắc thành công!";
+            return RedirectToAction("Colors");
+        }
+
+        // Hàm hỗ trợ tải lại view SanPham
+        private ActionResult LoadSanPhamView()
+        {
+            var products = _context.Products
+                .Include(p => p.Subcategory)
+                .Include(p => p.Subcategory.Category)
+                .Include(p => p.ProductVariants)
+                .Include(p => p.ProductImages)
+                .ToList();
+            var subcategories = _context.Subcategories
+                .Include(s => s.Category)
+                .Where(s => s.IsActive)
+                .ToList();
+            var sizes = _context.Sizes.Where(s => s.IsActive).ToList();
+            var colors = _context.Colors.Where(c => c.IsActive).ToList();
+
+            ViewBag.Subcategories = subcategories ?? new List<Subcategory>();
+            ViewBag.Sizes = sizes ?? new List<Size>();
+            ViewBag.Colors = colors ?? new List<Color>();
+            return View("SanPham", products);
         }
     }
 }

@@ -1,10 +1,11 @@
 ﻿@model List<doanwebnangcao.Models.Product>
-@using System.Linq
 
 @{
     ViewBag.Title = "Quản lý Sản phẩm";
     ViewBag.ActivePage = "SanPham";
     var subcategories = ViewBag.Subcategories as List<doanwebnangcao.Models.Subcategory>;
+    var sizes = ViewBag.Sizes as List<doanwebnangcao.Models.Size>;
+    var colors = ViewBag.Colors as List<doanwebnangcao.Models.Color>;
 }
 
 <h2 class="mb-4 text-dark">Quản lý Sản phẩm</h2>
@@ -15,100 +16,106 @@
         <span>Thêm sản phẩm mới</span>
     </div>
     <div class="card-body p-4">
-        @using (Html.BeginForm("CreateProduct", "Admin", FormMethod.Post, new { id = "addProductForm", enctype = "multipart/form-data" }))
+        @if (!sizes.Any() || !colors.Any())
         {
-            <div class="row mb-3">
-                <label for="SubcategoryId" class="col-md-3 col-form-label fw-bold">Danh mục con</label>
-                <div class="col-md-9">
-                    @if (subcategories != null && subcategories.Any())
-                    {
-                        <select name="SubcategoryId" class="form-control" required>
-                            <option value="">-- Chọn danh mục con --</option>
-                            @foreach (var subcategory in subcategories)
-                            {
-                                <option value="@subcategory.Id">
-                                    @subcategory.Name @(subcategory.Category != null ? " (" + subcategory.Category.Name + ")" : "")
-                                </option>
-                            }
-                        </select>
-                    }
-                    else
-                    {
-                        <select class="form-control" disabled>
-                            <option>Không có danh mục con nào</option>
-                        </select>
-                        <p class="text-danger">Vui lòng thêm danh mục con trước khi tạo sản phẩm.</p>
-                    }
-                    @Html.ValidationMessage("SubcategoryId", new { @class = "text-danger" })
-                </div>
+            <div class="alert alert-warning">
+                @if (!sizes.Any())
+                {
+                    <p>Vui lòng thêm <a href="@Url.Action("Sizes", "Admin")">kích thước</a> trước khi tạo sản phẩm.</p>
+                }
+                @if (!colors.Any())
+                {
+                    <p>Vui lòng thêm <a href="@Url.Action("Colors", "Admin")">màu sắc</a> trước khi tạo sản phẩm.</p>
+                }
             </div>
-
-            <div class="row mb-3">
-                <label for="ProductCode" class="col-md-3 col-form-label fw-bold">Mã sản phẩm</label>
-                <div class="col-md-9">
-                    @Html.TextBox("ProductCode", null, new { @class = "form-control", required = "required", maxlength = "50" })
-                    @Html.ValidationMessage("ProductCode", new { @class = "text-danger" })
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label for="Name" class="col-md-3 col-form-label fw-bold">Tên sản phẩm</label>
-                <div class="col-md-9">
-                    @Html.TextBox("Name", null, new { @class = "form-control", required = "required", maxlength = "200" })
-                    @Html.ValidationMessage("Name", new { @class = "text-danger" })
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label for="Price" class="col-md-3 col-form-label fw-bold">Giá</label>
-                <div class="col-md-9">
-                    @Html.TextBox("Price", null, new { @class = "form-control", type = "number", required = true, min = "0", step = "1000" })
-                    @Html.ValidationMessage("Price", new { @class = "text-danger" })
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label for="StockQuantity" class="col-md-3 col-form-label fw-bold">Số lượng</label>
-                <div class="col-md-9">
-                    @Html.TextBox("StockQuantity", null, new { @class = "form-control", type = "number", required = true, min = "0" })
-                    @Html.ValidationMessage("StockQuantity", new { @class = "text-danger" })
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label for="ImageUrl" class="col-md-3 col-form-label fw-bold">Hình ảnh</label>
-                <div class="col-md-9">
-                    <input type="file" name="ImageFile" class="form-control" />
-                    @Html.ValidationMessage("ImageUrl", new { @class = "text-danger" })
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label for="Description" class="col-md-3 col-form-label fw-bold">Mô tả</label>
-                <div class="col-md-9">
-                    @Html.TextArea("Description", null, new { @class = "form-control", rows = "3" })
-                    @Html.ValidationMessage("Description", new { @class = "text-danger" })
-                </div>
-            </div>
-
-            <div class="row mb-3">
-                <label for="IsActive" class="col-md-3 col-form-label fw-bold">Trạng thái</label>
-                <div class="col-md-9">
-                    <div class="form-check">
-                        @Html.CheckBox("IsActive", true, new { @class = "form-check-input" })
-                        <label class="form-check-label" for="IsActive">Hoạt động</label>
+        }
+        else
+        {
+            <form id="addProductForm" action="@Url.Action("CreateProduct", "Admin")" method="post" enctype="multipart/form-data">
+                <div class="row mb-3">
+                    <label for="SubcategoryId" class="col-md-3 col-form-label fw-bold">Danh mục con</label>
+                    <div class="col-md-9">
+                        @if (subcategories != null && subcategories.Any())
+                        {
+                            <select name="SubcategoryId" class="form-control" required>
+                                <option value="">-- Chọn danh mục con --</option>
+                                @foreach (var subcategory in subcategories)
+                                {
+                                    <option value="@subcategory.Id">
+                                        @subcategory.Name @(subcategory.Category != null ? " (" + subcategory.Category.Name + ")" : "")
+                                    </option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <select class="form-control" disabled>
+                                <option>Không có danh mục con nào</option>
+                            </select>
+                            <p class="text-danger">Vui lòng thêm danh mục con trước khi tạo sản phẩm.</p>
+                        }
+                        <span class="text-danger field-validation-error" data-valmsg-for="SubcategoryId" data-valmsg-replace="true"></span>
                     </div>
                 </div>
-            </div>
 
-            <div class="row">
-                <div class="col-md-9 offset-md-3">
-                    <button type="submit" class="btn btn-primary me-2" @(subcategories != null && subcategories.Any() ? "" : "disabled")>
-                        <i class="fas fa-save me-1"></i> Thêm sản phẩm
-                    </button>
-                    <button type="reset" class="btn btn-secondary"><i class="fas fa-undo me-1"></i> Làm mới</button>
+                <div class="row mb-3">
+                    <label for="ProductCode" class="col-md-3 col-form-label fw-bold">Mã sản phẩm</label>
+                    <div class="col-md-9">
+                        <input type="text" name="ProductCode" class="form-control" required maxlength="50" />
+                        <span class="text-danger field-validation-error" data-valmsg-for="ProductCode" data-valmsg-replace="true"></span>
+                    </div>
                 </div>
-            </div>
+
+                <div class="row mb-3">
+                    <label for="Name" class="col-md-3 col-form-label fw-bold">Tên sản phẩm</label>
+                    <div class="col-md-9">
+                        <input type="text" name="Name" class="form-control" required maxlength="200" />
+                        <span class="text-danger field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="Price" class="col-md-3 col-form-label fw-bold">Giá mặc định</label>
+                    <div class="col-md-9">
+                        <input type="number" name="Price" class="form-control" required min="0" step="1000" />
+                        <span class="text-danger field-validation-error" data-valmsg-for="Price" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="ImageFile" class="col-md-3 col-form-label fw-bold">Ảnh chính</label>
+                    <div class="col-md-9">
+                        <input type="file" name="ImageFile" class="form-control" accept="image/*" />
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="Description" class="col-md-3 col-form-label fw-bold">Mô tả</label>
+                    <div class="col-md-9">
+                        <textarea name="Description" class="form-control" rows="3"></textarea>
+                        <span class="text-danger field-validation-error" data-valmsg-for="Description" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="IsActive" class="col-md-3 col-form-label fw-bold">Trạng thái</label>
+                    <div class="col-md-9">
+                        <div class="form-check">
+                            <input type="checkbox" name="IsActive" class="form-check-input" checked />
+                            <label class="form-check-label" for="IsActive">Hoạt động</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-9 offset-md-3">
+                        <button type="submit" class="btn btn-primary me-2" @(subcategories != null && subcategories.Any() && sizes.Any() && colors.Any() ? "" : "disabled")>
+                            <i class="fas fa-save me-1"></i> Thêm sản phẩm
+                        </button>
+                        <button type="reset" class="btn btn-secondary"><i class="fas fa-undo me-1"></i> Làm mới</button>
+                    </div>
+                </div>
+            </form>
         }
     </div>
 </div>
@@ -140,10 +147,11 @@
                         <th style="width: 5%;">#</th>
                         <th style="width: 10%;">Mã sản phẩm</th>
                         <th style="width: 10%;">Hình ảnh</th>
-                        <th style="width: 25%;">Tên sản phẩm</th>
+                        <th style="width: 20%;">Tên sản phẩm</th>
                         <th style="width: 15%;">Danh mục</th>
                         <th style="width: 12%;">Giá</th>
                         <th style="width: 8%;">Số lượng</th>
+                        <th style="width: 10%;">Biến thể</th>
                         <th style="width: 10%;">Trạng thái</th>
                         <th style="width: 20%; min-width: 120px;">Hành động</th>
                     </tr>
@@ -159,17 +167,18 @@
                                 <td>@product.ProductCode</td>
                                 <td>
                                     <div class="image-frame" style="border: 1px solid #ddd; border-radius: 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0;">
-                                        <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/placeholder.png" : product.ImageUrl)" alt="@product.Name" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                        <img src="@(product.ImageUrl ?? (product.ProductImages != null && product.ProductImages.Any(i => i.IsMain) ? product.ProductImages.First(i => i.IsMain).ImageUrl : "/images/placeholder.png"))" alt="@product.Name" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                                     </div>
                                 </td>
                                 <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; padding: 4px 8px;">@product.Name</td>
                                 <td style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; padding: 4px 8px;">
-                                    @(product.Subcategory != null
-                                        ? product.Subcategory.Name + (product.Subcategory.Category != null ? " (" + product.Subcategory.Category.Name + ")" : "")
-                                        : "Không có danh mục")
+                                    @(product.Subcategory != null ? product.Subcategory.Name + (product.Subcategory.Category != null ? " (" + product.Subcategory.Category.Name + ")" : "") : "Không có danh mục")
                                 </td>
                                 <td style="padding: 4px 8px;">@product.Price.ToString("N0") VNĐ</td>
                                 <td style="padding: 4px 8px;">@product.StockQuantity</td>
+                                <td style="padding: 4px 8px;">
+                                    @(product.ProductVariants != null && product.ProductVariants.Any() ? string.Join(", ", product.ProductVariants.Select(v => (v.Size != null ? v.Size.Name : "") + "/" + (v.Color != null ? v.Color.Name : "") + " (" + v.StockQuantity + ")")) : "Không có biến thể")
+                                </td>
                                 <td>
                                     <span class="badge rounded-pill @(product.IsActive ? "bg-success" : "bg-danger")" style="padding: 4px 8px; font-size: 0.8rem;">
                                         @(product.IsActive ? "Hoạt động" : "Ngừng bán")
@@ -177,7 +186,7 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-1" style="flex-wrap: nowrap;">
-                                        <button class="btn btn-sm btn-warning me-1" onclick="editProduct(@product.Id, @product.SubcategoryId, '@product.ProductCode', '@product.Name', @product.Price, @product.StockQuantity, '@(product.Description ?? "")', @product.IsActive)">
+                                        <button class="btn btn-sm btn-warning me-1" onclick="editProduct(@product.Id, @product.SubcategoryId, '@product.ProductCode', '@product.Name', @product.Price, '@(product.Description ?? "")', @product.IsActive, '@Newtonsoft.Json.JsonConvert.SerializeObject(product.ProductVariants.Select(v => new { v.Id, v.SizeId, v.ColorId, v.StockQuantity, v.VariantPrice, v.VariantImageUrl }).ToList())', '@(product.ImageUrl ?? "")')">
                                             <i class="fas fa-edit me-1"></i> Sửa
                                         </button>
                                         <a href="@Url.Action("DeleteProduct", "Admin", new { id = product.Id })" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
@@ -192,7 +201,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="9" class="text-center text-muted py-4">Không có sản phẩm nào</td>
+                            <td colspan="10" class="text-center text-muted py-4">Không có sản phẩm nào</td>
                         </tr>
                     }
                 </tbody>
@@ -203,15 +212,14 @@
 
 <!-- Modal chỉnh sửa sản phẩm -->
 <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="editProductModalLabel">Chỉnh sửa sản phẩm</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                @using (Html.BeginForm("EditProduct", "Admin", FormMethod.Post, new { id = "editProductForm", enctype = "multipart/form-data" }))
-                {
+                <form id="editProductForm" action="@Url.Action("EditProduct", "Admin")" method="post" enctype="multipart/form-data">
                     <input type="hidden" id="editProductId" name="Id" />
 
                     <div class="mb-3">
@@ -235,49 +243,49 @@
                             </select>
                             <p class="text-danger">Vui lòng thêm danh mục con trước khi chỉnh sửa sản phẩm.</p>
                         }
-                        @Html.ValidationMessage("SubcategoryId", new { @class = "text-danger" })
+                        <span class="text-danger field-validation-error" data-valmsg-for="SubcategoryId" data-valmsg-replace="true"></span>
                     </div>
 
                     <div class="mb-3">
                         <label for="editProductCode" class="form-label fw-bold">Mã sản phẩm</label>
-                        @Html.TextBox("ProductCode", null, new { @class = "form-control", id = "editProductCode", required = "required", maxlength = "50" })
-                        @Html.ValidationMessage("ProductCode", new { @class = "text-danger" })
+                        <input type="text" name="ProductCode" id="editProductCode" class="form-control" required maxlength="50" />
+                        <span class="text-danger field-validation-error" data-valmsg-for="ProductCode" data-valmsg-replace="true"></span>
                     </div>
 
                     <div class="mb-3">
                         <label for="editName" class="form-label fw-bold">Tên sản phẩm</label>
-                        @Html.TextBox("Name", null, new { @class = "form-control", id = "editName", required = "required", maxlength = "200" })
-                        @Html.ValidationMessage("Name", new { @class = "text-danger" })
+                        <input type="text" name="Name" id="editName" class="form-control" required maxlength="200" />
+                        <span class="text-danger field-validation-error" data-valmsg-for="Name" data-valmsg-replace="true"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label for="editPrice" class="form-label fw-bold">Giá</label>
-                        @Html.TextBox("Price", null, new { @class = "form-control", id = "editPrice", type = "number", required = true, min = "0", step = "1000" })
-                        @Html.ValidationMessage("Price", new { @class = "text-danger" })
+                        <label for="editPrice" class="form-label fw-bold">Giá mặc định</label>
+                        <input type="number" name="Price" id="editPrice" class="form-control" required min="0" step="1000" />
+                        <span class="text-danger field-validation-error" data-valmsg-for="Price" data-valmsg-replace="true"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label for="editStockQuantity" class="form-label fw-bold">Số lượng</label>
-                        @Html.TextBox("StockQuantity", null, new { @class = "form-control", id = "editStockQuantity", type = "number", required = true, min = "0" })
-                        @Html.ValidationMessage("StockQuantity", new { @class = "text-danger" })
+                        <label for="editImageFile" class="form-label fw-bold">Ảnh chính</label>
+                        <input type="file" name="ImageFile" id="editImageFile" class="form-control" accept="image/*" />
+                        <img id="editImagePreview" src="" style="max-width: 100px; margin-top: 10px; display: none;" />
                     </div>
 
                     <div class="mb-3">
-                        <label for="editImageUrl" class="form-label fw-bold">Hình ảnh</label>
-                        <input type="file" name="ImageFile" class="form-control" id="editImageUrl" />
-                        @Html.ValidationMessage("ImageUrl", new { @class = "text-danger" })
+                        <label class="form-label fw-bold">Biến thể sản phẩm</label>
+                        <div id="editVariantContainer"></div>
+                        <button type="button" class="btn btn-sm btn-info" onclick="addEditVariantRow()">Thêm biến thể</button>
                     </div>
 
                     <div class="mb-3">
                         <label for="editDescription" class="form-label fw-bold">Mô tả</label>
-                        @Html.TextArea("Description", null, new { @class = "form-control", id = "editDescription", rows = "3" })
-                        @Html.ValidationMessage("Description", new { @class = "text-danger" })
+                        <textarea name="Description" id="editDescription" class="form-control" rows="3"></textarea>
+                        <span class="text-danger field-validation-error" data-valmsg-for="Description" data-valmsg-replace="true"></span>
                     </div>
 
                     <div class="mb-3">
                         <label for="editIsActive" class="form-label fw-bold">Trạng thái</label>
                         <div class="form-check">
-                            @Html.CheckBox("IsActive", true, new { @class = "form-check-input", id = "editIsActive" })
+                            <input type="checkbox" name="IsActive" id="editIsActive" class="form-check-input" />
                             <label class="form-check-label" for="editIsActive">Hoạt động</label>
                         </div>
                     </div>
@@ -288,7 +296,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times me-1"></i> Đóng
                     </button>
-                }
+                </form>
             </div>
         </div>
     </div>
@@ -297,23 +305,23 @@
 @section Scripts {
     <style>
         .table th, .table td {
-            padding: 4px 6px; /* Giảm padding để thu hẹp khoảng cách */
+            padding: 4px 6px;
         }
 
             .table th:nth-child(3), .table td:nth-child(3) {
-                padding: 4px 4px; /* Giảm padding cột hình ảnh */
+                padding: 4px 4px;
             }
 
             .table th:nth-child(4), .table td:nth-child(4) {
-                padding: 4px 8px; /* Điều chỉnh padding cột tên sản phẩm */
+                padding: 4px 8px;
             }
 
-            .table th:nth-child(9), .table td:nth-child(9) {
-                min-width: 130px; /* Đảm bảo cột hành động đủ rộng */
+            .table th:nth-child(10), .table td:nth-child(10) {
+                min-width: 130px;
             }
 
         .image-frame {
-            margin: 0; /* Loại bỏ margin để sát cột tên sản phẩm */
+            margin: 0;
         }
     </style>
     <script>
@@ -324,13 +332,10 @@
                     SubcategoryId: { required: true },
                     ProductCode: { required: true, maxlength: 50 },
                     Name: { required: true, maxlength: 200 },
-                    Price: { required: true, number: true, min: 0 },
-                    StockQuantity: { required: true, number: true, min: 0 }
+                    Price: { required: true, number: true, min: 0 }
                 },
                 messages: {
-                    SubcategoryId: {
-                        required: "Vui lòng chọn danh mục con"
-                    },
+                    SubcategoryId: { required: "Vui lòng chọn danh mục con" },
                     ProductCode: {
                         required: "Vui lòng nhập mã sản phẩm",
                         maxlength: "Mã sản phẩm không được dài quá 50 ký tự"
@@ -343,15 +348,10 @@
                         required: "Vui lòng nhập giá sản phẩm",
                         number: "Giá phải là một số",
                         min: "Giá không được nhỏ hơn 0"
-                    },
-                    StockQuantity: {
-                        required: "Vui lòng nhập số lượng",
-                        number: "Số lượng phải là một số",
-                        min: "Số lượng không được nhỏ hơn 0"
                     }
                 },
                 errorPlacement: function (error, element) {
-                    error.insertAfter(element); // Đặt thông báo lỗi ngay sau phần tử
+                    error.insertAfter(element);
                 }
             });
 
@@ -362,12 +362,13 @@
                     ProductCode: { required: true, maxlength: 50 },
                     Name: { required: true, maxlength: 200 },
                     Price: { required: true, number: true, min: 0 },
-                    StockQuantity: { required: true, number: true, min: 0 }
+                    "SizeIds[]": { required: true },
+                    "ColorIds[]": { required: true },
+                    "VariantQuantities[]": { required: true, number: true, min: 0 },
+                    "VariantPrices[]": { number: true, min: 0 }
                 },
                 messages: {
-                    SubcategoryId: {
-                        required: "Vui lòng chọn danh mục con"
-                    },
+                    SubcategoryId: { required: "Vui lòng chọn danh mục con" },
                     ProductCode: {
                         required: "Vui lòng nhập mã sản phẩm",
                         maxlength: "Mã sản phẩm không được dài quá 50 ký tự"
@@ -381,29 +382,114 @@
                         number: "Giá phải là một số",
                         min: "Giá không được nhỏ hơn 0"
                     },
-                    StockQuantity: {
+                    "SizeIds[]": { required: "Vui lòng chọn kích thước" },
+                    "ColorIds[]": { required: "Vui lòng chọn màu sắc" },
+                    "VariantQuantities[]": {
                         required: "Vui lòng nhập số lượng",
                         number: "Số lượng phải là một số",
                         min: "Số lượng không được nhỏ hơn 0"
+                    },
+                    "VariantPrices[]": {
+                        number: "Giá phải là một số",
+                        min: "Giá không được nhỏ hơn 0"
                     }
                 },
                 errorPlacement: function (error, element) {
-                    error.insertAfter(element); // Đặt thông báo lỗi ngay sau phần tử
+                    error.insertAfter(element);
                 }
             });
         });
 
+        // Hàm thêm hàng biến thể mới trong form chỉnh sửa
+        function addEditVariantRow() {
+            var row = '<div class="variant-row mb-3">' +
+                '<div class="row">' +
+                '<div class="col-md-3">' +
+                '<select name="SizeIds" class="form-control size-select" required>' +
+                '<option value="">-- Chọn kích thước --</option>' +
+                '@foreach (var size in sizes) { <option value="@size.Id">@size.Name</option> }' +
+                '</select>' +
+                '</div>' +
+                '<div class="col-md-3">' +
+                '<select name="ColorIds" class="form-control color-select" required>' +
+                '<option value="">-- Chọn màu sắc --</option>' +
+                '@foreach (var color in colors) { <option value="@color.Id">@color.Name</option> }' +
+                '</select>' +
+                '</div>' +
+                '<div class="col-md-2">' +
+                '<input type="number" name="VariantQuantities" class="form-control" placeholder="Số lượng" required min="0" />' +
+                '</div>' +
+                '<div class="col-md-2">' +
+                '<input type="number" name="VariantPrices" class="form-control" placeholder="Giá" min="0" step="1000" />' +
+                '</div>' +
+                '<div class="col-md-2">' +
+                '<input type="file" name="VariantImageFiles" class="form-control" accept="image/*" />' +
+                '<input type="hidden" name="VariantIds" value="0" />' +
+                '<button type="button" class="btn btn-sm btn-danger mt-1" onclick="removeVariantRow(this)">Xóa</button>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+            $("#editVariantContainer").append(row);
+        }
+
+        // Hàm xóa hàng biến thể
+        function removeVariantRow(button) {
+            $(button).closest(".variant-row").remove();
+        }
+
         // Hàm mở modal chỉnh sửa và điền dữ liệu
-        function editProduct(id, subcategoryId, productCode, name, price, stockQuantity, description, isActive) {
+        function editProduct(id, subcategoryId, productCode, name, price, description, isActive, variantsJson, imageUrl) {
             $("#editProductId").val(id);
             $("#editSubcategoryId").val(subcategoryId);
             $("#editProductCode").val(productCode);
             $("#editName").val(name);
             $("#editPrice").val(price);
-            $("#editStockQuantity").val(stockQuantity);
-            $("#editDescription").val(description || ""); // Xử lý trường hợp description là null
-            $("#editIsActive").prop("checked", isActive === true || isActive === "true" || isActive === 1); // Xử lý giá trị boolean
+            $("#editDescription").val(description || "");
+            $("#editIsActive").prop("checked", isActive === true || isActive === "true" || isActive === 1);
+
+            // Hiển thị ảnh hiện tại (nếu có)
+            if (imageUrl) {
+                $("#editImagePreview").attr("src", imageUrl).show();
+            } else {
+                $("#editImagePreview").hide();
+            }
+
+            // Xử lý biến thể
+            $("#editVariantContainer").empty();
+            var variants = JSON.parse(variantsJson);
+            variants.forEach(function (variant) {
+                var row = '<div class="variant-row mb-3">' +
+                    '<div class="row">' +
+                    '<div class="col-md-3">' +
+                    '<select name="SizeIds" class="form-control size-select" required>' +
+                    '<option value="">-- Chọn kích thước --</option>' +
+                    '@foreach (var size in sizes) { <option value="@size.Id"' + (variant.SizeId == @size.Id ? ' selected' : '') + '>@size.Name</option> }' +
+                    '</select>' +
+                    '</div>' +
+                    '<div class="col-md-3">' +
+                    '<select name="ColorIds" class="form-control color-select" required>' +
+                    '<option value="">-- Chọn màu sắc --</option>' +
+                    '@foreach (var color in colors) { <option value="@color.Id"' + (variant.ColorId == @color.Id ? ' selected' : '') + '>@color.Name</option> }' +
+                    '</select>' +
+                    '</div>' +
+                    '<div class="col-md-2">' +
+                    '<input type="number" name="VariantQuantities" class="form-control" value="' + variant.StockQuantity + '" required min="0" />' +
+                    '</div>' +
+                    '<div class="col-md-2">' +
+                    '<input type="number" name="VariantPrices" class="form-control" value="' + (variant.VariantPrice || '') + '" min="0" step="1000" />' +
+                    '</div>' +
+                    '<div class="col-md-2">' +
+                    '<input type="file" name="VariantImageFiles" class="form-control" accept="image/*" />' +
+                    '<input type="hidden" name="VariantIds" value="' + variant.Id + '" />' +
+                    (variant.VariantImageUrl ? '<img src="' + variant.VariantImageUrl + '" style="max-width: 50px; margin-top: 5px;" />' : '') +
+                    '<button type="button" class="btn btn-sm btn-danger mt-1" onclick="removeVariantRow(this)">Xóa</button>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>';
+                $("#editVariantContainer").append(row);
+            });
+
             $("#editProductModal").modal("show");
         }
     </script>
-}
+}S

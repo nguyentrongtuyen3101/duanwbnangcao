@@ -8,7 +8,7 @@ namespace doanwebnangcao.Models
         public int Id { get; set; }
 
         [Required]
-        public int ProductId { get; set; }
+        public int ProductVariantId { get; set; } // Thay ProductId
 
         [Required]
         [StringLength(500)]
@@ -16,7 +16,6 @@ namespace doanwebnangcao.Models
 
         public bool IsMain { get; set; } = false;
 
-        // Navigation property
-        public virtual Product Product { get; set; }
+        public virtual ProductVariant ProductVariant { get; set; } // Thay Product
     }
 }

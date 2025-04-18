@@ -21,14 +21,14 @@ namespace doanwebnangcao.Models
 
         [Required]
         [Range(0, double.MaxValue)]
-        public decimal Price { get; set; }
+        public decimal Price { get; set; } // Giá mặc định
 
         [Range(0, double.MaxValue)]
         public decimal? DiscountedPrice { get; set; }
 
         [Required]
         [Range(0, int.MaxValue)]
-        public int StockQuantity { get; set; }
+        public int StockQuantity { get; set; } // Tổng tồn kho (tính từ ProductVariants)
 
         [StringLength(500)]
         public string ImageUrl { get; set; }
@@ -36,17 +36,18 @@ namespace doanwebnangcao.Models
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         public bool IsActive { get; set; } = true;
-        // Thêm trường ProductCode
+
         [Required]
         [StringLength(50)]
-        [Index(IsUnique = true)] // Đảm bảo ProductCode là duy nhất
+        [Index(IsUnique = true)]
         public string ProductCode { get; set; }
-        // Navigation properties
+
         public virtual Subcategory Subcategory { get; set; }
         public virtual ICollection<ProductImage> ProductImages { get; set; }
         public virtual ICollection<Review> Reviews { get; set; }
         public virtual ICollection<CartDetail> CartDetails { get; set; }
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
         public virtual ICollection<Wishlist> Wishlists { get; set; }
+        public virtual ICollection<ProductVariant> ProductVariants { get; set; } // Quan hệ với biến thể
     }
 }

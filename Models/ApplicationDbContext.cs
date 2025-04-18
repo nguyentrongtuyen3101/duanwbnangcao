@@ -24,5 +24,8 @@ namespace doanwebnangcao.Models
         public DbSet<Coupon> Coupons { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Wishlist> Wishlists { get; set; }
+        public DbSet<Size> Sizes { get; set; } // Thêm DbSet cho Size
+        public DbSet<Color> Colors { get; set; } // Thêm DbSet cho Color
+        public DbSet<ProductVariant> ProductVariants { get; set; } // Thêm DbSet cho ProductVariant
     }
 }
