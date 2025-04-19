@@ -196,6 +196,7 @@
     <Compile Include="Controllers\Admincontroller.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\trangchuController.cs" />
+    <Compile Include="DTO\VariantDto.cs" />
     <Compile Include="Filters\LogActionFilter.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -219,6 +220,10 @@
     <Compile Include="Migrations\202504181014290_AddSizeColorProductVariantAndUpdateModels.cs" />
     <Compile Include="Migrations\202504181014290_AddSizeColorProductVariantAndUpdateModels.designer.cs">
       <DependentUpon>202504181014290_AddSizeColorProductVariantAndUpdateModels.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202504191639296_AddProductImagesToProductVariant.cs" />
+    <Compile Include="Migrations\202504191639296_AddProductImagesToProductVariant.designer.cs">
+      <DependentUpon>202504191639296_AddProductImagesToProductVariant.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Address.cs" />
@@ -587,6 +592,7 @@
     <Content Include="Views\Admin\_ViewStart.cshtml" />
     <Content Include="Views\Admin\Sizes.cshtml" />
     <Content Include="Views\Admin\Colors.cshtml" />
+    <Content Include="Views\Admin\sanphambienthe.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -607,6 +613,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202504181014290_AddSizeColorProductVariantAndUpdateModels.resx">
       <DependentUpon>202504181014290_AddSizeColorProductVariantAndUpdateModels.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202504191639296_AddProductImagesToProductVariant.resx">
+      <DependentUpon>202504191639296_AddProductImagesToProductVariant.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

@@ -103,12 +103,12 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Danh mục cha</th>
-                        <th>Tên danh mục con</th>
-                        <th>Mô tả</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th>
+                        <th class="col-1">#</th>
+                        <th class="col-2">Danh mục cha</th>
+                        <th class="col-2">Tên danh mục con</th>
+                        <th class="col-3 d-none d-md-table-cell">Mô tả</th>
+                        <th class="col-2">Trạng thái</th>
+                        <th class="col-2">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -118,22 +118,24 @@
                         foreach (var subcategory in Model)
                         {
                             <tr>
-                                <td>@index</td>
-                                <td>@(subcategory.Category != null ? subcategory.Category.Name : "Không có danh mục cha")</td>
-                                <td>@subcategory.Name</td>
-                                <td>@subcategory.Description</td>
-                                <td>
+                                <td class="col-1 p-2">@index</td>
+                                <td class="col-2 p-2 text-truncate">@(subcategory.Category != null ? subcategory.Category.Name : "Không có danh mục cha")</td>
+                                <td class="col-2 p-2 text-truncate">@subcategory.Name</td>
+                                <td class="col-3 p-2 text-truncate d-none d-md-table-cell">@subcategory.Description</td>
+                                <td class="col-2 p-2">
                                     <span class="badge rounded-pill @(subcategory.IsActive ? "bg-success" : "bg-danger")">
                                         @(subcategory.IsActive ? "Hoạt động" : "Không hoạt động")
                                     </span>
                                 </td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning me-1" onclick="editSubcategory(@subcategory.Id, @subcategory.CategoryId, '@subcategory.Name', '@subcategory.Description', '@subcategory.IsActive')">
-                                        <i class="fas fa-edit me-1"></i> Sửa
-                                    </button>
-                                    <a href="@Url.Action("DeleteSubcategory", "Admin", new { id = subcategory.Id })" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa danh mục con này? Lưu ý: Xóa danh mục con có thể ảnh hưởng đến sản phẩm liên quan.')">
-                                        <i class="fas fa-trash me-1"></i> Xóa
-                                    </a>
+                                <td class="col-2 p-2">
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-warning" onclick="editSubcategory(@subcategory.Id, @subcategory.CategoryId, '@subcategory.Name', '@subcategory.Description', '@subcategory.IsActive')">
+                                            <i class="fas fa-edit me-1"></i> Sửa
+                                        </button>
+                                        <a href="@Url.Action("DeleteSubcategory", "Admin", new { id = subcategory.Id })" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa danh mục con này? Lưu ý: Xóa danh mục con có thể ảnh hưởng đến sản phẩm liên quan.')">
+                                            <i class="fas fa-trash me-1"></i> Xóa
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                             index++;

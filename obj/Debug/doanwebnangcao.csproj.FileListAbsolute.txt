@@ -131,3 +131,4 @@ C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.dll
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.pdb
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.MigrationName.resources
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.AddSizeColorProductVariantAndUpdateModels.resources
+C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.AddProductImagesToProductVariant.resources

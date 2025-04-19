@@ -1,4 +1,5 @@
 ﻿@model List<doanwebnangcao.Models.Product>
+@using doanwebnangcao.DTO
 
 @{
     ViewBag.Title = "Quản lý Sản phẩm";
@@ -32,6 +33,21 @@
         else
         {
             <form id="addProductForm" action="@Url.Action("CreateProduct", "Admin")" method="post" enctype="multipart/form-data">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @TempData["ErrorMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
                 <div class="row mb-3">
                     <label for="SubcategoryId" class="col-md-3 col-form-label fw-bold">Danh mục con</label>
                     <div class="col-md-9">
@@ -101,8 +117,9 @@
                     <label for="IsActive" class="col-md-3 col-form-label fw-bold">Trạng thái</label>
                     <div class="col-md-9">
                         <div class="form-check">
-                            <input type="checkbox" name="IsActive" class="form-check-input" checked />
+                            <input type="checkbox" name="IsActive" id="IsActive" value="true" class="form-check-input" checked />
                             <label class="form-check-label" for="IsActive">Hoạt động</label>
+                            <input type="hidden" name="IsActive" value="false" />
                         </div>
                     </div>
                 </div>
@@ -140,20 +157,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
-        <div class="table-responsive" style="overflow-x: hidden;">
+        <div class="table-responsive" style="overflow-x: auto;">
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th style="width: 5%;">#</th>
-                        <th style="width: 10%;">Mã sản phẩm</th>
-                        <th style="width: 10%;">Hình ảnh</th>
-                        <th style="width: 20%;">Tên sản phẩm</th>
-                        <th style="width: 15%;">Danh mục</th>
-                        <th style="width: 12%;">Giá</th>
-                        <th style="width: 8%;">Số lượng</th>
-                        <th style="width: 10%;">Biến thể</th>
-                        <th style="width: 10%;">Trạng thái</th>
-                        <th style="width: 20%; min-width: 120px;">Hành động</th>
+                        <th style="width: 3%; min-width: 40px;">#</th>
+                        <th style="width: 10%; min-width: 60px;">Mã sản phẩm</th>
+                        <th style="width: 7%; min-width: 50px;">Hình ảnh</th>
+                        <th style="width: 10%; min-width: 200px;">Tên sản phẩm</th>
+                        <th style="width: 10%; min-width: 150px;">Danh mục</th>
+                        <th style="width: 8%; min-width: 80px;">Giá</th>
+                        <th style="width: 10%; min-width: 60px;">Số lượng</th>
+                        <th style="width: 15%; min-width: 150px;">Biến thể</th>
+                        <th style="width: 10%; min-width: 60px;">Trạng thái</th>
+                        <th style="width: 25%; min-width: 250px;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -162,22 +179,52 @@
                         int index = 1;
                         foreach (var product in Model)
                         {
+                            List<VariantDto> variants = new List<VariantDto>();
+                            if (product.ProductVariants != null)
+                            {
+                                variants = product.ProductVariants.Select(v => new VariantDto
+                                {
+                                    Id = v.Id,
+                                    SizeId = v.SizeId,
+                                    ColorId = v.ColorId,
+                                    StockQuantity = v.StockQuantity,
+                                    VariantPrice = v.VariantPrice,
+                                    VariantImageUrl = v.VariantImageUrl ?? (v.ProductImages != null && v.ProductImages.Any(pi => pi.IsMain)
+                                        ? v.ProductImages.First(pi => pi.IsMain).ImageUrl
+                                        : null),
+                                    IsActive = v.IsActive
+                                }).ToList();
+                            }
+                            var variantsJson = Newtonsoft.Json.JsonConvert.SerializeObject(variants);
+
                             <tr>
                                 <td>@index</td>
                                 <td>@product.ProductCode</td>
                                 <td>
                                     <div class="image-frame" style="border: 1px solid #ddd; border-radius: 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0;">
-                                        <img src="@(product.ImageUrl ?? (product.ProductImages != null && product.ProductImages.Any(i => i.IsMain) ? product.ProductImages.First(i => i.IsMain).ImageUrl : "/images/placeholder.png"))" alt="@product.Name" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                        @{
+                                            string imageUrl = product.ImageUrl ?? (product.ProductImages != null && product.ProductImages.Any(i => i.IsMain)
+                                                ? product.ProductImages.First(i => i.IsMain).ImageUrl
+                                                : null);
+                                        }
+                                        @if (!string.IsNullOrEmpty(imageUrl) && System.IO.File.Exists(Server.MapPath(imageUrl)))
+                                        {
+                                            <img src="@Url.Content(imageUrl)" alt="@product.Name" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                                        }
+                                        else
+                                        {
+                                            <span style="font-size: 12px; color: #666;">@product.Name</span>
+                                        }
                                     </div>
                                 </td>
                                 <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; padding: 4px 8px;">@product.Name</td>
-                                <td style="max-width: 120px; overflow: hidden; text-overflow: ellipsis; padding: 4px 8px;">
+                                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; padding: 4px 8px;">
                                     @(product.Subcategory != null ? product.Subcategory.Name + (product.Subcategory.Category != null ? " (" + product.Subcategory.Category.Name + ")" : "") : "Không có danh mục")
                                 </td>
                                 <td style="padding: 4px 8px;">@product.Price.ToString("N0") VNĐ</td>
                                 <td style="padding: 4px 8px;">@product.StockQuantity</td>
-                                <td style="padding: 4px 8px;">
-                                    @(product.ProductVariants != null && product.ProductVariants.Any() ? string.Join(", ", product.ProductVariants.Select(v => (v.Size != null ? v.Size.Name : "") + "/" + (v.Color != null ? v.Color.Name : "") + " (" + v.StockQuantity + ")")) : "Không có biến thể")
+                                <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; padding: 4px 8px;">
+                                    @(product.ProductVariants != null && product.ProductVariants.Any() ? "Có biến thể" : "Không có biến thể")
                                 </td>
                                 <td>
                                     <span class="badge rounded-pill @(product.IsActive ? "bg-success" : "bg-danger")" style="padding: 4px 8px; font-size: 0.8rem;">
@@ -186,9 +233,12 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-1" style="flex-wrap: nowrap;">
-                                        <button class="btn btn-sm btn-warning me-1" onclick="editProduct(@product.Id, @product.SubcategoryId, '@product.ProductCode', '@product.Name', @product.Price, '@(product.Description ?? "")', @product.IsActive, '@Newtonsoft.Json.JsonConvert.SerializeObject(product.ProductVariants.Select(v => new { v.Id, v.SizeId, v.ColorId, v.StockQuantity, v.VariantPrice, v.VariantImageUrl }).ToList())', '@(product.ImageUrl ?? "")')">
+                                        <button class="btn btn-sm btn-warning" onclick="editProduct(@product.Id, @product.SubcategoryId, '@product.ProductCode', '@product.Name', @product.Price, '@(product.Description ?? "")', '@product.IsActive.ToString().ToLower()', '@variantsJson', '@(product.ImageUrl ?? "")')">
                                             <i class="fas fa-edit me-1"></i> Sửa
                                         </button>
+                                        <a href="@Url.Action("SanPhamBienThe", "Admin", new { productId = product.Id })" class="btn btn-sm btn-info">
+                                            <i class="fas fa-info-circle me-1"></i> Chi tiết
+                                        </a>
                                         <a href="@Url.Action("DeleteProduct", "Admin", new { id = product.Id })" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
                                             <i class="fas fa-trash me-1"></i> Xóa
                                         </a>
@@ -267,13 +317,17 @@
                     <div class="mb-3">
                         <label for="editImageFile" class="form-label fw-bold">Ảnh chính</label>
                         <input type="file" name="ImageFile" id="editImageFile" class="form-control" accept="image/*" />
-                        <img id="editImagePreview" src="" style="max-width: 100px; margin-top: 10px; display: none;" />
+                        <img id="editImagePreview" src="" style="max-width: 100px; margin-top: 10px; display: none;" alt="Ảnh sản phẩm" />
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Biến thể sản phẩm</label>
-                        <div id="editVariantContainer"></div>
-                        <button type="button" class="btn btn-sm btn-info" onclick="addEditVariantRow()">Thêm biến thể</button>
+                        <div id="editVariantContainer" class="p-3 rounded" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">
+                            <!-- Danh sách biến thể hiện có sẽ được thêm vào đây -->
+                        </div>
+                        <button type="button" class="btn btn-sm btn-success mt-2" onclick="showVariantForm(false)">
+                            <i class="fas fa-plus me-1"></i> Thêm biến thể mới
+                        </button>
                     </div>
 
                     <div class="mb-3">
@@ -285,8 +339,9 @@
                     <div class="mb-3">
                         <label for="editIsActive" class="form-label fw-bold">Trạng thái</label>
                         <div class="form-check">
-                            <input type="checkbox" name="IsActive" id="editIsActive" class="form-check-input" />
+                            <input type="checkbox" name="IsActive" id="editIsActive" value="true" class="form-check-input" />
                             <label class="form-check-label" for="editIsActive">Hoạt động</label>
+                            <input type="hidden" name="IsActive" value="false" />
                         </div>
                     </div>
 
@@ -302,10 +357,70 @@
     </div>
 </div>
 
+<!-- Modal thêm/chỉnh sửa biến thể -->
+<div class="modal fade" id="addVariantModal" tabindex="-1" aria-labelledby="addVariantModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addVariantModalLabel">Thêm biến thể mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addVariantForm" enctype="multipart/form-data">
+                    <input type="hidden" id="variantProductId" />
+                    <input type="hidden" id="variantId" />
+                    <input type="hidden" id="isEditMode" value="false" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Kích thước <span class="text-danger">*</span></label>
+                        <select id="variantSizeId" class="form-control" required>
+                            <option value="">-- Chọn kích thước --</option>
+                            @foreach (var size in sizes)
+                            {
+                                <option value="@size.Id">@size.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Màu sắc <span class="text-danger">*</span></label>
+                        <select id="variantColorId" class="form-control" required>
+                            <option value="">-- Chọn màu sắc --</option>
+                            @foreach (var color in colors)
+                            {
+                                <option value="@color.Id">@color.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Số lượng <span class="text-danger">*</span></label>
+                        <input type="number" id="variantStockQuantity" class="form-control" required min="0" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Ảnh biến thể</label>
+                        <input type="file" id="variantImageFile" class="form-control" accept="image/*" />
+                        <img id="variantImagePreview" src="" style="max-width: 100px; margin-top: 10px; display: none;" alt="Ảnh biến thể" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Lưu
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Đóng
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <style>
         .table th, .table td {
             padding: 4px 6px;
+            vertical-align: middle;
         }
 
             .table th:nth-child(3), .table td:nth-child(3) {
@@ -317,16 +432,58 @@
             }
 
             .table th:nth-child(10), .table td:nth-child(10) {
-                min-width: 130px;
+                min-width: 200px;
             }
 
         .image-frame {
             margin: 0;
         }
+
+        .variant-image {
+            max-width: 50px;
+            max-height: 50px;
+            object-fit: contain;
+        }
+
+        /* Cải thiện giao diện danh sách biến thể */
+        .variant-row {
+            transition: all 0.2s ease;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background-color: #fff;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+            .variant-row:hover {
+                background-color: #f8f9fa;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .variant-row .form-label {
+                font-size: 0.9rem;
+                color: #333;
+            }
+
+        #editVariantContainer {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+
+            #editVariantContainer .variant-row:last-child {
+                margin-bottom: 0;
+            }
     </style>
+
     <script>
+        const sizes = @Html.Raw(Json.Encode(sizes.Select(s => new { s.Id, s.Name }).ToList()));
+        const colors = @Html.Raw(Json.Encode(colors.Select(c => new { c.Id, c.Name }).ToList()));
+
         $(document).ready(function () {
-            // Validation cho form thêm sản phẩm
             $("#addProductForm").validate({
                 rules: {
                     SubcategoryId: { required: true },
@@ -355,17 +512,12 @@
                 }
             });
 
-            // Validation cho form chỉnh sửa sản phẩm
             $("#editProductForm").validate({
                 rules: {
                     SubcategoryId: { required: true },
                     ProductCode: { required: true, maxlength: 50 },
                     Name: { required: true, maxlength: 200 },
-                    Price: { required: true, number: true, min: 0 },
-                    "SizeIds[]": { required: true },
-                    "ColorIds[]": { required: true },
-                    "VariantQuantities[]": { required: true, number: true, min: 0 },
-                    "VariantPrices[]": { number: true, min: 0 }
+                    Price: { required: true, number: true, min: 0 }
                 },
                 messages: {
                     SubcategoryId: { required: "Vui lòng chọn danh mục con" },
@@ -381,63 +533,174 @@
                         required: "Vui lòng nhập giá sản phẩm",
                         number: "Giá phải là một số",
                         min: "Giá không được nhỏ hơn 0"
-                    },
-                    "SizeIds[]": { required: "Vui lòng chọn kích thước" },
-                    "ColorIds[]": { required: "Vui lòng chọn màu sắc" },
-                    "VariantQuantities[]": {
-                        required: "Vui lòng nhập số lượng",
-                        number: "Số lượng phải là một số",
-                        min: "Số lượng không được nhỏ hơn 0"
-                    },
-                    "VariantPrices[]": {
-                        number: "Giá phải là một số",
-                        min: "Giá không được nhỏ hơn 0"
                     }
                 },
                 errorPlacement: function (error, element) {
                     error.insertAfter(element);
                 }
             });
+
+            $("#addVariantForm").validate({
+                rules: {
+                    variantSizeId: { required: true },
+                    variantColorId: { required: true },
+                    variantStockQuantity: { required: true, number: true, min: 0 }
+                },
+                messages: {
+                    variantSizeId: { required: "Vui lòng chọn kích thước" },
+                    variantColorId: { required: "Vui lòng chọn màu sắc" },
+                    variantStockQuantity: {
+                        required: "Vui lòng nhập số lượng",
+                        number: "Số lượng phải là một số",
+                        min: "Số lượng không được nhỏ hơn 0"
+                    }
+                },
+                errorPlacement: function (error, element) {
+                    error.insertAfter(element);
+                },
+                submitHandler: function (form) {
+                    saveVariantViaAjax();
+                }
+            });
         });
 
-        // Hàm thêm hàng biến thể mới trong form chỉnh sửa
-        function addEditVariantRow() {
-            var row = '<div class="variant-row mb-3">' +
-                '<div class="row">' +
-                '<div class="col-md-3">' +
-                '<select name="SizeIds" class="form-control size-select" required>' +
-                '<option value="">-- Chọn kích thước --</option>' +
-                '@foreach (var size in sizes) { <option value="@size.Id">@size.Name</option> }' +
-                '</select>' +
-                '</div>' +
-                '<div class="col-md-3">' +
-                '<select name="ColorIds" class="form-control color-select" required>' +
-                '<option value="">-- Chọn màu sắc --</option>' +
-                '@foreach (var color in colors) { <option value="@color.Id">@color.Name</option> }' +
-                '</select>' +
-                '</div>' +
-                '<div class="col-md-2">' +
-                '<input type="number" name="VariantQuantities" class="form-control" placeholder="Số lượng" required min="0" />' +
-                '</div>' +
-                '<div class="col-md-2">' +
-                '<input type="number" name="VariantPrices" class="form-control" placeholder="Giá" min="0" step="1000" />' +
-                '</div>' +
-                '<div class="col-md-2">' +
-                '<input type="file" name="VariantImageFiles" class="form-control" accept="image/*" />' +
-                '<input type="hidden" name="VariantIds" value="0" />' +
-                '<button type="button" class="btn btn-sm btn-danger mt-1" onclick="removeVariantRow(this)">Xóa</button>' +
-                '</div>' +
-                '</div>' +
-                '</div>';
-            $("#editVariantContainer").append(row);
+        function showVariantForm(isEdit, variantData = null) {
+            const productId = $("#editProductId").val();
+            $("#variantProductId").val(productId);
+
+            if (isEdit && variantData) {
+                $("#addVariantModalLabel").text("Chỉnh sửa biến thể");
+                $("#isEditMode").val("true");
+                $("#variantId").val(variantData.Id);
+                $("#variantSizeId").val(variantData.SizeId);
+                $("#variantColorId").val(variantData.ColorId);
+                $("#variantStockQuantity").val(variantData.StockQuantity);
+                if (variantData.VariantImageUrl) {
+                    $("#variantImagePreview").attr("src", variantData.VariantImageUrl.startsWith('/') ? variantData.VariantImageUrl : '/' + variantData.VariantImageUrl).show();
+                } else {
+                    $("#variantImagePreview").hide();
+                }
+            } else {
+                $("#addVariantModalLabel").text("Thêm biến thể mới");
+                $("#isEditMode").val("false");
+                $("#variantId").val('');
+                $("#variantSizeId").val('');
+                $("#variantColorId").val('');
+                $("#variantStockQuantity").val('');
+                $("#variantImageFile").val('');
+                $("#variantImagePreview").hide();
+            }
+
+            $("#addVariantModal").modal("show");
         }
 
-        // Hàm xóa hàng biến thể
-        function removeVariantRow(button) {
-            $(button).closest(".variant-row").remove();
+        function saveVariantViaAjax() {
+            const isEditMode = $("#isEditMode").val() === "true";
+            const productId = $("#variantProductId").val();
+            const variantId = $("#variantId").val();
+            const sizeId = $("#variantSizeId").val();
+            const colorId = $("#variantColorId").val();
+            const stockQuantity = $("#variantStockQuantity").val();
+            const variantImageFile = $("#variantImageFile")[0].files[0];
+
+            const formData = new FormData();
+            if (isEditMode) {
+                formData.append("variantId", variantId);
+            } else {
+                formData.append("productId", productId);
+            }
+            formData.append("sizeId", sizeId);
+            formData.append("colorId", colorId);
+            formData.append("stockQuantity", stockQuantity);
+            if (variantImageFile) {
+                formData.append("variantImageFile", variantImageFile);
+            }
+
+            const url = isEditMode ? '@Url.Action("EditProductVariant", "Admin")' : '@Url.Action("AddProductVariant", "Admin")';
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response.success) {
+                        const variant = response.variant;
+                        const size = sizes.find(s => s.Id == variant.SizeId)?.Name || "Không xác định";
+                        const color = colors.find(c => c.Id == variant.ColorId)?.Name || "Không xác định";
+                        const row = `
+                            <div class="variant-row mb-3 p-3 border rounded bg-white shadow-sm" data-variant-id="${variant.Id}">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold mb-1">Kích thước</label>
+                                        <p>${size}</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold mb-1">Màu sắc</label>
+                                        <p>${color}</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold mb-1">Số lượng</label>
+                                        <p>${variant.StockQuantity}</p>
+                                    </div>
+                                    <div class="col-md-3 text-end">
+                                        <button type="button" class="btn btn-sm btn-warning me-1" onclick='showVariantForm(true, {Id: ${variant.Id}, SizeId: ${variant.SizeId}, ColorId: ${variant.ColorId}, StockQuantity: ${variant.StockQuantity}, VariantImageUrl: "${variant.VariantImageUrl || ''}"})'>
+                                            <i class="fas fa-edit me-1"></i> Sửa
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteVariant(${variant.Id})">
+                                            <i class="fas fa-trash me-1"></i> Xóa
+                                        </button>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-bold mb-1">Ảnh biến thể</label>
+                                        ${variant.VariantImageUrl
+                                            ? `<div class="image-frame" style="border: 1px solid #ddd; border-radius: 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0;">
+                                                 <img src="${variant.VariantImageUrl.startsWith('/') ? variant.VariantImageUrl : '/' + variant.VariantImageUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.src='/images/placeholder.png'" />
+                                               </div>`
+                                            : '<p>Không có</p>'
+                                        }
+                                    </div>
+                                </div>
+                            </div>`;
+
+                        if (isEditMode) {
+                            $(`div[data-variant-id="${variant.Id}"]`).replaceWith(row);
+                        } else {
+                            $("#editVariantContainer").append(row);
+                        }
+                        $("#addVariantModal").modal("hide");
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Đã có lỗi xảy ra khi lưu biến thể.");
+                }
+            });
         }
 
-        // Hàm mở modal chỉnh sửa và điền dữ liệu
+        function deleteVariant(variantId) {
+            if (!confirm("Bạn có chắc muốn xóa biến thể này?")) return;
+
+            $.ajax({
+                url: '@Url.Action("DeleteProductVariant", "Admin")',
+                type: 'POST',
+                data: { variantId: variantId },
+                success: function (response) {
+                    if (response.success) {
+                        $(`div[data-variant-id="${variantId}"]`).remove();
+                        alert(response.message);
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Đã có lỗi xảy ra khi xóa biến thể.");
+                }
+            });
+        }
+
         function editProduct(id, subcategoryId, productCode, name, price, description, isActive, variantsJson, imageUrl) {
             $("#editProductId").val(id);
             $("#editSubcategoryId").val(subcategoryId);
@@ -445,51 +708,67 @@
             $("#editName").val(name);
             $("#editPrice").val(price);
             $("#editDescription").val(description || "");
-            $("#editIsActive").prop("checked", isActive === true || isActive === "true" || isActive === 1);
+            $("#editIsActive").prop("checked", isActive === "true");
 
-            // Hiển thị ảnh hiện tại (nếu có)
+            // Hiển thị ảnh preview nếu imageUrl tồn tại
             if (imageUrl) {
-                $("#editImagePreview").attr("src", imageUrl).show();
+                $("#editImagePreview").attr("src", imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl).show();
             } else {
                 $("#editImagePreview").hide();
             }
 
-            // Xử lý biến thể
             $("#editVariantContainer").empty();
-            var variants = JSON.parse(variantsJson);
-            variants.forEach(function (variant) {
-                var row = '<div class="variant-row mb-3">' +
-                    '<div class="row">' +
-                    '<div class="col-md-3">' +
-                    '<select name="SizeIds" class="form-control size-select" required>' +
-                    '<option value="">-- Chọn kích thước --</option>' +
-                    '@foreach (var size in sizes) { <option value="@size.Id"' + (variant.SizeId == @size.Id ? ' selected' : '') + '>@size.Name</option> }' +
-                    '</select>' +
-                    '</div>' +
-                    '<div class="col-md-3">' +
-                    '<select name="ColorIds" class="form-control color-select" required>' +
-                    '<option value="">-- Chọn màu sắc --</option>' +
-                    '@foreach (var color in colors) { <option value="@color.Id"' + (variant.ColorId == @color.Id ? ' selected' : '') + '>@color.Name</option> }' +
-                    '</select>' +
-                    '</div>' +
-                    '<div class="col-md-2">' +
-                    '<input type="number" name="VariantQuantities" class="form-control" value="' + variant.StockQuantity + '" required min="0" />' +
-                    '</div>' +
-                    '<div class="col-md-2">' +
-                    '<input type="number" name="VariantPrices" class="form-control" value="' + (variant.VariantPrice || '') + '" min="0" step="1000" />' +
-                    '</div>' +
-                    '<div class="col-md-2">' +
-                    '<input type="file" name="VariantImageFiles" class="form-control" accept="image/*" />' +
-                    '<input type="hidden" name="VariantIds" value="' + variant.Id + '" />' +
-                    (variant.VariantImageUrl ? '<img src="' + variant.VariantImageUrl + '" style="max-width: 50px; margin-top: 5px;" />' : '') +
-                    '<button type="button" class="btn btn-sm btn-danger mt-1" onclick="removeVariantRow(this)">Xóa</button>' +
-                    '</div>' +
-                    '</div>' +
-                    '</div>';
-                $("#editVariantContainer").append(row);
-            });
+            let variants = [];
+            try {
+                variants = JSON.parse(variantsJson);
+            } catch (e) {
+                console.error("Error parsing variantsJson:", e);
+                variants = [];
+            }
+
+            if (variants.length > 0) {
+                variants.forEach(variant => {
+                    const size = sizes.find(s => s.Id == variant.SizeId)?.Name || "Không xác định";
+                    const color = colors.find(c => c.Id == variant.ColorId)?.Name || "Không xác định";
+                    const row = `
+                <div class="variant-row mb-3 p-3 border rounded bg-white shadow-sm" data-variant-id="${variant.Id}">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold mb-1">Kích thước</label>
+                            <p>${size}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold mb-1">Màu sắc</label>
+                            <p>${color}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold mb-1">Số lượng</label>
+                            <p>${variant.StockQuantity}</p>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button type="button" class="btn btn-sm btn-warning me-1" onclick='showVariantForm(true, {Id: ${variant.Id}, SizeId: ${variant.SizeId}, ColorId: ${variant.ColorId}, StockQuantity: ${variant.StockQuantity}, VariantImageUrl: "${variant.VariantImageUrl || ''}"})'>
+                                <i class="fas fa-edit me-1"></i> Sửa
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteVariant(${variant.Id})">
+                                <i class="fas fa-trash me-1"></i> Xóa
+                            </button>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold mb-1">Ảnh biến thể</label>
+                            ${variant.VariantImageUrl
+                            ? `<div class="image-frame" style="border: 1px solid #ddd; border-radius: 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0;">
+                                     <img src="${variant.VariantImageUrl.startsWith('/') ? variant.VariantImageUrl : '/' + variant.VariantImageUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Ảnh biến thể" />
+                                   </div>`
+                            : '<p>Ảnh biến thể</p>'
+                        }
+                        </div>
+                    </div>
+                </div>`;
+                    $("#editVariantContainer").append(row);
+                });
+            }
 
             $("#editProductModal").modal("show");
         }
     </script>
-}S
+}
