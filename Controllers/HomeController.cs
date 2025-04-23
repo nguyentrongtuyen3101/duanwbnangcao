@@ -64,6 +64,7 @@ namespace doanwebnangcao.Controllers
                 }
 
                 SignInUser(user);
+                System.Diagnostics.Debug.WriteLine("Session UserId: " + HttpContext.Session["UserId"]);
                 return RedirectToRoleBasedPage(user);
             }
             catch (Exception ex)
@@ -279,6 +280,11 @@ namespace doanwebnangcao.Controllers
             var identity = new ClaimsIdentity(claims, "ApplicationCookie");
             var authManager = HttpContext.GetOwinContext().Authentication;
             authManager.SignIn(new AuthenticationProperties { IsPersistent = false }, identity);
+            HttpContext.Session["UserId"] = user.Id;
+            HttpContext.Session["Email"] = user.Email;
+            HttpContext.Session["Role"] = user.Role.ToString();
+            HttpContext.Session["FullName"] = $"{user.FirstName} {user.LastName}";
+            System.Diagnostics.Debug.WriteLine("Session stored: UserId=" + user.Id + ", Email=" + user.Email);
         }
 
         private ActionResult RedirectToRoleBasedPage(User user)
@@ -311,6 +317,18 @@ namespace doanwebnangcao.Controllers
         {
             ViewBag.ErrorMessage = message;
             return View();
+        }
+        public ActionResult DangXuat()
+        {
+            // Xóa cookie authentication
+            var authManager = HttpContext.GetOwinContext().Authentication;
+            authManager.SignOut("ApplicationCookie");
+
+            // Xóa tất cả thông tin trong Session
+            HttpContext.Session.Clear();
+            HttpContext.Session.Abandon();
+
+            return RedirectToAction("DangNhap", "Home");
         }
     }
 }

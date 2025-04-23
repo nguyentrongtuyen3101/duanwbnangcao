@@ -6037,11 +6037,11 @@ input::-ms-clear {
 .hero-slide {
   background: center center/cover no-repeat; }
   .hero-slide--1 {
-    background-image: url(../images/slider/slide-1.jpg); }
+    background-image: url(../images/slider/Betterimage.ai_1745379434649.jpeg); }
   .hero-slide--2 {
-    background-image: url(../images/slider/slide-2.jpg); }
+    background-image: url(../images/slider/Betterimage.ai_1745379979208.jpeg); }
   .hero-slide--3 {
-    background-image: url(../images/slider/slide-3.jpg); }
+    background-image: url(../images/slider/Betterimage.ai_1745379991055.jpeg); }
   .hero-slide--4 {
     background-image: url(../images/slider/slide-4.jpg); }
   .hero-slide--5 {
@@ -6392,9 +6392,9 @@ input::-ms-clear {
   cursor: pointer;
   bottom: 0;
   border-radius: 50%;
-  height: 36px;
+  //height: 36px;
   line-height: 36px;
-  width: 36px;
+ // width: 36px;
   margin: auto 0;
   transition: opacity ease-in-out .5s, background-color ease-in 0.3s;
   background-color: #ffffff;

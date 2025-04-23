@@ -1,0 +1,963 @@
+﻿@model List<doanwebnangcao.Models.Product>
+
+@{
+    ViewBag.Title = "Hàng Mới Về";
+}
+
+<style>
+    /* Modal Product Detail */
+    .pd-breadcrumb {
+        margin-bottom: 30px;
+    }
+
+    .pd-breadcrumb__list {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+        .pd-breadcrumb__list li {
+            margin-right: 10px;
+        }
+
+            .pd-breadcrumb__list li.has-separator::after {
+                content: ">";
+                margin-left: 10px;
+            }
+
+            .pd-breadcrumb__list li.is-marked a {
+                font-weight: bold;
+            }
+
+    .pd-wrap {
+        position: relative;
+        overflow: hidden;
+    }
+
+    #js-product-detail-modal {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 400px;
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        overflow: hidden;
+    }
+
+    #quick-look-image {
+        max-width: 100%;
+        max-height: 100%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        display: block;
+    }
+
+    .pd-thumbnails {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        margin-top: 15px;
+        padding-bottom: 5px;
+    }
+
+        .pd-thumbnails div {
+            flex: 0 0 auto;
+        }
+
+        .pd-thumbnails img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            transition: border-color 0.3s;
+        }
+
+            .pd-thumbnails img:hover {
+                border-color: #000;
+            }
+
+    .pd-detail {
+        padding: 0 15px;
+    }
+
+    .pd-detail__name {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .pd-detail__inline {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .pd-detail__price {
+        font-size: 20px;
+        color: #e74c3c;
+        font-weight: bold;
+    }
+
+    .pd-detail__discount {
+        font-size: 14px;
+        color: #27ae60;
+    }
+
+    .pd-detail__del {
+        font-size: 14px;
+        color: #7f8c8d;
+        text-decoration: line-through;
+    }
+
+    .pd-detail__rating {
+        margin-bottom: 15px;
+    }
+
+    .pd-detail__stock {
+        font-size: 14px;
+        color: #2ecc71;
+    }
+
+    .pd-detail__left {
+        font-size: 14px;
+        color: #e74c3c;
+    }
+
+    .pd-detail__preview-desc {
+        font-size: 14px;
+        color: #34495e;
+        line-height: 1.6;
+    }
+
+    .pd-detail__click-wrap {
+        font-size: 14px;
+    }
+
+        .pd-detail__click-wrap a {
+            color: #2980b9;
+        }
+
+    .pd-social-list {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        gap: 10px;
+    }
+
+        .pd-social-list li a {
+            font-size: 16px;
+            color: #34495e;
+        }
+
+            .pd-social-list li a:hover {
+                color: #e74c3c;
+            }
+
+    .pd-detail__form {
+        margin-top: 15px;
+    }
+
+    .pd-detail-inline-2 {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+        .pd-detail-inline-2 label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .pd-detail-inline-2 select {
+            font-size: 14px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 180px;
+            height: 32px;
+            box-sizing: border-box;
+        }
+
+    .input-counter {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid #ddd;
+        padding: 2px 5px;
+        border-radius: 4px;
+        width: 90px;
+        height: 32px;
+        box-sizing: border-box;
+    }
+
+    .input-counter__text {
+        width: 30px;
+        text-align: center;
+        border: none;
+        font-size: 14px;
+        height: 26px;
+        box-sizing: border-box;
+    }
+
+    .input-counter__minus,
+    .input-counter__plus {
+        cursor: pointer;
+        padding: 2px 8px;
+        background: #f1f1f1;
+        font-size: 14px;
+        border-radius: 2px;
+        user-select: none;
+        line-height: 22px;
+        box-sizing: border-box;
+    }
+
+    .btn--e-brand-b-2 {
+        background: #e74c3c;
+        color: #fff;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        height: 32px;
+        line-height: 20px;
+        box-sizing: border-box;
+    }
+
+    .pd-detail__policy-list {
+        list-style: none;
+        padding: 0;
+    }
+
+        .pd-detail__policy-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+            .pd-detail__policy-list li i {
+                color: #27ae60;
+                margin-right: 8px;
+            }
+</style>
+
+<main>
+    <div class="app-content">
+        <!--====== Section 1 ======-->
+        <div class="u-s-p-y-90">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-3 col-md-12">
+                        <div class="shop-w-master">
+                            <h1 class="shop-w-master__heading u-s-m-b-30">
+                                <i class="fas fa-filter u-s-m-r-8"></i>
+                                <span>BỘ LỌC</span>
+                            </h1>
+                            <div class="shop-w-master__sidebar">
+                                <!-- CATEGORY -->
+                                <div class="u-s-m-b-30">
+                                    <div class="shop-w shop-w--style">
+                                        <div class="shop-w__intro-wrap">
+                                            <h1 class="shop-w__h">DANH MỤC</h1>
+                                            <span class="fas fa-minus shop-w__toggle" data-target="#s-category" data-toggle="collapse"></span>
+                                        </div>
+                                        <div class="shop-w__wrap collapse show" id="s-category">
+                                            <ul class="shop-w__category-list gl-scroll">
+                                                @foreach (var category in ViewBag.Categories)
+                                                {
+                                                    <li class="has-list">
+                                                        <a href="@Url.Action("hangmoive", "HangMoiVe", new { categoryId = category.Id })">@category.Name</a>
+                                                        <span class="category-list__text u-s-m-l-6">(@ViewBag.CategoryProductCounts[category.Id])</span>
+                                                        <span class="js-shop-category-span @(ViewBag.CurrentCategoryId == category.Id ? "is-expanded fas fa-minus" : "fas fa-plus") u-s-m-l-6"></span>
+                                                        <ul style="@(ViewBag.CurrentCategoryId == category.Id ? "display:block" : "display:none")">
+                                                            @foreach (var subcategory in ViewBag.Subcategories)
+                                                            {
+                                                                if (subcategory.CategoryId == category.Id)
+                                                                {
+                                                                    <li>
+                                                                        <a href="@Url.Action("hangmoive", "HangMoiVe", new { subcategoryId = subcategory.Id })">@subcategory.Name</a>
+                                                                        <span class="category-list__text u-s-m-l-6">(@ViewBag.SubcategoryProductCounts[subcategory.Id])</span>
+                                                                    </li>
+                                                                }
+                                                            }
+                                                        </ul>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- RATING -->
+                                <div class="u-s-m-b-30">
+                                    <div class="shop-w shop-w--style">
+                                        <div class="shop-w__intro-wrap">
+                                            <h1 class="shop-w__h">ĐÁNH GIÁ</h1>
+                                            <span class="fas fa-minus shop-w__toggle" data-target="#s-rating" data-toggle="collapse"></span>
+                                        </div>
+                                        <div class="shop-w__wrap collapse show" id="s-rating">
+                                            <ul class="shop-w__list gl-scroll">
+                                                @for (int i = 5; i >= 1; i--)
+                                                {
+                                                    <li>
+                                                        <div class="rating__check">
+                                                            <input type="checkbox" name="rating" value="@i" onchange="applyFilters()">
+                                                            <div class="rating__check-star-wrap">
+                                                                @for (int j = 1; j <= 5; j++)
+                                                                {
+                                                                    if (j <= i)
+                                                                    {
+                                                                        <i class="fas fa-star"></i>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <i class="far fa-star"></i>
+                                                                    }
+                                                                }
+                                                                @if (i < 5)
+                                                                {
+                                                                    <span>& Up</span>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                        <span class="shop-w__total-text">(@ViewBag.RatingCounts[i])</span>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- SHIPPING -->
+                                <div class="u-s-m-b-30">
+                                    <div class="shop-w shop-w--style">
+                                        <div class="shop-w__intro-wrap">
+                                            <h1 class="shop-w__h">VẬN CHUYỂN</h1>
+                                            <span class="fas fa-minus shop-w__toggle" data-target="#s-shipping" data-toggle="collapse"></span>
+                                        </div>
+                                        <div class="shop-w__wrap collapse show" id="s-shipping">
+                                            <ul class="shop-w__list gl-scroll">
+                                                <li>
+                                                    <div class="check-box">
+                                                        <input type="checkbox" id="free-shipping" name="freeShipping" onchange="applyFilters()">
+                                                        <div class="check-box__state check-box__state--primary">
+                                                            <label class="check-box__label" for="free-shipping">Miễn phí vận chuyển</label>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- PRICE -->
+                                <div class="u-s-m-b-30">
+                                    <div class="shop-w shop-w--style">
+                                        <div class="shop-w__intro-wrap">
+                                            <h1 class="shop-w__h">GIÁ</h1>
+                                            <span class="fas fa-minus shop-w__toggle" data-target="#s-price" data-toggle="collapse"></span>
+                                        </div>
+                                        <div class="shop-w__wrap collapse show" id="s-price">
+                                            <form class="shop-w__form-p" onsubmit="applyFilters(); return false;">
+                                                <div class="shop-w__form-p-wrap">
+                                                    <div>
+                                                        <label for="price-min"></label>
+                                                        <input class="input-text input-text--primary-style" type="number" id="price-min" name="minPrice" placeholder="Min" value="@ViewBag.MinPrice">
+                                                    </div>
+                                                    <div>
+                                                        <label for="price-max"></label>
+                                                        <input class="input-text input-text--primary-style" type="number" id="price-max" name="maxPrice" placeholder="Max" value="@ViewBag.MaxPrice">
+                                                    </div>
+                                                    <div>
+                                                        <button class="btn btn--icon fas fa-angle-right btn--e-transparent-platinum-b-2" type="submit"></button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- COLOR -->
+                                <div class="u-s-m-b-30">
+                                    <div class="shop-w shop-w--style">
+                                        <div class="shop-w__intro-wrap">
+                                            <h1 class="shop-w__h">MÀU SẮC</h1>
+                                            <span class="fas fa-minus shop-w__toggle" data-target="#s-color" data-toggle="collapse"></span>
+                                        </div>
+                                        <div class="shop-w__wrap collapse show" id="s-color">
+                                            <ul class="shop-w__list gl-scroll">
+                                                @foreach (var color in ViewBag.Colors)
+                                                {
+                                                    <li>
+                                                        <div class="color__check">
+                                                            <input type="checkbox" id="color-@color.Id" name="colorId" value="@color.Id" onchange="applyFilters()" @(ViewBag.ColorId == color.Id ? "checked" : "")>
+                                                            <label class="color__check-label" for="color-@color.Id" style="background-color: @color.HexCode"></label>
+                                                        </div>
+                                                        <span class="shop-w__total-text">(@ViewBag.ColorVariantCounts[color.Id])</span>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- SIZE -->
+                                <div class="u-s-m-b-30">
+                                    <div class="shop-w shop-w--style">
+                                        <div class="shop-w__intro-wrap">
+                                            <h1 class="shop-w__h">KÍCH THƯỚC</h1>
+                                            <span class="fas fa-minus shop-w__toggle" data-target="#s-size" data-toggle="collapse"></span>
+                                        </div>
+                                        <div class="shop-w__wrap collapse show" id="s-size">
+                                            <ul class="shop-w__list gl-scroll">
+                                                @foreach (var size in ViewBag.Sizes)
+                                                {
+                                                    <li>
+                                                        <div class="check-box">
+                                                            <input type="checkbox" id="size-@size.Id" name="sizeId" value="@size.Id" onchange="applyFilters()" @(ViewBag.SizeId == size.Id ? "checked" : "")>
+                                                            <div class="check-box__state check-box__state--primary">
+                                                                <label class="check-box__label" for="size-@size.Id">@size.Name</label>
+                                                            </div>
+                                                        </div>
+                                                        <span class="shop-w__total-text">(@ViewBag.SizeVariantCounts[size.Id])</span>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-9 col-md-12">
+                        <div class="shop-p">
+                            <div class="shop-p__toolbar u-s-m-b-30">
+                                <div class="shop-p__meta-wrap u-s-m-b-60">
+                                    <span class="shop-p__meta-text-1">TÌM THẤY @ViewBag.TotalRecords KẾT QUẢ</span>
+                                    <div class="shop-p__meta-text-2">
+                                        <span>Tìm kiếm liên quan:</span>
+                                        @foreach (var category in ViewBag.RelatedCategories)
+                                        {
+                                            <a class="gl-tag btn--e-brand-shadow" href="@Url.Action("hangmoive", "HangMoiVe", new { categoryId = category.Id })">@category.Name</a>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="shop-p__tool-style">
+                                    <div class="tool-style__group u-s-m-b-8">
+                                        <span class="js-shop-grid-target is-active">Lưới</span>
+                                        <span class="js-shop-list-target">Danh sách</span>
+                                    </div>
+                                    <form>
+                                        <div class="tool-style__form-wrap">
+                                            <div class="u-s-m-b-8">
+                                                <select class="select-box select-box--transparent-b-2" name="pageSize" onchange="applyFilters()">
+                                                    <option value="8" @(ViewBag.PageSize == 8 ? "selected" : "")>Hiển thị: 8</option>
+                                                    <option value="12" @(ViewBag.PageSize == 12 ? "selected" : "")>Hiển thị: 12</option>
+                                                    <option value="16" @(ViewBag.PageSize == 16 ? "selected" : "")>Hiển thị: 16</option>
+                                                    <option value="28" @(ViewBag.PageSize == 28 ? "selected" : "")>Hiển thị: 28</option>
+                                                </select>
+                                            </div>
+                                            <div class="u-s-m-b-8">
+                                                <select class="select-box select-box--transparent-b-2" name="sortBy" onchange="applyFilters()">
+                                                    <option value="Newest" @(ViewBag.SortBy == "Newest" ? "selected" : "")>Sắp xếp theo: Mới nhất</option>
+                                                    <option value="Latest" @(ViewBag.SortBy == "Latest" ? "selected" : "")>Sắp xếp theo: Cũ nhất</option>
+                                                    <option value="BestSelling" @(ViewBag.SortBy == "BestSelling" ? "selected" : "")>Sắp xếp theo: Bán chạy</option>
+                                                    <option value="BestRating" @(ViewBag.SortBy == "BestRating" ? "selected" : "")>Sắp xếp theo: Đánh giá tốt</option>
+                                                    <option value="LowestPrice" @(ViewBag.SortBy == "LowestPrice" ? "selected" : "")>Sắp xếp theo: Giá thấp</option>
+                                                    <option value="HighestPrice" @(ViewBag.SortBy == "HighestPrice" ? "selected" : "")>Sắp xếp theo: Giá cao</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="shop-p__collection">
+                                <div class="row is-grid-active">
+                                    @if (Model != null && Model.Any())
+                                    {
+                                        foreach (var product in Model)
+                                        {
+                                            <div class="col-lg-4 col-md-6 col-sm-6">
+                                                <div class="product-m">
+                                                    <div class="product-m__thumb">
+                                                        <!-- Sửa link ảnh sản phẩm để dẫn đến sanphamdetailt -->
+                                                        <a class="aspect aspect--bg-grey aspect--square u-d-block" href="@Url.Action("sanphamdetailt", "HangMoiVe", new { id = product.Id })">
+                                                            <img class="aspect__img" src="@product.ImageUrl" alt="@product.Name">
+                                                        </a>
+                                                        <div class="product-m__quick-look">
+                                                            <!-- Icon kính lúp vẫn mở modal Quick Look -->
+                                                            <a class="fas fa-search" href="#" data-modal="modal" data-modal-id="#quick-look" data-product-id="@product.Id" data-tooltip="tooltip" data-placement="top" title="Xem nhanh"></a>
+                                                        </div>
+                                                        <div class="product-m__add-cart">
+                                                            <a class="btn--e-brand" href="#" data-modal="modal" data-modal-id="#quick-look" data-product-id="@product.Id">Thêm vào giỏ hàng</a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="product-m__content">
+                                                        <div class="product-m__category">
+                                                            <a href="@Url.Action("hangmoive", "HangMoiVe", new { subcategoryId = product.SubcategoryId })">@product.Subcategory.Name</a>
+                                                        </div>
+                                                        <div class="product-m__name">
+                                                            <a href="#" data-modal="modal" data-modal-id="#quick-look" data-product-id="@product.Id">@product.Name</a>
+                                                        </div>
+                                                        <div class="product-m__rating gl-rating-style">
+                                                            @if (product.Reviews != null && product.Reviews.Any())
+                                                            {
+                                                                var averageRating = product.Reviews.Average(r => r.Rating);
+                                                                for (int i = 1; i <= 5; i++)
+                                                                {
+                                                                    if (i <= averageRating)
+                                                                    {
+                                                                        <i class="fas fa-star"></i>
+                                                                    }
+                                                                    else if (i - 0.5 <= averageRating)
+                                                                    {
+                                                                        <i class="fas fa-star-half-alt"></i>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <i class="far fa-star"></i>
+                                                                    }
+                                                                }
+                                                                <span class="product-m__review">(@product.Reviews.Count)</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span>Chưa có đánh giá</span>
+                                                            }
+                                                        </div>
+                                                        <div class="product-m__price">
+                                                            @(product.DiscountedPrice.HasValue ? product.DiscountedPrice.Value.ToString("N0") : product.Price.ToString("N0")) VND
+                                                            @if (product.DiscountedPrice.HasValue)
+                                                            {
+                                                                <span class="product-m__discount">@product.Price.ToString("N0") VND</span>
+                                                            }
+                                                        </div>
+                                                        <div class="product-m__hover">
+                                                            <div class="product-m__preview-description">
+                                                                <span>@product.Description</span>
+                                                            </div>
+                                                            <div class="product-m__wishlist">
+                                                                <a class="far fa-heart" href="@Url.Action("AddToWishlist", "Wishlist", new { productId = product.Id })" data-tooltip="tooltip" data-placement="top" title="Thêm vào danh sách mong muốn"></a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <p>Không tìm thấy sản phẩm nào.</p>
+                                    }
+                                </div>
+                            </div>
+                            <div class="u-s-p-y-60">
+                                <!-- Pagination -->
+                                <ul class="shop-p__pagination">
+                                    @if (ViewBag.CurrentPage > 1)
+                                    {
+                                        <li>
+                                            <a class="fas fa-angle-left" href="@Url.Action("hangmoive", "HangMoiVe", new { categoryId = ViewBag.CurrentCategoryId, subcategoryId = ViewBag.CurrentSubcategoryId, minPrice = ViewBag.MinPrice, maxPrice = ViewBag.MaxPrice, colorId = ViewBag.ColorId, sizeId = ViewBag.SizeId, sortBy = ViewBag.SortBy, page = ViewBag.CurrentPage - 1, pageSize = ViewBag.PageSize })"></a>
+                                        </li>
+                                    }
+                                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                    {
+                                        <li class="@(i == ViewBag.CurrentPage ? "is-active" : "")">
+                                            <a href="@Url.Action("hangmoive", "HangMoiVe", new { categoryId = ViewBag.CurrentCategoryId, subcategoryId = ViewBag.CurrentSubcategoryId, minPrice = ViewBag.MinPrice, maxPrice = ViewBag.MaxPrice, colorId = ViewBag.ColorId, sizeId = ViewBag.SizeId, sortBy = ViewBag.SortBy, page = i, pageSize = ViewBag.PageSize })">@i</a>
+                                        </li>
+                                    }
+                                    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                    {
+                                        <li>
+                                            <a class="fas fa-angle-right" href="@Url.Action("hangmoive", "HangMoiVe", new { categoryId = ViewBag.CurrentCategoryId, subcategoryId = ViewBag.CurrentSubcategoryId, minPrice = ViewBag.MinPrice, maxPrice = ViewBag.MaxPrice, colorId = ViewBag.ColorId, sizeId = ViewBag.SizeId, sortBy = ViewBag.SortBy, page = ViewBag.CurrentPage + 1, pageSize = ViewBag.PageSize })"></a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--====== End - Section 1 ======-->
+    </div>
+
+    <!-- Quick Look Modal -->
+    <div class="modal fade" id="quick-look" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="quick-look-title"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-5">
+                            <!--====== Product Breadcrumb ======-->
+                            <div class="pd-breadcrumb u-s-m-b-30">
+                                <ul class="pd-breadcrumb__list">
+                                    <li class="has-separator">
+                                        <a href="@Url.Action("Index", "Home")">Trang chủ</a>
+                                    </li>
+                                    <li class="has-separator">
+                                        <a href="#" id="quick-look-category-link"></a>
+                                    </li>
+                                    <li class="has-separator">
+                                        <a href="#" id="quick-look-subcategory-link"></a>
+                                    </li>
+                                    <li class="is-marked">
+                                        <a href="#" id="quick-look-product-link"></a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <!--====== End - Product Breadcrumb ======-->
+                            <!--====== Product Detail ======-->
+                            <div class="pd u-s-m-b-30">
+                                <div class="pd-wrap">
+                                    <div id="js-product-detail-modal">
+                                        <img class="u-img-fluid" id="quick-look-image" src="" alt="">
+                                    </div>
+                                </div>
+                                <div class="u-s-m-t-15">
+                                    <div id="js-product-detail-modal-thumbnail" class="pd-thumbnails">
+                                        <!-- Thumbnails will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                            <!--====== End - Product Detail ======-->
+                        </div>
+                        <div class="col-lg-7">
+                            <!--====== Product Right Side Details ======-->
+                            <div class="pd-detail">
+                                <div>
+                                    <span class="pd-detail__name" id="quick-look-title"></span>
+                                </div>
+                                <div>
+                                    <div class="pd-detail__inline">
+                                        <span class="pd-detail__price" id="quick-look-price"></span>
+                                        <span class="pd-detail__discount" id="quick-look-discount"></span>
+                                        <del class="pd-detail__del" id="quick-look-original-price"></del>
+                                    </div>
+                                </div>
+                                <div class="u-s-m-b-15">
+                                    <div class="pd-detail__rating gl-rating-style" id="quick-look-rating"></div>
+                                </div>
+                                <div class="u-s-m-b-15">
+                                    <div class="pd-detail__inline">
+                                        <span class="pd-detail__stock" id="quick-look-stock"></span>
+                                        <span class="pd-detail__left" id="quick-look-left"></span>
+                                    </div>
+                                </div>
+                                <div class="u-s-m-b-15">
+                                    <span class="pd-detail__preview-desc" id="quick-look-description"></span>
+                                </div>
+                                <div class="u-s-m-b-15">
+                                    <div class="pd-detail__inline">
+                                        <span class="pd-detail__click-wrap">
+                                            <i class="far fa-heart u-s-m-r-6"></i>
+                                            <a href="#" id="quick-look-wishlist">Thêm vào danh sách mong muốn</a>
+                                            <span class="pd-detail__click-count" id="quick-look-wishlist-count"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="u-s-m-b-15">
+                                    <div class="pd-detail__inline">
+                                        <span class="pd-detail__click-wrap">
+                                            <i class="far fa-envelope u-s-m-r-6"></i>
+                                            <a href="#">Gửi email khi giảm giá</a>
+                                            <span class="pd-detail__click-count" id="quick-look-email-count"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="u-s-m-b-15">
+                                    <ul class="pd-social-list">
+                                        <li><a class="s-fb--color-hover" href="#"><i class="fab fa-facebook-f"></i></a></li>
+                                        <li><a class="s-tw--color-hover" href="#"><i class="fab fa-twitter"></i></a></li>
+                                        <li><a class="s-insta--color-hover" href="#"><i class="fab fa-instagram"></i></a></li>
+                                        <li><a class="s-wa--color-hover" href="#"><i class="fab fa-whatsapp"></i></a></li>
+                                        <li><a class="s-gplus--color-hover" href="#"><i class="fab fa-google-plus-g"></i></a></li>
+                                    </ul>
+                                </div>
+                                <div class="u-s-m-b-15">
+                                    @if (User.Identity.IsAuthenticated)
+                                    {
+                                        <form id="quick-look-add-to-cart-form" method="post" action="@Url.Action("AddToCart", "Cart")">
+                                            <input type="hidden" name="productId" id="quick-look-product-id" />
+                                            <div class="pd-detail__form">
+                                                <div class="pd-detail-inline-2">
+                                                    <div class="u-s-m-b-15">
+                                                        <label for="quick-look-variant-id">Kích thước & Màu sắc:</label>
+                                                        <select name="variantId" id="quick-look-variant-id" class="select-box select-box--primary-style"></select>
+                                                    </div>
+                                                    <div class="u-s-m-b-15">
+                                                        <div class="input-counter">
+                                                            <span class="input-counter__minus fas fa-minus"></span>
+                                                            <input class="input-counter__text input-counter--text-primary-style" type="text" name="quantity" id="quick-look-quantity" value="1" data-min="1" data-max="1000">
+                                                            <span class="input-counter__plus fas fa-plus"></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="u-s-m-b-15">
+                                                        <button class="btn btn--e-brand-b-2" type="submit">Thêm vào giỏ hàng</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <p>Vui lòng <a href="@Url.Action("DangNhap", "Home")">đăng nhập</a> để thêm sản phẩm vào giỏ hàng.</p>
+                                    }
+                                </div>
+                                <div class="u-s-m-b-15">
+                                    <span class="pd-detail__label u-s-m-b-8">Chính sách sản phẩm:</span>
+                                    <ul class="pd-detail__policy-list">
+                                        <li><i class="fas fa-check-circle u-s-m-r-8"></i><span>Bảo vệ người mua.</span></li>
+                                        <li><i class="fas fa-check-circle u-s-m-r-8"></i><span>Hoàn tiền đầy đủ nếu không nhận được đơn hàng.</span></li>
+                                        <li><i class="fas fa-check-circle u-s-m-r-8"></i><span>Chấp nhận đổi trả nếu sản phẩm không đúng mô tả.</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <!--====== End - Product Right Side Details ======-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+    function applyFilters() {
+        var categoryId = @(ViewBag.CurrentCategoryId != null ? ViewBag.CurrentCategoryId : "null");
+        var subcategoryId = @(ViewBag.CurrentSubcategoryId != null ? ViewBag.CurrentSubcategoryId : "null");
+        var minPrice = $("#price-min").val() || null;
+        var maxPrice = $("#price-max").val() || null;
+        var colorId = $("input[name='colorId']:checked").val() || null;
+        var sizeId = $("input[name='sizeId']:checked").val() || null;
+        var sortBy = $("select[name='sortBy']").val();
+        var pageSize = $("select[name='pageSize']").val();
+
+        var url = "@Url.Action("hangmoive", "HangMoiVe")" + "?";
+        if (categoryId) url += "categoryId=" + categoryId + "&";
+        if (subcategoryId) url += "subcategoryId=" + subcategoryId + "&";
+        if (minPrice) url += "minPrice=" + minPrice + "&";
+        if (maxPrice) url += "maxPrice=" + maxPrice + "&";
+        if (colorId) url += "colorId=" + colorId + "&";
+        if (sizeId) url += "sizeId=" + sizeId + "&";
+        url += "sortBy=" + sortBy + "&pageSize=" + pageSize;
+
+        window.location.href = url;
+    }
+
+    // Hàm thay đổi ảnh chính
+    function changeMainImage(imageUrl) {
+        if (!imageUrl || imageUrl.trim() === "") {
+            console.warn("Invalid image URL, using placeholder.");
+            imageUrl = "/images/placeholder.jpg";
+        }
+        console.log("Changing main image to:", imageUrl);
+        $("#quick-look-image").attr("src", imageUrl).on("error", function () {
+            console.error("Failed to load image:", imageUrl);
+            $(this).attr("src", "/images/placeholder.jpg");
+            alert("Không thể tải ảnh sản phẩm. Vui lòng kiểm tra lại.");
+        });
+    }
+
+    $(document).ready(function () {
+        // Xử lý mở modal Quick Look
+        $("[data-modal-id='#quick-look']").click(function (e) {
+            e.preventDefault();
+            var productId = $(this).data("product-id");
+
+            $.ajax({
+                url: "@Url.Action("GetProductDetail", "HangMoiVe")",
+                type: "GET",
+                data: { id: productId },
+                success: function (response) {
+                    if (response.success) {
+                        var product = response.data;
+
+                        // Debug: Log dữ liệu để kiểm tra
+                        console.log("Product Data:", product);
+
+                        // Điền dữ liệu vào modal
+                        $("#quick-look-title").text(product.name || "Tên sản phẩm không có");
+                        $("#quick-look-product-id").val(product.id);
+                        $("#quick-look-product-link").text(product.name || "Tên sản phẩm không có");
+                        $("#quick-look-category-link").text(product.categoryName || "Danh mục không có").attr("href", "@Url.Action("hangmoive", "HangMoiVe")" + "?categoryId=" + (product.categoryId || ""));
+                        $("#quick-look-subcategory-link").text(product.subcategoryName || "Danh mục con không có").attr("href", "@Url.Action("hangmoive", "HangMoiVe")" + "?subcategoryId=" + (product.subcategoryId || ""));
+
+                        // Ưu tiên hiển thị ảnh từ variantImageUrl của biến thể đầu tiên
+                        var initialImageUrl = "/images/placeholder.jpg";
+                        if (product.productVariants && product.productVariants.length > 0 && product.productVariants[0].variantImageUrl) {
+                            initialImageUrl = product.productVariants[0].variantImageUrl;
+                            console.log("Using variant image as initial image:", initialImageUrl);
+                        } else if (product.imageUrl) {
+                            initialImageUrl = product.imageUrl;
+                            console.log("Falling back to main image:", initialImageUrl);
+                        } else {
+                            console.warn("No variantImageUrl or imageUrl found, using placeholder.");
+                        }
+                        changeMainImage(initialImageUrl);
+
+                        // Đánh giá
+                        var ratingHtml = "";
+                        if (product.averageRating > 0) {
+                            for (var i = 1; i <= 5; i++) {
+                                if (i <= product.averageRating) {
+                                    ratingHtml += '<i class="fas fa-star"></i>';
+                                } else if (i - 0.5 <= product.averageRating) {
+                                    ratingHtml += '<i class="fas fa-star-half-alt"></i>';
+                                } else {
+                                    ratingHtml += '<i class="far fa-star"></i>';
+                                }
+                            }
+                            ratingHtml += ' <span class="pd-detail__review u-s-m-l-4"><a href="#">' + (product.reviewCount || 0) + ' Đánh giá</a></span>';
+                        } else {
+                            ratingHtml = "Chưa có đánh giá";
+                        }
+                        $("#quick-look-rating").html(ratingHtml);
+
+                        // Giá
+                        var priceHtml = "";
+                        var discountHtml = "";
+                        var originalPriceHtml = "";
+                        if (product.discountedPrice) {
+                            priceHtml = product.discountedPrice.toLocaleString('vi-VN');
+                            discountHtml = '(' + Math.round(((product.price - product.discountedPrice) / product.price) * 100) + '% OFF)';
+                            originalPriceHtml = product.price.toLocaleString('vi-VN');
+                        } else {
+                            priceHtml = product.price.toLocaleString('vi-VN');
+                        }
+                        $("#quick-look-price").text(priceHtml + ' VND');
+                        $("#quick-look-discount").text(discountHtml);
+                        $("#quick-look-original-price").text(originalPriceHtml ? originalPriceHtml + ' VND' : '');
+
+                        // Tồn kho
+                        var totalStock = product.productVariants ? product.productVariants.reduce((sum, variant) => sum + (variant.stockQuantity || 0), 0) : 0;
+                        $("#quick-look-stock").text(totalStock + ' trong kho');
+                        $("#quick-look-left").text(totalStock <= 5 ? 'Chỉ còn ' + totalStock + ' sản phẩm' : '');
+
+                        // Mô tả
+                        $("#quick-look-description").text(product.description || "Không có mô tả");
+
+                        // Ảnh phụ
+                        var thumbnailsHtml = "";
+                        var uniqueImages = new Set();
+                        if (product.productImages && product.productImages.length > 0) {
+                            product.productImages.forEach(function (image) {
+                                if (image.imageUrl && !uniqueImages.has(image.imageUrl)) {
+                                    uniqueImages.add(image.imageUrl);
+                                    thumbnailsHtml += '<div><img class="u-img-fluid" src="' + image.imageUrl + '" alt="Thumbnail" onclick="changeMainImage(\'' + image.imageUrl + '\')" onError="this.src=\'/images/placeholder.jpg\'" /></div>';
+                                }
+                            });
+                        }
+                        if (product.productVariants) {
+                            product.productVariants.forEach(function (variant) {
+                                if (variant.variantImageUrl && !uniqueImages.has(variant.variantImageUrl)) {
+                                    uniqueImages.add(variant.variantImageUrl);
+                                    thumbnailsHtml += '<div><img class="u-img-fluid" src="' + variant.variantImageUrl + '" alt="Thumbnail" onclick="changeMainImage(\'' + variant.variantImageUrl + '\')" onError="this.src=\'/images/placeholder.jpg\'" /></div>';
+                                }
+                            });
+                        }
+                        $("#js-product-detail-modal-thumbnail").html(thumbnailsHtml || "<p>Không có ảnh phụ</p>");
+
+                        // Biến thể
+                        var variantsHtml = "";
+                        if (product.productVariants && product.productVariants.length > 0) {
+                            product.productVariants.forEach(function (variant) {
+                                variantsHtml += '<option value="' + variant.id + '" ' +
+                                                'data-price="' + (variant.variantDiscountedPrice || variant.variantPrice || product.discountedPrice || product.price) + '" ' +
+                                                'data-image="' + (variant.variantImageUrl || product.imageUrl || "/images/placeholder.jpg") + '" ' +
+                                                'data-stock="' + (variant.stockQuantity || 0) + '">' +
+                                                (variant.sizeName || "Không có kích thước") + ' - ' + (variant.colorName || "Không có màu") + ' (Tồn kho: ' + (variant.stockQuantity || 0) + ')' +
+                                                '</option>';
+                            });
+                        } else {
+                            variantsHtml = '<option disabled>Không có biến thể khả dụng</option>';
+                            $("#quick-look-add-to-cart-form button").prop("disabled", true);
+                        }
+                        $("#quick-look-variant-id").html(variantsHtml);
+
+                        // Cập nhật giá và ảnh khi chọn biến thể
+                        $("#quick-look-variant-id").change(function () {
+                            var selectedOption = $(this).find("option:selected");
+                            var price = selectedOption.data("price");
+                            var image = selectedOption.data("image");
+                            var stock = selectedOption.data("stock");
+                            $("#quick-look-price").text(price.toLocaleString('vi-VN') + ' VND');
+                            changeMainImage(image);
+                            $("#quick-look-stock").text(stock + ' trong kho');
+                            $("#quick-look-left").text(stock <= 5 ? 'Chỉ còn ' + stock + ' sản phẩm' : '');
+                        }).trigger("change");
+
+                        // Danh sách mong muốn
+                        $("#quick-look-wishlist").attr("href", "@Url.Action("AddToWishlist", "Wishlist")" + "?productId=" + product.id);
+                        $("#quick-look-wishlist-count").text(product.wishlistCount ? '(' + product.wishlistCount + ')' : '');
+
+                        // Email khi giảm giá
+                        $("#quick-look-email-count").text(product.emailCount ? '(' + product.emailCount + ')' : '');
+
+                        // Mở modal
+                        $("#quick-look").modal("show");
+
+                        // Bind sự kiện tăng/giảm số lượng ngay sau khi modal mở
+                        console.log("Binding quantity buttons...");
+                        $(".input-counter__plus").off("click").on("click", function () {
+                            var input = $(this).siblings(".input-counter__text");
+                            var max = parseInt(input.data("max")) || 1000;
+                            var current = parseInt(input.val()) || 0;
+                            if (current < max) {
+                                input.val(current + 1);
+                                console.log("Increased quantity to:", current + 1);
+                            }
+                        });
+
+                        $(".input-counter__minus").off("click").on("click", function () {
+                            var input = $(this).siblings(".input-counter__text");
+                            var min = parseInt(input.data("min")) || 1;
+                            var current = parseInt(input.val()) || 1;
+                            if (current > min) {
+                                input.val(current - 1);
+                                console.log("Decreased quantity to:", current - 1);
+                            }
+                        });
+                    } else {
+                        alert(response.message || "Không thể lấy dữ liệu sản phẩm.");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Lỗi AJAX:", status, error);
+                    alert("Đã có lỗi xảy ra khi lấy dữ liệu sản phẩm. Vui lòng thử lại.");
+                }
+            });
+        });
+
+        // Xử lý form thêm vào giỏ hàng
+        $("#quick-look-add-to-cart-form").submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            $.ajax({
+                url: form.attr("action"),
+                type: "POST",
+                data: form.serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        alert("Đã thêm vào giỏ hàng!");
+                        $("#quick-look").modal("hide");
+                    } else {
+                        alert(response.message || "Không thể thêm vào giỏ hàng.");
+                    }
+                },
+                error: function () {
+                    alert("Đã có lỗi xảy ra khi thêm vào giỏ hàng. Vui lòng thử lại.");
+                }
+            });
+        });
+    });
+        </script>
+    }

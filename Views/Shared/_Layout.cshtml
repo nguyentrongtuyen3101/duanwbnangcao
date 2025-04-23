@@ -85,7 +85,7 @@
                                             <ul style="width:120px">
                                                 <li>
 
-                                                    <a href="dashboard.html">
+                                                    <a href="@Url.Action("trangcanhan", "profile")">
                                                         <i class="fas fa-user-circle u-s-m-r-6"></i>
 
                                                         <span>Account</span>
@@ -93,7 +93,7 @@
                                                 </li>
                                                 <li>
 
-                                                    <a href="signup.html">
+                                                    <a >
                                                         <i class="fas fa-user-plus u-s-m-r-6"></i>
 
                                                         <span>Signup</span>
@@ -101,7 +101,7 @@
                                                 </li>
                                                 <li>
 
-                                                    <a href="signin.html">
+                                                    <a >
                                                         <i class="fas fa-lock u-s-m-r-6"></i>
 
                                                         <span>Signin</span>
@@ -109,7 +109,7 @@
                                                 </li>
                                                 <li>
 
-                                                    <a href="signup.html">
+                                                    <a href="@Url.Action("DangXuat", "Home")">
                                                         <i class="fas fa-lock-open u-s-m-r-6"></i>
 
                                                         <span>Signout</span>
@@ -379,7 +379,7 @@
                                     <ul class="ah-list ah-list--design2 ah-list--link-color-secondary">
                                         <li>
 
-                                            <a href="shop-side-version-2.html">NEW ARRIVALS</a>
+                                            <a href="@Url.Action("hangmoive", "hangmoive")">NEW ARRIVALS</a>
                                         </li>
                                         <li class="has-dropdown">
 
@@ -1432,5 +1432,8 @@
             </div>
         </div>
     </noscript>
+    @RenderSection("Scripts", required: false)
+    @RenderSection("Styles", required: false)
+
 </body>
 </html>

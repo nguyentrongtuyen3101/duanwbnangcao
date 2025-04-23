@@ -132,3 +132,14 @@ C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.pdb
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.MigrationName.resources
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.AddSizeColorProductVariantAndUpdateModels.resources
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.AddProductImagesToProductVariant.resources
+C:\Users\admin\Desktop\doanwebnangcao\bin\Serilog.dll
+C:\Users\admin\Desktop\doanwebnangcao\bin\Serilog.Sinks.File.dll
+C:\Users\admin\Desktop\doanwebnangcao\bin\SerilogWeb.Classic.dll
+C:\Users\admin\Desktop\doanwebnangcao\bin\System.Diagnostics.DiagnosticSource.dll
+C:\Users\admin\Desktop\doanwebnangcao\bin\System.Threading.Channels.dll
+C:\Users\admin\Desktop\doanwebnangcao\bin\Serilog.xml
+C:\Users\admin\Desktop\doanwebnangcao\bin\Serilog.Sinks.File.xml
+C:\Users\admin\Desktop\doanwebnangcao\bin\SerilogWeb.Classic.xml
+C:\Users\admin\Desktop\doanwebnangcao\bin\System.Diagnostics.DiagnosticSource.xml
+C:\Users\admin\Desktop\doanwebnangcao\bin\System.Threading.Channels.xml
+C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.UpdateOrderStatusToEnum.resources

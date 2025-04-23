@@ -176,7 +176,7 @@
                 <tbody>
                     @if (Model != null && Model.Any())
                     {
-                        int index = 1;
+                        int index = (ViewBag.CurrentPage - 1) * ViewBag.PageSize + 1;
                         foreach (var product in Model)
                         {
                             List<VariantDto> variants = new List<VariantDto>();
@@ -257,6 +257,34 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Phân trang -->
+        @if (ViewBag.TotalPages > 1)
+        {
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-4">
+                    <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("SanPham", "Admin", new { page = ViewBag.CurrentPage - 1, pageSize = ViewBag.PageSize })" aria-label="Previous">
+                            <span aria-hidden="true">« Trước</span>
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("SanPham", "Admin", new { page = i, pageSize = ViewBag.PageSize })">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("SanPham", "Admin", new { page = ViewBag.CurrentPage + 1, pageSize = ViewBag.PageSize })" aria-label="Next">
+                            <span aria-hidden="true">Sau »</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="text-center">
+                <p>Hiển thị bản ghi @(ViewBag.CurrentPage * ViewBag.PageSize - ViewBag.PageSize + 1) đến @(ViewBag.CurrentPage * ViewBag.PageSize > ViewBag.TotalRecords ? ViewBag.TotalRecords : ViewBag.CurrentPage * ViewBag.PageSize) của @ViewBag.TotalRecords bản ghi</p>
+            </div>
+        }
     </div>
 </div>
 
@@ -271,7 +299,7 @@
             <div class="modal-body">
                 <form id="editProductForm" action="@Url.Action("EditProduct", "Admin")" method="post" enctype="multipart/form-data">
                     <input type="hidden" id="editProductId" name="Id" />
-
+                    <input type="hidden" name="page" value=""/>
                     <div class="mb-3">
                         <label for="editSubcategoryId" class="form-label fw-bold">Danh mục con</label>
                         @if (subcategories != null && subcategories.Any())
@@ -445,7 +473,6 @@
             object-fit: contain;
         }
 
-        /* Cải thiện giao diện danh sách biến thể */
         .variant-row {
             transition: all 0.2s ease;
             border: 1px solid #dee2e6;
@@ -710,7 +737,6 @@
             $("#editDescription").val(description || "");
             $("#editIsActive").prop("checked", isActive === "true");
 
-            // Hiển thị ảnh preview nếu imageUrl tồn tại
             if (imageUrl) {
                 $("#editImagePreview").attr("src", imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl).show();
             } else {
@@ -731,39 +757,39 @@
                     const size = sizes.find(s => s.Id == variant.SizeId)?.Name || "Không xác định";
                     const color = colors.find(c => c.Id == variant.ColorId)?.Name || "Không xác định";
                     const row = `
-                <div class="variant-row mb-3 p-3 border rounded bg-white shadow-sm" data-variant-id="${variant.Id}">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold mb-1">Kích thước</label>
-                            <p>${size}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold mb-1">Màu sắc</label>
-                            <p>${color}</p>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold mb-1">Số lượng</label>
-                            <p>${variant.StockQuantity}</p>
-                        </div>
-                        <div class="col-md-3 text-end">
-                            <button type="button" class="btn btn-sm btn-warning me-1" onclick='showVariantForm(true, {Id: ${variant.Id}, SizeId: ${variant.SizeId}, ColorId: ${variant.ColorId}, StockQuantity: ${variant.StockQuantity}, VariantImageUrl: "${variant.VariantImageUrl || ''}"})'>
-                                <i class="fas fa-edit me-1"></i> Sửa
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteVariant(${variant.Id})">
-                                <i class="fas fa-trash me-1"></i> Xóa
-                            </button>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold mb-1">Ảnh biến thể</label>
-                            ${variant.VariantImageUrl
-                            ? `<div class="image-frame" style="border: 1px solid #ddd; border-radius: 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0;">
-                                     <img src="${variant.VariantImageUrl.startsWith('/') ? variant.VariantImageUrl : '/' + variant.VariantImageUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;" alt="Ảnh biến thể" />
-                                   </div>`
-                            : '<p>Ảnh biến thể</p>'
-                        }
-                        </div>
-                    </div>
-                </div>`;
+                        <div class="variant-row mb-3 p-3 border rounded bg-white shadow-sm" data-variant-id="${variant.Id}">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold mb-1">Kích thước</label>
+                                    <p>${size}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold mb-1">Màu sắc</label>
+                                    <p>${color}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold mb-1">Số lượng</label>
+                                    <p>${variant.StockQuantity}</p>
+                                </div>
+                                <div class="col-md-3 text-end">
+                                    <button type="button" class="btn btn-sm btn-warning me-1" onclick='showVariantForm(true, {Id: ${variant.Id}, SizeId: ${variant.SizeId}, ColorId: ${variant.ColorId}, StockQuantity: ${variant.StockQuantity}, VariantImageUrl: "${variant.VariantImageUrl || ''}"})'>
+                                        <i class="fas fa-edit me-1"></i> Sửa
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteVariant(${variant.Id})">
+                                        <i class="fas fa-trash me-1"></i> Xóa
+                                    </button>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold mb-1">Ảnh biến thể</label>
+                                    ${variant.VariantImageUrl
+                                        ? `<div class="image-frame" style="border: 1px solid #ddd; border-radius: 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0;">
+                                             <img src="${variant.VariantImageUrl.startsWith('/') ? variant.VariantImageUrl : '/' + variant.VariantImageUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.src='/images/placeholder.png'" />
+                                           </div>`
+                                        : '<p>Không có</p>'
+                                    }
+                                </div>
+                            </div>
+                        </div>`;
                     $("#editVariantContainer").append(row);
                 });
             }
@@ -771,4 +797,4 @@
             $("#editProductModal").modal("show");
         }
     </script>
-}
+}SSS

@@ -5,6 +5,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace doanwebnangcao.Models
 {
+    public enum OrderStatus
+    {
+        Pending,
+        Confirmed,
+        Processing,
+        Shipped,
+        Delivered,
+        Cancelled
+    }
+
     public class Order
     {
         [Key]
@@ -20,8 +30,7 @@ namespace doanwebnangcao.Models
         public decimal TotalAmount { get; set; }
 
         [Required]
-        [StringLength(50)]
-        public string Status { get; set; }
+        public OrderStatus Status { get; set; }
 
         [Required]
         public int ShippingAddressId { get; set; }
