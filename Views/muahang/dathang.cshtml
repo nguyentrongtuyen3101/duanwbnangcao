@@ -6,7 +6,6 @@
     var paymentMethods = ViewBag.PaymentMethods as List<PaymentMethod>;
     var selectedAddress = ViewBag.SelectedAddress as Address;
     var userAddresses = ViewBag.UserAddresses as List<Address>;
-    var shippingMethods = ViewBag.ShippingMethods as List<ShippingMethod>;
 }
 
 <main>
@@ -252,12 +251,13 @@
                                     <div class="o-summary__section u-s-m-b-30">
                                         <div class="o-summary__box">
                                             <h1 class="checkout-f__h1">THÔNG TIN THANH TOÁN</h1>
-                                            @using (Html.BeginForm("PlaceOrder", "muahang", FormMethod.Post, new { @class = "checkout-f__payment" }))
+                                            @using (Html.BeginForm("PlaceOrder", "muahang", FormMethod.Post, new { @id = "payment-form", @class = "checkout-f__payment" }))
                                             {
                                                 @Html.AntiForgeryToken()
                                                 @Html.HiddenFor(model => model.ProductId)
                                                 @Html.HiddenFor(model => model.VariantId)
                                                 @Html.HiddenFor(model => model.Quantity)
+                                                @Html.HiddenFor(model => model.OrderNote)
                                                 <div class="u-s-m-b-10">
                                                     @if (paymentMethods != null && paymentMethods.Any())
                                                     {
@@ -307,7 +307,7 @@
                     <div class="modal-header custom-modal-header">
                         <h5 class="modal-title">Chọn Địa Chỉ Giao Hàng và Phương Thức Vận Chuyển</h5>
                         <button type="button" class="custom-close" data-dismiss="modal" aria-label="Close">
-                            <span>&times;</span>
+                            <span>×</span>
                         </button>
                     </div>
                     <div class="modal-body">
@@ -329,22 +329,6 @@
                                 else
                                 {
                                     <p>Chưa có địa chỉ nào. Vui lòng thêm địa chỉ mới.</p>
-                                }
-                            </div>
-                            <div class="u-s-m-b-15">
-                                <label class="gl-label">Chọn phương thức vận chuyển:</label>
-                                @if (shippingMethods != null && shippingMethods.Any())
-                                {
-                                    <select class="select-box select-box--primary-style" name="ShippingMethodId" id="shipping-method-id">
-                                        @foreach (var method in shippingMethods)
-                                        {
-                                            <option value="@method.Id">@method.Name - $@method.Cost</option>
-                                        }
-                                    </select>
-                                }
-                                else
-                                {
-                                    <p>Chưa có phương thức vận chuyển.</p>
                                 }
                             </div>
                             @Html.HiddenFor(model => model.ProductId)

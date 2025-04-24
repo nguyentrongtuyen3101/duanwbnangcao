@@ -328,7 +328,7 @@
                     <li><a class="dropdown-item" href="#">Hồ sơ</a></li>
                     <li><a class="dropdown-item" href="#">Cài đặt</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="/Admin/Logout">Đăng xuất</a></li>
+                    <li><a class="dropdown-item" href="@Url.Action("DangXuat", "Home")">Đăng xuất</a></li>
                 </ul>
             </div>
         </div>
@@ -343,7 +343,7 @@
                     <a class="nav-link @(ViewBag.ActivePage == "SanPham" ? "active" : "")" href="@Url.Action("SanPham", "Admin")"><i class="fas fa-tshirt me-2"></i> Quản lý Sản phẩm</a>
                     <a class="nav-link @(ViewBag.ActivePage == "Sizes" ? "active" : "")" href="@Url.Action("Sizes", "Admin")"><i class="fas fa-ruler me-2"></i> Quản lý Kích thước</a>
                     <a class="nav-link @(ViewBag.ActivePage == "Colors" ? "active" : "")" href="@Url.Action("Colors", "Admin")"><i class="fas fa-palette me-2"></i> Quản lý Màu sắc</a>
-                    <a class="nav-link @(ViewBag.ActivePage == "Orders" ? "active" : "")" href="@Url.Action("Orders", "Admin")"><i class="fas fa-shopping-cart me-2"></i> Quản lý Đơn hàng</a>
+                    <a class="nav-link @(ViewBag.ActivePage == "Orders" ? "active" : "")" href="@Url.Action("quanlydonhang", "QuanLyDonHang")"><i class="fas fa-shopping-cart me-2"></i> Quản lý Đơn hàng</a>
                     <a class="nav-link @(ViewBag.ActivePage == "Customers" ? "active" : "")" href="@Url.Action("Customers", "Admin")"><i class="fas fa-users me-2"></i> Quản lý Khách hàng</a>
                     <a class="nav-link @(ViewBag.ActivePage == "danhmuc" ? "active" : "")" href="@Url.Action("danhmuc", "Admin")"><i class="fas fa-tags me-2"></i> Quản lý Danh mục</a>
                     <a class="nav-link @(ViewBag.ActivePage == "danhmucon" ? "active" : "")" href="@Url.Action("danhmucon", "Admin")"><i class="fas fa-list-ul me-2"></i> Quản lý Danh mục con</a>
@@ -365,7 +365,7 @@
                         <a class="nav-link @(ViewBag.ActivePage == "SanPham" ? "active" : "")" href="@Url.Action("SanPham", "Admin")"><i class="fas fa-tshirt me-2"></i> Quản lý Sản phẩm</a>
                         <a class="nav-link @(ViewBag.ActivePage == "Sizes" ? "active" : "")" href="@Url.Action("Sizes", "Admin")"><i class="fas fa-ruler me-2"></i> Quản lý Kích thước</a>
                         <a class="nav-link @(ViewBag.ActivePage == "Colors" ? "active" : "")" href="@Url.Action("Colors", "Admin")"><i class="fas fa-palette me-2"></i> Quản lý Màu sắc</a>
-                        <a class="nav-link @(ViewBag.ActivePage == "Orders" ? "active" : "")" href="@Url.Action("Orders", "Admin")"><i class="fas fa-shopping-cart me-2"></i> Quản lý Đơn hàng</a>
+                        <a class="nav-link @(ViewBag.ActivePage == "Orders" ? "active" : "")" href="@Url.Action("quanlydonhang", "QuanLyDonHang")"><i class="fas fa-shopping-cart me-2"></i> Quản lý Đơn hàng</a>
                         <a class="nav-link @(ViewBag.ActivePage == "Customers" ? "active" : "")" href="@Url.Action("Customers", "Admin")"><i class="fas fa-users me-2"></i> Quản lý Khách hàng</a>
                         <a class="nav-link @(ViewBag.ActivePage == "danhmuc" ? "active" : "")" href="@Url.Action("danhmuc", "Admin")"><i class="fas fa-tags me-2"></i> Quản lý Danh mục</a>
                         <a class="nav-link @(ViewBag.ActivePage == "danhmucon" ? "active" : "")" href="@Url.Action("danhmucon", "Admin")"><i class="fas fa-list-ul me-2"></i> Quản lý Danh mục con</a>

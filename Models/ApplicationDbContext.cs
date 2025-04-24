@@ -6,6 +6,7 @@ namespace doanwebnangcao.Models
     {
         public ApplicationDbContext() : base("name=SocialNetworkConnection")
         {
+            Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
         }
 
         public DbSet<User> Users { get; set; }
@@ -19,7 +20,7 @@ namespace doanwebnangcao.Models
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
         public DbSet<Address> Addresses { get; set; }
-        public DbSet<ShippingMethod> ShippingMethods { get; set; }
+        
         public DbSet<PaymentMethod> PaymentMethods { get; set; }
         public DbSet<Coupon> Coupons { get; set; }
         public DbSet<Payment> Payments { get; set; }

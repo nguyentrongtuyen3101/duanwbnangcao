@@ -272,7 +272,7 @@ namespace doanwebnangcao.Controllers
         }
 
         [HttpPost]
-        public ActionResult EditProduct(Product product, HttpPostedFileBase ImageFile, int page )
+        public ActionResult EditProduct(Product product, HttpPostedFileBase ImageFile, int page=1 )
         {
             ViewBag.ActivePage = "SanPham";
             if (!ModelState.IsValid)

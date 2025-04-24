@@ -36,9 +36,6 @@ namespace doanwebnangcao.Models
         public int ShippingAddressId { get; set; }
 
         [Required]
-        public int ShippingMethodId { get; set; }
-
-        [Required]
         [Range(0, double.MaxValue)]
         public decimal ShippingCost { get; set; }
 
@@ -56,7 +53,6 @@ namespace doanwebnangcao.Models
         // Navigation properties
         public virtual User User { get; set; }
         public virtual Address ShippingAddress { get; set; }
-        public virtual ShippingMethod ShippingMethod { get; set; }
         public virtual PaymentMethod PaymentMethod { get; set; }
         public virtual Coupon Coupon { get; set; }
         public virtual ICollection<OrderDetail> OrderDetails { get; set; }
