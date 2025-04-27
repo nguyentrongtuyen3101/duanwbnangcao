@@ -87,10 +87,10 @@
                                                 <a href="@Url.Action("trangcanhan", "profile")">Manage My Account</a>
                                             </li>
                                             <li>
-                                                <a href="@Url.Action("editprofile", "profile")">My Profile</a>
+                                                <a href="@Url.Action("myprofile", "profile")">My Profile</a>
                                             </li>
                                             <li>
-                                                <a href="dash-address-book.html">Address Book</a>
+                                                <a href="@Url.Action("editaddress", "profile")">Address Book</a>
                                             </li>
                                             <li>
                                                 <a href="dash-track-order.html">Track Order</a>
@@ -172,7 +172,7 @@
                                                                     </div>
                                                                     <div>
                                                                         <div class="dash__link dash__link--brand">
-                                                                            <a href="dash-manage-order.html">MANAGE</a>
+                                                                            <a href="@Url.Action("quanlychitietdonhang", "muahang", new { orderId = order.Id })">MANAGE</a>
                                                                         </div>
                                                                     </div>
                                                                 </div>

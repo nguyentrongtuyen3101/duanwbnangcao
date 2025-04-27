@@ -553,5 +553,37 @@ namespace doanwebnangcao.Controllers
             }
             base.Dispose(disposing);
         }
+        [HttpGet]
+        public ActionResult quanlychitietdonhang(int orderId)
+        {
+            // Log để debug
+            Debug.WriteLine($"quanlychitietdonhang - UserId: {Session["UserId"]}, OrderId: {orderId}");
+
+            if (Session["UserId"] == null)
+            {
+                TempData["ErrorMessage"] = "Vui lòng đăng nhập.";
+                return RedirectToAction("DangNhap", "Home");
+            }
+
+            int userId = (int)Session["UserId"];
+
+            // Truy vấn đơn hàng với các quan hệ cần thiết
+            var order = _context.Orders
+                .Include(o => o.OrderDetails)
+                .Include(o => o.OrderDetails.Select(od => od.ProductVariant))
+                .Include(o => o.OrderDetails.Select(od => od.ProductVariant.Product))
+                .Include(o => o.OrderDetails.Select(od => od.ProductVariant.ProductImages))
+                .Include(o => o.ShippingAddress)
+                .Include(o => o.PaymentMethod)
+                .SingleOrDefault(o => o.Id == orderId && o.UserId == userId);
+
+            if (order == null)
+            {
+                TempData["ErrorMessage"] = "Đơn hàng không tồn tại hoặc bạn không có quyền truy cập.";
+                return RedirectToAction("quanlydonhang");
+            }
+
+            return View(order);
+        }
     }
 }
