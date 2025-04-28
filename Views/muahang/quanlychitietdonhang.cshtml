@@ -77,18 +77,11 @@
                                             <li>
                                                 <a href="@Url.Action("editaddress", "profile")">Address Book</a>
                                             </li>
-                                            <li>
-                                                <a href="dash-track-order.html">Track Order</a>
-                                            </li>
+                                           
                                             <li>
                                                 <a class="dash-active" href="@Url.Action("quanlydonhang", "muahang")">My Orders</a>
                                             </li>
-                                            <li>
-                                                <a href="dash-payment-option.html">My Payment Options</a>
-                                            </li>
-                                            <li>
-                                                <a href="dash-cancellation.html">My Returns & Cancellations</a>
-                                            </li>
+                                           
                                         </ul>
                                     </div>
                                 </div>
@@ -137,6 +130,17 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <!-- Thêm nút Hủy đơn hàng -->
+                                        @if (Model.Status != doanwebnangcao.Models.OrderStatus.Delivered && Model.Status != doanwebnangcao.Models.OrderStatus.Cancelled)
+                                        {
+                                            using (Html.BeginForm("CancelOrder", "muahang", new { orderId = Model.Id }, FormMethod.Post, new { onsubmit = "return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');" }))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn--e-transparent-platinum-b-2" style="background-color: #ff4444; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-top: 10px;">
+                                                    Hủy đơn hàng
+                                                </button>
+                                            }
+                                        }
                                     </div>
                                 </div>
                                 <div class="dash__box dash__box--shadow dash__box--radius dash__box--bg-white u-s-m-b-30">

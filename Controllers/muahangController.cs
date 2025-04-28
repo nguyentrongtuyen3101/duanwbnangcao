@@ -517,6 +517,131 @@ namespace doanwebnangcao.Controllers
             return View(orders);
         }
 
+        // GET: muahang/quanlychitietdonhang
+        [HttpGet]
+        public ActionResult quanlychitietdonhang(int orderId)
+        {
+            // Log để debug
+            Debug.WriteLine($"quanlychitietdonhang - UserId: {Session["UserId"]}, OrderId: {orderId}");
+
+            if (Session["UserId"] == null)
+            {
+                TempData["ErrorMessage"] = "Vui lòng đăng nhập.";
+                return RedirectToAction("DangNhap", "Home");
+            }
+
+            int userId = (int)Session["UserId"];
+
+            // Truy vấn đơn hàng với các quan hệ cần thiết
+            var order = _context.Orders
+                .Include(o => o.OrderDetails)
+                .Include(o => o.OrderDetails.Select(od => od.ProductVariant))
+                .Include(o => o.OrderDetails.Select(od => od.ProductVariant.Product))
+                .Include(o => o.OrderDetails.Select(od => od.ProductVariant.ProductImages))
+                .Include(o => o.ShippingAddress)
+                .Include(o => o.PaymentMethod)
+                .SingleOrDefault(o => o.Id == orderId && o.UserId == userId);
+
+            if (order == null)
+            {
+                TempData["ErrorMessage"] = "Đơn hàng không tồn tại hoặc bạn không có quyền truy cập.";
+                return RedirectToAction("quanlydonhang");
+            }
+
+            return View(order);
+        }
+
+        // POST: muahang/CancelOrder
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CancelOrder(int orderId)
+        {
+            if (Session["UserId"] == null)
+            {
+                TempData["ErrorMessage"] = "Vui lòng đăng nhập.";
+                return RedirectToAction("DangNhap", "Home");
+            }
+
+            int userId = (int)Session["UserId"];
+
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    // Truy vấn đơn hàng với các quan hệ cần thiết
+                    var order = _context.Orders
+                        .Include(o => o.OrderDetails.Select(od => od.ProductVariant))
+                        .SingleOrDefault(o => o.Id == orderId && o.UserId == userId);
+
+                    if (order == null)
+                    {
+                        TempData["ErrorMessage"] = "Đơn hàng không tồn tại hoặc bạn không có quyền truy cập.";
+                        return RedirectToAction("quanlydonhang");
+                    }
+
+                    // Kiểm tra trạng thái đơn hàng
+                    if (order.Status == OrderStatus.Delivered || order.Status == OrderStatus.Cancelled)
+                    {
+                        TempData["ErrorMessage"] = "Đơn hàng đã được giao hoặc đã bị hủy, không thể hủy thêm.";
+                        return RedirectToAction("quanlydonhang");
+                    }
+
+                    // Thu thập ProductId duy nhất
+                    var productIds = new HashSet<int>();
+
+                    // Hoàn lại số lượng tồn kho cho ProductVariant
+                    foreach (var detail in order.OrderDetails)
+                    {
+                        var productVariant = detail.ProductVariant;
+                        if (productVariant == null)
+                        {
+                            TempData["ErrorMessage"] = "Biến thể sản phẩm không tồn tại.";
+                            return RedirectToAction("quanlydonhang");
+                        }
+
+                        // Hoàn lại số lượng tồn kho của biến thể
+                        productVariant.StockQuantity += detail.Quantity;
+                        _context.Entry(productVariant).State = EntityState.Modified;
+
+                        // Thu thập ProductId
+                        productIds.Add(productVariant.ProductId);
+                    }
+
+                    // Lưu thay đổi cho ProductVariant
+                    _context.SaveChanges();
+
+                    // Cập nhật Product bằng SQL trực tiếp
+                    foreach (var productId in productIds)
+                    {
+                        var totalVariantStock = _context.ProductVariants
+                            .Where(pv => pv.ProductId == productId && pv.IsActive)
+                            .Sum(pv => pv.StockQuantity);
+
+                        _context.Database.ExecuteSqlCommand(
+                            "UPDATE Products SET StockQuantity = @p0 WHERE Id = @p1",
+                            totalVariantStock, productId);
+                    }
+
+                    // Cập nhật trạng thái đơn hàng thành Cancelled
+                    order.Status = OrderStatus.Cancelled;
+                    _context.Entry(order).State = EntityState.Modified;
+                    _context.SaveChanges();
+
+                    transaction.Commit();
+
+                    TempData["SuccessMessage"] = "Hủy đơn hàng thành công!";
+                    return RedirectToAction("quanlydonhang");
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    Debug.WriteLine($"Error in CancelOrder: {ex.Message}");
+                    TempData["ErrorMessage"] = "Có lỗi xảy ra khi hủy đơn hàng. Vui lòng thử lại.";
+                    return RedirectToAction("quanlydonhang");
+                }
+            }
+        }
+
         // Helper method: Tạo chữ ký HMAC-SHA512
         private string HmacSHA512(string key, string inputData)
         {
@@ -552,38 +677,6 @@ namespace doanwebnangcao.Controllers
                 _context.Dispose();
             }
             base.Dispose(disposing);
-        }
-        [HttpGet]
-        public ActionResult quanlychitietdonhang(int orderId)
-        {
-            // Log để debug
-            Debug.WriteLine($"quanlychitietdonhang - UserId: {Session["UserId"]}, OrderId: {orderId}");
-
-            if (Session["UserId"] == null)
-            {
-                TempData["ErrorMessage"] = "Vui lòng đăng nhập.";
-                return RedirectToAction("DangNhap", "Home");
-            }
-
-            int userId = (int)Session["UserId"];
-
-            // Truy vấn đơn hàng với các quan hệ cần thiết
-            var order = _context.Orders
-                .Include(o => o.OrderDetails)
-                .Include(o => o.OrderDetails.Select(od => od.ProductVariant))
-                .Include(o => o.OrderDetails.Select(od => od.ProductVariant.Product))
-                .Include(o => o.OrderDetails.Select(od => od.ProductVariant.ProductImages))
-                .Include(o => o.ShippingAddress)
-                .Include(o => o.PaymentMethod)
-                .SingleOrDefault(o => o.Id == orderId && o.UserId == userId);
-
-            if (order == null)
-            {
-                TempData["ErrorMessage"] = "Đơn hàng không tồn tại hoặc bạn không có quyền truy cập.";
-                return RedirectToAction("quanlydonhang");
-            }
-
-            return View(order);
         }
     }
 }

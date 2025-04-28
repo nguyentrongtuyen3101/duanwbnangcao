@@ -216,6 +216,7 @@
     <Compile Include="Controllers\QuanLyDonHangController.cs" />
     <Compile Include="Controllers\ThanhToanAdminController.cs" />
     <Compile Include="Controllers\trangchuController.cs" />
+    <Compile Include="Controllers\yeuthichController.cs" />
     <Compile Include="DTO\OrderViewModel.cs" />
     <Compile Include="DTO\VariantDto.cs" />
     <Compile Include="Filters\LogActionFilter.cs" />
@@ -641,6 +642,7 @@
     <Content Include="Views\muahang\quanlychitietdonhang.cshtml" />
     <Content Include="Views\profile\myprofile.cshtml" />
     <Content Include="Views\profile\adddiachi.cshtml" />
+    <Content Include="Views\yeuthich\wishlist.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -1,0 +1,125 @@
+﻿@model List<doanwebnangcao.Models.Wishlist>
+
+@{
+    ViewBag.Title = "Danh Sách Yêu Thích";
+}
+
+<main>
+    <!--====== App Content ======-->
+    <div class="app-content">
+        <!--====== Section 1 ======-->
+        <div class="u-s-p-y-60">
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="container">
+                    <div class="breadcrumb">
+                        <div class="breadcrumb__wrap">
+                            <ul class="breadcrumb__list">
+                                <li class="has-separator">
+                                    <a href="@Url.Action("trangchu", "trangchu")">Trang Chủ</a>
+                                </li>
+                                <li class="is-marked">
+                                    <a href="@Url.Action("Wishlist", "yeuthich")">Danh Sách Yêu Thích</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--====== End - Section 1 ======-->
+        <!--====== Section 2 ======-->
+        <div class="u-s-p-b-60">
+            <!--====== Section Intro ======-->
+            <div class="section__intro u-s-m-b-60">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="section__text-wrap">
+                                <h1 class="section__heading u-c-secondary">Danh Sách Yêu Thích</h1>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Section Intro ======-->
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    var product = item.Product;
+                                    var imageUrl = !string.IsNullOrEmpty(product.ImageUrl) ? product.ImageUrl : "/images/placeholder.jpg";
+                                    var price = product.DiscountedPrice.HasValue ? product.DiscountedPrice.Value : product.Price;
+                                    var originalPrice = product.DiscountedPrice.HasValue ? product.Price : (decimal?)null;
+
+                                    <!--====== Wishlist Product ======-->
+                                    <div class="w-r u-s-m-b-30">
+                                        <div class="w-r__container">
+                                            <div class="w-r__wrap-1">
+                                                <div class="w-r__img-wrap">
+                                                    <img class="u-img-fluid" src="@imageUrl" alt="@product.Name" onerror="this.src='/images/placeholder.jpg'" />
+                                                </div>
+                                                <div class="w-r__info">
+                                                    <span class="w-r__name">
+                                                        <a href="@Url.Action("sanphamdetailt", "HangMoiVe", new { id = product.Id })">@product.Name</a>
+                                                    </span>
+                                                    <span class="w-r__category">
+                                                        <a href="@Url.Action("hangmoive", "HangMoiVe", new { subcategoryId = product.SubcategoryId })">@product.Subcategory.Name</a>
+                                                    </span>
+                                                    <span class="w-r__price">
+                                                        $@price.ToString("F2")
+                                                        @if (originalPrice.HasValue)
+                                                        {
+                                                            <span class="w-r__discount">$@originalPrice.Value.ToString("F2")</span>
+                                                        }
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="w-r__wrap-2">
+                                                <a class="w-r__link btn--e-brand-b-2" data-modal="modal" data-modal-id="#add-to-cart">THÊM VÀO GIỎ HÀNG</a>
+                                                <a class="w-r__link btn--e-transparent-platinum-b-2" href="@Url.Action("sanphamdetailt", "HangMoiVe", new { id = product.Id })">XEM</a>
+                                                <a class="w-r__link btn--e-transparent-platinum-b-2" href="@Url.Action("Remove", "yeuthich", new { id = item.Id })">XÓA</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--====== End - Wishlist Product ======-->
+                                }
+                            }
+                            else
+                            {
+                                <p>Danh sách yêu thích của bạn hiện đang trống.</p>
+                            }
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="route-box">
+                                <div class="route-box__g">
+                                    <a class="route-box__link" href="@Url.Action("hangmoive", "HangMoiVe")">
+                                        <i class="fas fa-long-arrow-alt-left"></i>
+                                        <span>TIẾP TỤC MUA SẮM</span>
+                                    </a>
+                                </div>
+                                @if (Model != null && Model.Any())
+                                {
+                                    <div class="route-box__g">
+                                        <a class="route-box__link" href="@Url.Action("ClearWishlist", "yeuthich")">
+                                            <i class="fas fa-trash"></i>
+                                            <span>XÓA TẤT CẢ DANH SÁCH YÊU THÍCH</span>
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Section Content ======-->
+        </div>
+        <!--====== End - Section 2 ======-->
+    </div>
+    <!--====== End - App Content ======-->
+</main>

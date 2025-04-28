@@ -33,10 +33,10 @@
                                     <a href="@Url.Action("Index", "TrangChu")">Trang chủ</a>
                                 </li>
                                 <li class="has-separator">
-                                    <a href="@Url.Action("HangMoiVe", "HangMoiVe", new { categoryId = Model.Subcategory.CategoryId })">@Model.Subcategory.Category.Name</a>
+                                    <a href="@Url.Action("hangmoive", "HangMoiVe", new { categoryId = Model.Subcategory.CategoryId })">@Model.Subcategory.Category.Name</a>
                                 </li>
                                 <li class="has-separator">
-                                    <a href="@Url.Action("HangMoiVe", "HangMoiVe", new { subcategoryId = Model.SubcategoryId })">@Model.Subcategory.Name</a>
+                                    <a href="@Url.Action("hangmoive", "HangMoiVe", new { subcategoryId = Model.SubcategoryId })">@Model.Subcategory.Name</a>
                                 </li>
                                 <li class="is-marked">
                                     <a href="#">@Model.Name</a>
@@ -179,7 +179,7 @@
                                 <div class="pd-detail__inline">
                                     <span class="pd-detail__click-wrap">
                                         <i class="far fa-heart u-s-m-r-6"></i>
-                                        <a href="@Url.Action("AddToWishlist", "Wishlist", new { productId = Model.Id })">Thêm vào danh sách mong muốn</a>
+                                        <a href="javascript:void(0)" onclick="addToWishlist(@Model.Id)">Thêm vào danh sách mong muốn</a>
                                         <span class="pd-detail__click-count">
                                             (@(Model.Wishlists != null ? Model.Wishlists.Count : 0))
                                         </span>
@@ -249,7 +249,7 @@
                                             <button class="btn btn--e-brand-b-2" type="submit" formaction="@Url.Action("AddToCart", "Cart")">Thêm vào giỏ hàng</button>
                                         </div>
                                         <div class="u-s-m-b-15">
-                                            <button class="btn btn--e-brand-b-2" type="submit" formaction="@Url.Action("dathang", "muahang")">Buy Now</button>
+                                            <button class="btn btn--e-brand-b-2" type="submit" formaction="@Url.Action("dathang", "muahang")">Mua Ngay</button>
                                         </div>
                                     </form>
                                 }
@@ -646,7 +646,7 @@
                             <div class="u-s-m-b-30">
                                 <div class="product-o product-o--hover-on">
                                     <div class="product-o__wrap">
-                                        <a class="aspect aspect--bg-grey aspect--square u-d-block" href="@Url.Action("SanPhamDetail", "HangMoiVe", new { id = relatedProduct.Id })">
+                                        <a class="aspect aspect--bg-grey aspect--square u-d-block" href="@Url.Action("sanphamdetailt", "HangMoiVe", new { id = relatedProduct.Id })">
                                             <img class="aspect__img" src="@relatedProduct.ImageUrl" alt="@relatedProduct.Name" onError="this.src='/images/placeholder.jpg'" />
                                         </a>
                                         <div class="product-o__action-wrap">
@@ -658,7 +658,7 @@
                                                     <a data-modal="modal" data-modal-id="#quick-look" data-product-id="@relatedProduct.Id" data-tooltip="tooltip" data-placement="top" title="Thêm vào giỏ hàng"><i class="fas fa-plus-circle"></i></a>
                                                 </li>
                                                 <li>
-                                                    <a href="@Url.Action("AddToWishlist", "Wishlist", new { productId = relatedProduct.Id })" data-tooltip="tooltip" data-placement="top" title="Thêm vào danh sách mong muốn"><i class="fas fa-heart"></i></a>
+                                                    <a href="@Url.Action("AddToWishlist", "yeuthich", new { productId = relatedProduct.Id })" data-tooltip="tooltip" data-placement="top" title="Thêm vào danh sách mong muốn"><i class="fas fa-heart"></i></a>
                                                 </li>
                                                 <li>
                                                     <a href="#" data-tooltip="tooltip" data-placement="top" title="Gửi email khi giảm giá"><i class="fas fa-envelope"></i></a>
@@ -667,10 +667,10 @@
                                         </div>
                                     </div>
                                     <span class="product-o__category">
-                                        <a href="@Url.Action("HangMoiVe", "HangMoiVe", new { subcategoryId = relatedProduct.SubcategoryId })">@relatedProduct.Subcategory.Name</a>
+                                        <a href="@Url.Action("hangmoive", "HangMoiVe", new { subcategoryId = relatedProduct.SubcategoryId })">@relatedProduct.Subcategory.Name</a>
                                     </span>
                                     <span class="product-o__name">
-                                        <a href="@Url.Action("SanPhamDetail", "HangMoiVe", new { id = relatedProduct.Id })">@relatedProduct.Name</a>
+                                        <a href="@Url.Action("sanphamdetailt", "HangMoiVe", new { id = relatedProduct.Id })">@relatedProduct.Name</a>
                                     </span>
                                     <div class="product-o__rating gl-rating-style">
                                         @{
@@ -792,5 +792,26 @@
                 }
             }).trigger("change");
         });
+
+        function addToWishlist(productId) {
+            $.ajax({
+                url: '@Url.Action("AddToWishlist", "yeuthich")',
+                type: 'POST',
+                data: { productId: productId },
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        // Cập nhật số lượng nếu cần
+                        var currentCount = parseInt($('.pd-detail__click-count').text().replace('(', '').replace(')', '')) || 0;
+                        $('.pd-detail__click-count').text('(' + (currentCount + 1) + ')');
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            });
+        }
     </script>
-}S
+}
