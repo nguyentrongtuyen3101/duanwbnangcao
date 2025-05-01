@@ -84,53 +84,43 @@ namespace doanwebnangcao.Controllers
                         return Json(new { success = false, message = "Đơn hàng không tồn tại.", page });
                     }
 
-                    // Kiểm tra trạng thái hiện tại của đơn hàng
                     if (order.Status == OrderStatus.Cancelled || order.Status == OrderStatus.Delivered)
                     {
                         return Json(new { success = false, message = "Đơn hàng đã ở trạng thái cuối (Đã giao hoặc Đã hủy), không thể cập nhật.", page });
                     }
 
-                    // Lấy trạng thái mới
                     var newStatus = order.Status + 1;
 
-                    // Chỉ xử lý trừ tồn kho nếu trạng thái mới là Confirmed
-                    if (newStatus == OrderStatus.Confirmed)
+                    // Trừ tồn kho khi trạng thái chuyển sang Shipped
+                    if (newStatus == OrderStatus.Shipped)
                     {
-                        // Thu thập ProductId duy nhất
                         var productIds = new HashSet<int>();
 
-                        // Cập nhật ProductVariant
                         foreach (var detail in order.OrderDetails)
                         {
-                            var productVariant = detail.ProductVariant;
-                            if (productVariant == null)
+                            if (detail.ProductVariant == null)
                             {
                                 return Json(new { success = false, message = "Biến thể sản phẩm không tồn tại.", page });
                             }
 
-                            // Kiểm tra số lượng tồn kho
-                            if (productVariant.StockQuantity < detail.Quantity)
+                            if (detail.ProductVariant.StockQuantity < detail.Quantity)
                             {
-                                return Json(new { success = false, message = $"Sản phẩm {productVariant.ProductId} (biến thể) không đủ số lượng tồn kho.", page });
+                                return Json(new { success = false, message = $"Sản phẩm {detail.ProductVariant.ProductId} (biến thể) không đủ số lượng tồn kho.", page });
                             }
 
-                            // Trừ số lượng tồn kho của biến thể
-                            productVariant.StockQuantity -= detail.Quantity;
-                            _context.Entry(productVariant).State = EntityState.Modified;
+                            detail.ProductVariant.StockQuantity -= detail.Quantity;
+                            _context.Entry(detail.ProductVariant).State = EntityState.Modified;
 
-                            // Thu thập ProductId
-                            productIds.Add(productVariant.ProductId);
+                            productIds.Add(detail.ProductVariant.ProductId);
                         }
 
-                        // Lưu thay đổi cho ProductVariant
                         _context.SaveChanges();
 
-                        // Cập nhật Product bằng SQL trực tiếp
                         foreach (var productId in productIds)
                         {
                             var totalVariantStock = _context.ProductVariants
                                 .Where(pv => pv.ProductId == productId && pv.IsActive)
-                                .Sum(pv => pv.StockQuantity);
+                                .Sum(pv => (int?)pv.StockQuantity) ?? 0;
 
                             _context.Database.ExecuteSqlCommand(
                                 "UPDATE Products SET StockQuantity = @p0 WHERE Id = @p1",
@@ -138,7 +128,6 @@ namespace doanwebnangcao.Controllers
                         }
                     }
 
-                    // Cập nhật trạng thái đơn hàng
                     order.Status = newStatus;
                     _context.Entry(order).State = EntityState.Modified;
                     _context.SaveChanges();
@@ -149,6 +138,7 @@ namespace doanwebnangcao.Controllers
                 catch (Exception ex)
                 {
                     transaction.Rollback();
+                    System.Diagnostics.Debug.WriteLine($"Error in UpdateOrderStatus: {ex.Message}");
                     return Json(new { success = false, message = "Lỗi khi cập nhật trạng thái: " + ex.Message, page });
                 }
             }
@@ -227,36 +217,29 @@ namespace doanwebnangcao.Controllers
                         return Json(new { success = false, message = "Đơn hàng không tồn tại.", page });
                     }
 
-                    // Hoàn lại số lượng tồn kho nếu trạng thái chưa phải là Delivered
-                    if (order.Status != OrderStatus.Delivered)
+                    // Hoàn lại tồn kho nếu trạng thái là Shipped hoặc Delivered (tồn kho đã bị trừ)
+                    if (order.Status == OrderStatus.Shipped || order.Status == OrderStatus.Delivered)
                     {
-                        // Thu thập ProductId duy nhất
                         var productIds = new HashSet<int>();
 
-                        // Cập nhật ProductVariant
                         foreach (var detail in order.OrderDetails)
                         {
                             var productVariant = detail.ProductVariant;
                             if (productVariant != null)
                             {
-                                // Hoàn lại số lượng tồn kho cho biến thể
                                 productVariant.StockQuantity += detail.Quantity;
                                 _context.Entry(productVariant).State = EntityState.Modified;
-
-                                // Thu thập ProductId
                                 productIds.Add(productVariant.ProductId);
                             }
                         }
 
-                        // Lưu thay đổi cho ProductVariant
                         _context.SaveChanges();
 
-                        // Cập nhật Product bằng SQL trực tiếp
                         foreach (var productId in productIds)
                         {
                             var totalVariantStock = _context.ProductVariants
                                 .Where(pv => pv.ProductId == productId && pv.IsActive)
-                                .Sum(pv => pv.StockQuantity);
+                                .Sum(pv => (int?)pv.StockQuantity) ?? 0;
 
                             _context.Database.ExecuteSqlCommand(
                                 "UPDATE Products SET StockQuantity = @p0 WHERE Id = @p1",
@@ -264,7 +247,7 @@ namespace doanwebnangcao.Controllers
                         }
                     }
 
-                    // Remove related OrderDetails and Payments
+                    // Xóa OrderDetails và Payments
                     if (order.OrderDetails != null && order.OrderDetails.Any())
                     {
                         _context.OrderDetails.RemoveRange(order.OrderDetails);
@@ -275,7 +258,7 @@ namespace doanwebnangcao.Controllers
                         _context.Payments.RemoveRange(order.Payments);
                     }
 
-                    // Remove the order
+                    // Xóa đơn hàng
                     _context.Orders.Remove(order);
                     _context.SaveChanges();
                     transaction.Commit();
@@ -285,6 +268,7 @@ namespace doanwebnangcao.Controllers
                 catch (Exception ex)
                 {
                     transaction.Rollback();
+                    System.Diagnostics.Debug.WriteLine($"Error in DeleteOrder: {ex.Message}");
                     return Json(new { success = false, message = "Lỗi khi xóa đơn hàng: " + ex.Message, page });
                 }
             }

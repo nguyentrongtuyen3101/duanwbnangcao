@@ -215,9 +215,10 @@
                                 </ul>
                             </div>
                             <div class="u-s-m-b-15">
-                                @if (User.Identity.IsAuthenticated)
+                                @if (Session["UserId"] != null)
                                 {
-                                    <form class="pd-detail__form" method="post" action="@Url.Action("dathang", "muahang")">
+                                    <form class="pd-detail__form" method="post">
+                                        @Html.AntiForgeryToken()
                                         <input type="hidden" name="productId" value="@Model.Id" />
                                         @if (Model.ProductVariants != null && Model.ProductVariants.Count > 0)
                                         {
@@ -246,10 +247,10 @@
                                             </div>
                                         </div>
                                         <div class="u-s-m-b-15">
-                                            <button class="btn btn--e-brand-b-2" type="submit" formaction="@Url.Action("AddToCart", "Cart")">Thêm vào giỏ hàng</button>
+                                            <button class="btn btn--e-brand-b-2" type="button" onclick="addToCart(this.form)">Thêm vào giỏ hàng</button>
                                         </div>
                                         <div class="u-s-m-b-15">
-                                            <button class="btn btn--e-brand-b-2" type="submit" formaction="@Url.Action("dathang", "muahang")">Mua Ngay</button>
+                                            <button class="btn btn--e-brand-b-2" type="submit" formaction="@Url.Action("BuyNow", "Muahang")">Mua Ngay</button>
                                         </div>
                                     </form>
                                 }
@@ -793,15 +794,64 @@
             }).trigger("change");
         });
 
-        function addToWishlist(productId) {
+        function addToCart(form) {
+            // Kiểm tra đăng nhập
+            var userId = '@Session["UserId"]';
+            if (!userId) {
+                alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.');
+                window.location.href = '@Url.Action("DangNhap", "Home")';
+                return;
+            }
+
+            var productId = $(form).find('input[name="productId"]').val();
+            var variantId = $(form).find('select[name="variantId"]').val();
+            var quantity = $(form).find('input[name="quantity"]').val();
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
             $.ajax({
-                url: '@Url.Action("AddToWishlist", "yeuthich")',
+                url: '@Url.Action("AddToCart", "GioHang")',
                 type: 'POST',
-                data: { productId: productId },
+                data: {
+                    productId: productId,
+                    variantId: variantId,
+                    quantity: quantity,
+                    __RequestVerificationToken: token
+                },
                 success: function (response) {
                     if (response.success) {
                         alert(response.message);
-                        // Cập nhật số lượng nếu cần
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            });
+        }
+
+        function addToWishlist(productId) {
+            // Kiểm tra đăng nhập
+            var userId = '@Session["UserId"]';
+            if (!userId) {
+                alert('Vui lòng đăng nhập để thêm vào danh sách yêu thích.');
+                window.location.href = '@Url.Action("DangNhap", "Home")';
+                return;
+            }
+
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            $.ajax({
+                url: '@Url.Action("AddToWishlist", "yeuthich")',
+                type: 'POST',
+                data: {
+                    productId: productId,
+                    __RequestVerificationToken: token
+                },
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        // Cập nhật số lượng wishlist trên giao diện
                         var currentCount = parseInt($('.pd-detail__click-count').text().replace('(', '').replace(')', '')) || 0;
                         $('.pd-detail__click-count').text('(' + (currentCount + 1) + ')');
                     } else {

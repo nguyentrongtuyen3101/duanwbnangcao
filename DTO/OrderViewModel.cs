@@ -16,5 +16,6 @@ namespace doanwebnangcao.DTO
         public int VariantId { get; set; }
         public int Quantity { get; set; }
         public string OrderNote { get; set; }
+        public List<CartDetail> CartDetails { get; set; }
     }
 }

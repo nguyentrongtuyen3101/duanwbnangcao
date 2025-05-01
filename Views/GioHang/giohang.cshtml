@@ -1,0 +1,353 @@
+﻿@model doanwebnangcao.Models.Cart
+
+@{
+    ViewBag.Title = "Giỏ Hàng";
+}
+
+<main>
+    <!--====== App Content ======-->
+    <div class="app-content">
+        <!--====== Section 1 ======-->
+        <div class="u-s-p-y-60">
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="container">
+                    <div class="breadcrumb">
+                        <div class="breadcrumb__wrap">
+                            <ul class="breadcrumb__list">
+                                <li class="has-separator">
+                                    <a href="@Url.Action("trangchu", "trangchu")">Trang Chủ</a>
+                                </li>
+                                <li class="is-marked">
+                                    <a href="@Url.Action("giohang", "GioHang")">Giỏ Hàng</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--====== End - Section 1 ======-->
+        <!--====== Section 2 ======-->
+        <div class="u-s-p-b-60">
+            <!--====== Section Intro ======-->
+            <div class="section__intro u-s-m-b-60">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="section__text-wrap">
+                                <h1 class="section__heading u-c-secondary">GIỎ HÀNG</h1>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Section Intro ======-->
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12 u-s-m-b-30">
+                            <div class="table-responsive">
+                                <table class="table-p">
+                                    <tbody>
+                                        @if (Model != null && Model.CartDetails != null && Model.CartDetails.Any())
+                                        {
+                                            foreach (var cartDetail in Model.CartDetails)
+                                            {
+                                                var productVariant = cartDetail.ProductVariant;
+                                                var product = productVariant.Product;
+                                                var imageUrl = !string.IsNullOrEmpty(productVariant.VariantImageUrl) ? productVariant.VariantImageUrl : product.ImageUrl ?? "/images/placeholder.jpg";
+
+                                                <!--====== Row ======-->
+                                                <tr>
+                                                    <td>
+                                                        <div class="table-p__box">
+                                                            <div class="table-p__img-wrap">
+                                                                <img class="u-img-fluid cart-product-image" src="@imageUrl" alt="@product.Name" onerror="this.src='/images/placeholder.jpg'" />
+                                                            </div>
+                                                            <div class="table-p__info">
+                                                                <span class="table-p__name">
+                                                                    <a href="@Url.Action("sanphamdetailt", "HangMoiVe", new { id = product.Id })">@product.Name</a>
+                                                                </span>
+                                                                <span class="table-p__category">
+                                                                    <a href="@Url.Action("hangmoive", "HangMoiVe", new { subcategoryId = product.SubcategoryId })">@product.Subcategory.Name</a>
+                                                                </span>
+                                                                <ul class="table-p__variant-list">
+                                                                    <li>
+                                                                        <span>Kích thước: @productVariant.Size.Name</span>
+                                                                    </li>
+                                                                    <li>
+                                                                        <span>Màu sắc: @productVariant.Color.Name</span>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="table-p__price">$@cartDetail.UnitPrice.ToString("F2")</span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="table-p__input-counter-wrap">
+                                                            <!--====== Input Counter ======-->
+                                                            <div class="input-counter">
+                                                                <span class="input-counter__minus fas fa-minus" onclick="updateQuantity(@cartDetail.Id, -1)"></span>
+                                                                <input class="input-counter__text input-counter--text-primary-style" type="text" value="@cartDetail.Quantity" data-cart-detail-id="@cartDetail.Id" data-min="1" data-max="@productVariant.StockQuantity" readonly>
+                                                                <span class="input-counter__plus fas fa-plus" onclick="updateQuantity(@cartDetail.Id, 1)"></span>
+                                                            </div>
+                                                            <!--====== End - Input Counter ======-->
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="table-p__del-wrap">
+                                                            <a class="far fa-trash-alt table-p__delete-link" href="javascript:void(0)" onclick="removeFromCart(@cartDetail.Id)"></a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <!--====== End - Row ======-->
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="4">
+                                                    <p class="text-center">Giỏ hàng của bạn hiện đang trống.</p>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="route-box">
+                                <div class="route-box__g1">
+                                    <a class="route-box__link" href="@Url.Action("hangmoive", "HangMoiVe")">
+                                        <i class="fas fa-long-arrow-alt-left"></i>
+                                        <span>TIẾP TỤC MUA SẮM</span>
+                                    </a>
+                                </div>
+                                @if (Model != null && Model.CartDetails != null && Model.CartDetails.Any())
+                                {
+                                    <div class="route-box__g2">
+                                        <a class="route-box__link" href="javascript:void(0)" onclick="clearCart()">
+                                            <i class="fas fa-trash"></i>
+                                            <span>XÓA GIỎ HÀNG</span>
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Section Content ======-->
+        </div>
+        <!--====== End - Section 2 ======-->
+        <!--====== Section 3 ======-->
+        <div class="u-s-p-b-60">
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12 u-s-m-b-30">
+                            <form class="f-cart">
+                                <div class="row">
+                                    <div class="col-lg-4 col-md-6 u-s-m-b-30">
+                                        <div class="f-cart__pad-box">
+                                            <h1 class="gl-h1">ƯỚC TÍNH PHÍ VẬN CHUYỂN VÀ THUẾ</h1>
+                                            <span class="gl-text u-s-m-b-30">Nhập điểm đến của bạn để nhận ước tính phí vận chuyển.</span>
+                                            <div class="u-s-m-b-30">
+                                                <!--====== Select Box ======-->
+                                                <label class="gl-label" for="shipping-country">QUỐC GIA *</label>
+                                                <select class="select-box select-box--primary-style" id="shipping-country">
+                                                    <option selected value="">Chọn quốc gia</option>
+                                                    <option value="vn">Việt Nam</option>
+                                                    <option value="us">Hoa Kỳ</option>
+                                                    <option value="uk">Anh</option>
+                                                </select>
+                                                <!--====== End - Select Box ======-->
+                                            </div>
+                                            <div class="u-s-m-b-30">
+                                                <!--====== Select Box ======-->
+                                                <label class="gl-label" for="shipping-state">TỈNH/THÀNH PHỐ *</label>
+                                                <select class="select-box select-box--primary-style" id="shipping-state">
+                                                    <option selected value="">Chọn tỉnh/thành phố</option>
+                                                    <option value="hcm">Hồ Chí Minh</option>
+                                                    <option value="hn">Hà Nội</option>
+                                                    <option value="dn">Đà Nẵng</option>
+                                                </select>
+                                                <!--====== End - Select Box ======-->
+                                            </div>
+                                            <div class="u-s-m-b-30">
+                                                <label class="gl-label" for="shipping-zip">MÃ BƯU ĐIỆN *</label>
+                                                <input class="input-text input-text--primary-style" type="text" id="shipping-zip" placeholder="Mã bưu điện">
+                                            </div>
+                                            <div class="u-s-m-b-30">
+                                                <a class="f-cart__ship-link btn--e-transparent-brand-b-2" href="javascript:void(0)">TÍNH PHÍ VẬN CHUYỂN</a>
+                                            </div>
+                                            <span class="gl-text">Lưu ý: Một số quốc gia có thể được miễn phí vận chuyển, nếu không sẽ áp dụng phí cố định hoặc phí giao hàng theo quốc gia.</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 col-md-6 u-s-m-b-30">
+                                        <div class="f-cart__pad-box">
+                                            <h1 class="gl-h1">GHI CHÚ</h1>
+                                            <span class="gl-text u-s-m-b-30">Thêm ghi chú đặc biệt về sản phẩm của bạn</span>
+                                            <div>
+                                                <label for="f-cart-note"></label>
+                                                <textarea class="text-area text-area--primary-style" id="f-cart-note"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 col-md-6 u-s-m-b-30">
+                                        <div class="f-cart__pad-box">
+                                            <div class="u-s-m-b-30">
+                                                @{
+                                                    decimal subtotal = Model != null && Model.CartDetails != null ? Model.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity) : 0;
+                                                    decimal shippingFee = 4.00m;
+                                                    decimal tax = 0.00m;
+                                                    decimal total = subtotal + shippingFee + tax;
+                                                }
+                                                <table class="f-cart__table">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>PHÍ VẬN CHUYỂN</td>
+                                                            <td>$@shippingFee.ToString("F2")</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>THUẾ</td>
+                                                            <td>$@tax.ToString("F2")</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>TỔNG CỘNG</td>
+                                                            <td>$@subtotal.ToString("F2")</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>TỔNG THANH TOÁN</td>
+                                                            <td>$@total.ToString("F2")</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div>
+                                                @if (Model != null && Model.CartDetails != null && Model.CartDetails.Any())
+                                                {
+                                                    <a class="btn btn--e-brand-b-2" href="@Url.Action("dathang", "muahang")">TIẾN HÀNH THANH TOÁN</a>
+                                                }
+                                                else
+                                                {
+                                                    <button class="btn btn--e-brand-b-2" disabled>TIẾN HÀNH THANH TOÁN</button>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Section Content ======-->
+        </div>
+        <!--====== End - Section 3 ======-->
+    </div>
+    <!--====== End - App Content ======-->
+</main>
+
+@section Styles {
+    <style>
+        /* Đảm bảo ảnh giữ tỷ lệ tự nhiên, không cố định thành hình vuông */
+        .cart-product-image {
+            max-width: 120px; /* Giới hạn chiều rộng tối đa */
+            max-height: 150px; /* Giới hạn chiều cao tối đa */
+            object-fit: contain; /* Giữ tỷ lệ ảnh, không cắt */
+            object-position: center; /* Căn giữa ảnh */
+        }
+
+        /* Điều chỉnh container ảnh */
+        .table-p__img-wrap {
+            width: 120px;
+            height: auto; /* Chiều cao tự động theo ảnh */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        function updateQuantity(cartDetailId, change) {
+            var input = $(`input[data-cart-detail-id='${cartDetailId}']`);
+            var current = parseInt(input.val()) || 0;
+            var min = parseInt(input.data("min")) || 1;
+            var max = parseInt(input.data("max")) || 1000;
+            var newQuantity = current + change;
+
+            if (newQuantity < min || newQuantity > max) {
+                return;
+            }
+
+            $.ajax({
+                url: '@Url.Action("UpdateQuantity", "GioHang")',
+                type: 'POST',
+                data: {
+                    cartDetailId: cartDetailId,
+                    quantity: newQuantity
+                },
+                success: function (response) {
+                    if (response.success) {
+                        input.val(newQuantity);
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            });
+        }
+
+        function removeFromCart(cartDetailId) {
+            if (confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                $.ajax({
+                    url: '@Url.Action("RemoveFromCart", "GioHang")',
+                    type: 'POST',
+                    data: { cartDetailId: cartDetailId },
+                    success: function (response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                    }
+                });
+            }
+        }
+
+        function clearCart() {
+            if (confirm('Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng?')) {
+                $.ajax({
+                    url: '@Url.Action("ClearCart", "GioHang")',
+                    type: 'POST',
+                    success: function (response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                    }
+                });
+            }
+        }
+    </script>
+}

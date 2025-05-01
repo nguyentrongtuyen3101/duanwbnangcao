@@ -92,11 +92,9 @@
                                             <li>
                                                 <a href="@Url.Action("editaddress", "profile")">Address Book</a>
                                             </li>
-                                          
                                             <li>
                                                 <a class="dash-active" href="@Url.Action("quanlydonhang", "muahang")">My Orders</a>
                                             </li>
-                                           
                                         </ul>
                                     </div>
                                 </div>
@@ -152,51 +150,62 @@
                                             {
                                                 foreach (var order in Model)
                                                 {
-                                                    foreach (var detail in order.OrderDetails)
+                                                    // Lấy OrderDetail đầu tiên để hiển thị thông tin đại diện
+                                                    var firstDetail = order.OrderDetails.FirstOrDefault();
+                                                    string productName = "Unknown Product";
+                                                    string imageUrl = "/images/placeholder.jpg";
+                                                    int totalQuantity = 0;
+
+                                                    if (firstDetail != null)
                                                     {
-                                                        var product = detail.ProductVariant.Product;
-                                                        var imageUrl = detail.ProductVariant.VariantImageUrl ?? product.ImageUrl ?? "/images/placeholder.jpg";
-                                                        <div class="m-order__get">
-                                                            <div class="manage-o__header u-s-m-b-30">
-                                                                <div class="dash-l-r">
-                                                                    <div>
-                                                                        <div class="manage-o__text-2 u-c-secondary">Order #@order.Id</div>
-                                                                        <div class="manage-o__text u-c-silver">Placed on @order.OrderDate.ToString("dd MMM yyyy HH:mm:ss")</div>
-                                                                    </div>
-                                                                    <div>
-                                                                        <div class="dash__link dash__link--brand">
-                                                                            <a href="@Url.Action("quanlychitietdonhang", "muahang", new { orderId = order.Id })">MANAGE</a>
-                                                                        </div>
-                                                                    </div>
+                                                        var product = firstDetail.ProductVariant != null ? firstDetail.ProductVariant.Product : null;
+                                                        productName = product != null ? product.Name : "Unknown Product";
+                                                        imageUrl = firstDetail.ProductVariant != null
+                                                            ? (!string.IsNullOrEmpty(firstDetail.ProductVariant.VariantImageUrl) ? firstDetail.ProductVariant.VariantImageUrl : (product != null && !string.IsNullOrEmpty(product.ImageUrl) ? product.ImageUrl : "/images/placeholder.jpg"))
+                                                            : "/images/placeholder.jpg";
+                                                        totalQuantity = order.OrderDetails.Sum(d => d.Quantity); // Tổng số lượng sản phẩm trong đơn hàng
+                                                    }
+
+                                                    <div class="m-order__get">
+                                                        <div class="manage-o__header u-s-m-b-30">
+                                                            <div class="dash-l-r">
+                                                                <div>
+                                                                    <div class="manage-o__text-2 u-c-secondary">Order #@order.Id</div>
+                                                                    <div class="manage-o__text u-c-silver">Placed on @order.OrderDate.ToString("dd MMM yyyy HH:mm:ss")</div>
                                                                 </div>
-                                                            </div>
-                                                            <div class="manage-o__description">
-                                                                <div class="description__container">
-                                                                    <div class="description__img-wrap">
-                                                                        <img class="u-img-fluid" src="@imageUrl" alt="@product.Name" onerror="this.src='/images/placeholder.jpg'" />
-                                                                    </div>
-                                                                    <div class="description-title">@product.Name</div>
-                                                                </div>
-                                                                <div class="description__info-wrap">
-                                                                    <div>
-                                                                        <span class="manage-o__badge badge--@order.Status.ToString().ToLower()">@order.Status</span>
-                                                                    </div>
-                                                                    <div>
-                                                                        <span class="manage-o__text-2 u-c-silver">
-                                                                            Quantity:
-                                                                            <span class="manage-o__text-2 u-c-secondary">@detail.Quantity</span>
-                                                                        </span>
-                                                                    </div>
-                                                                    <div>
-                                                                        <span class="manage-o__text-2 u-c-silver">
-                                                                            Total:
-                                                                            <span class="manage-o__text-2 u-c-secondary">$@order.TotalAmount.ToString("F2")</span>
-                                                                        </span>
+                                                                <div>
+                                                                    <div class="dash__link dash__link--brand">
+                                                                        <a href="@Url.Action("quanlychitietdonhang", "muahang", new { orderId = order.Id })">MANAGE</a>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    }
+                                                        <div class="manage-o__description">
+                                                            <div class="description__container">
+                                                                <div class="description__img-wrap">
+                                                                    <img class="u-img-fluid" src="@imageUrl" alt="@productName" onerror="this.src='/images/placeholder.jpg'" />
+                                                                </div>
+                                                                <div class="description-title">@productName</div>
+                                                            </div>
+                                                            <div class="description__info-wrap">
+                                                                <div>
+                                                                    <span class="manage-o__badge badge--@order.Status.ToString().ToLower()">@order.Status</span>
+                                                                </div>
+                                                                <div>
+                                                                    <span class="manage-o__text-2 u-c-silver">
+                                                                        Total Quantity:
+                                                                        <span class="manage-o__text-2 u-c-secondary">@totalQuantity</span>
+                                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <span class="manage-o__text-2 u-c-silver">
+                                                                        Total:
+                                                                        <span class="manage-o__text-2 u-c-secondary">$@order.TotalAmount.ToString("F2")</span>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 }
                                             }
                                             else

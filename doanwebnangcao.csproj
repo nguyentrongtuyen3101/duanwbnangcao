@@ -209,6 +209,7 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\Admincontroller.cs" />
+    <Compile Include="Controllers\GioHangController.cs" />
     <Compile Include="Controllers\hangmoiveController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\muahangController.cs" />
@@ -262,6 +263,7 @@
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Address.cs" />
     <Compile Include="Models\ApplicationDbContext.cs" />
+    <Compile Include="Models\BuyNowItem.cs" />
     <Compile Include="Models\Cart.cs" />
     <Compile Include="Models\CartDetail.cs" />
     <Compile Include="Models\Category.cs" />
@@ -643,6 +645,7 @@
     <Content Include="Views\profile\myprofile.cshtml" />
     <Content Include="Views\profile\adddiachi.cshtml" />
     <Content Include="Views\yeuthich\wishlist.cshtml" />
+    <Content Include="Views\GioHang\giohang.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
