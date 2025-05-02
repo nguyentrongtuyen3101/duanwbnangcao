@@ -7,13 +7,13 @@ namespace doanwebnangcao.Migrations
     using System.Resources;
     
     [GeneratedCode("EntityFramework.Migrations", "6.4.4")]
-    public sealed partial class RemoveShippingMethodsTable : IMigrationMetadata
+    public sealed partial class SyncWithCurrentDatabase : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(RemoveShippingMethodsTable));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(SyncWithCurrentDatabase));
         
         string IMigrationMetadata.Id
         {
-            get { return "202504232103073_RemoveShippingMethodsTable"; }
+            get { return "202505020235026_SyncWithCurrentDatabase"; }
         }
         
         string IMigrationMetadata.Source

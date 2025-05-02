@@ -252,13 +252,9 @@
     <Compile Include="Migrations\202504231241027_UpdateOrderStatusToEnum.designer.cs">
       <DependentUpon>202504231241027_UpdateOrderStatusToEnum.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\202504232037281_RemoveShippingMethodIdAfterRollback.cs" />
-    <Compile Include="Migrations\202504232037281_RemoveShippingMethodIdAfterRollback.designer.cs">
-      <DependentUpon>202504232037281_RemoveShippingMethodIdAfterRollback.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202504232103073_RemoveShippingMethodsTable.cs" />
-    <Compile Include="Migrations\202504232103073_RemoveShippingMethodsTable.designer.cs">
-      <DependentUpon>202504232103073_RemoveShippingMethodsTable.cs</DependentUpon>
+    <Compile Include="Migrations\202505020235026_SyncWithCurrentDatabase.cs" />
+    <Compile Include="Migrations\202505020235026_SyncWithCurrentDatabase.designer.cs">
+      <DependentUpon>202505020235026_SyncWithCurrentDatabase.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Address.cs" />
@@ -673,11 +669,8 @@
     <EmbeddedResource Include="Migrations\202504231241027_UpdateOrderStatusToEnum.resx">
       <DependentUpon>202504231241027_UpdateOrderStatusToEnum.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202504232037281_RemoveShippingMethodIdAfterRollback.resx">
-      <DependentUpon>202504232037281_RemoveShippingMethodIdAfterRollback.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202504232103073_RemoveShippingMethodsTable.resx">
-      <DependentUpon>202504232103073_RemoveShippingMethodsTable.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202505020235026_SyncWithCurrentDatabase.resx">
+      <DependentUpon>202505020235026_SyncWithCurrentDatabase.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

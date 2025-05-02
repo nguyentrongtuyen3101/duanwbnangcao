@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Web.Services.Description;
 
 namespace doanwebnangcao.Models
 {
@@ -58,5 +59,7 @@ namespace doanwebnangcao.Models
         public virtual ICollection<Order> Orders { get; set; }
         public virtual ICollection<Address> Addresses { get; set; }
         public virtual ICollection<Wishlist> Wishlists { get; set; }
+
+       
     }
 }
