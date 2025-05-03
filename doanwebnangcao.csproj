@@ -67,6 +67,15 @@
     <Reference Include="Microsoft.AspNet.Identity.Owin, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.Identity.Owin.2.2.4\lib\net45\Microsoft.AspNet.Identity.Owin.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.Client, Version=2.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.AspNet.SignalR.Client.2.4.3\lib\net45\Microsoft.AspNet.SignalR.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.AspNet.SignalR.Core.2.4.3\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.4.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.AspNet.SignalR.SystemWeb.2.4.3\lib\net45\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform, Version=2.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
     </Reference>
@@ -113,8 +122,8 @@
     <Reference Include="Serilog, Version=4.2.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
       <HintPath>packages\Serilog.4.2.0\lib\net471\Serilog.dll</HintPath>
     </Reference>
-    <Reference Include="Serilog.Sinks.File, Version=6.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
-      <HintPath>packages\Serilog.Sinks.File.6.0.0\lib\net471\Serilog.Sinks.File.dll</HintPath>
+    <Reference Include="Serilog.Sinks.File, Version=7.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <HintPath>packages\Serilog.Sinks.File.7.0.0\lib\net471\Serilog.Sinks.File.dll</HintPath>
     </Reference>
     <Reference Include="SerilogWeb.Classic, Version=5.1.0.0, Culture=neutral, PublicKeyToken=9462ddd55fbc0e7f, processorArchitecture=MSIL">
       <HintPath>packages\SerilogWeb.Classic.5.1.66\lib\net45\SerilogWeb.Classic.dll</HintPath>
@@ -209,6 +218,7 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\Admincontroller.cs" />
+    <Compile Include="Controllers\ChatController.cs" />
     <Compile Include="Controllers\GioHangController.cs" />
     <Compile Include="Controllers\hangmoiveController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -224,6 +234,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Hubs\ChatHub.cs" />
     <Compile Include="Migrations\202504100920503_InitialCreate.cs" />
     <Compile Include="Migrations\202504100920503_InitialCreate.designer.cs">
       <DependentUpon>202504100920503_InitialCreate.cs</DependentUpon>
@@ -252,9 +263,9 @@
     <Compile Include="Migrations\202504231241027_UpdateOrderStatusToEnum.designer.cs">
       <DependentUpon>202504231241027_UpdateOrderStatusToEnum.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\202505020235026_SyncWithCurrentDatabase.cs" />
-    <Compile Include="Migrations\202505020235026_SyncWithCurrentDatabase.designer.cs">
-      <DependentUpon>202505020235026_SyncWithCurrentDatabase.cs</DependentUpon>
+    <Compile Include="Migrations\202505030956027_AddChatMessagesTable.cs" />
+    <Compile Include="Migrations\202505030956027_AddChatMessagesTable.designer.cs">
+      <DependentUpon>202505030956027_AddChatMessagesTable.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Address.cs" />
@@ -263,9 +274,12 @@
     <Compile Include="Models\Cart.cs" />
     <Compile Include="Models\CartDetail.cs" />
     <Compile Include="Models\Category.cs" />
+    <Compile Include="Models\ChatMessage.cs" />
+    <Compile Include="Models\ChatViewModel.cs" />
     <Compile Include="Models\Color.cs" />
     <Compile Include="Models\Coupon.cs" />
     <Compile Include="DTO\LoginViewModel.cs" />
+    <Compile Include="Models\MessageDto.cs" />
     <Compile Include="Models\Order.cs" />
     <Compile Include="Models\OrderDetail.cs" />
     <Compile Include="Models\Payment.cs" />
@@ -360,6 +374,7 @@
     <Content Include="pep\images\brand\b4.png" />
     <Content Include="pep\images\brand\b5.png" />
     <Content Include="pep\images\brand\b6.png" />
+    <Content Include="pep\images\brand\Betterimage.ai_1746239847647.jpeg" />
     <Content Include="pep\images\collection\coll-1.jpg" />
     <Content Include="pep\images\collection\coll-2.jpg" />
     <Content Include="pep\images\collection\coll-3.jpg" />
@@ -591,6 +606,8 @@
     <Content Include="Scripts\jquery-3.4.1.slim.js" />
     <Content Include="Scripts\jquery-3.4.1.slim.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="Scripts\jquery.signalR-2.4.3.js" />
+    <Content Include="Scripts\jquery.signalR-2.4.3.min.js" />
     <Content Include="Scripts\jquery.validate.js" />
     <Content Include="Scripts\jquery.validate.min.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
@@ -642,6 +659,7 @@
     <Content Include="Views\profile\adddiachi.cshtml" />
     <Content Include="Views\yeuthich\wishlist.cshtml" />
     <Content Include="Views\GioHang\giohang.cshtml" />
+    <Content Include="Views\Chat\chatbox.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -669,8 +687,8 @@
     <EmbeddedResource Include="Migrations\202504231241027_UpdateOrderStatusToEnum.resx">
       <DependentUpon>202504231241027_UpdateOrderStatusToEnum.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202505020235026_SyncWithCurrentDatabase.resx">
-      <DependentUpon>202505020235026_SyncWithCurrentDatabase.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202505030956027_AddChatMessagesTable.resx">
+      <DependentUpon>202505030956027_AddChatMessagesTable.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

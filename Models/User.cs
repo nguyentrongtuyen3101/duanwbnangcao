@@ -59,7 +59,7 @@ namespace doanwebnangcao.Models
         public virtual ICollection<Order> Orders { get; set; }
         public virtual ICollection<Address> Addresses { get; set; }
         public virtual ICollection<Wishlist> Wishlists { get; set; }
-
-       
+        public virtual ICollection<ChatMessage> SentMessages { get; set; }
+        public virtual ICollection<ChatMessage> ReceivedMessages { get; set; }
     }
 }

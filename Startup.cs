@@ -6,7 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Microsoft.AspNet.Identity;
-using System.Globalization; // Thêm namespace để dùng CultureInfo
+using System.Globalization;
+using Microsoft.AspNet.SignalR; // Thêm namespace cho SignalR
 
 [assembly: OwinStartup(typeof(doanwebnangcao.Startup))]
 
@@ -94,7 +95,7 @@ namespace doanwebnangcao
                 AuthenticationType = "ApplicationCookie",
                 LoginPath = new PathString("/Home/DangNhap"),
                 CookieHttpOnly = true,
-                CookieSecure = CookieSecureOption.SameAsRequest, // Thay đổi để kiểm tra trên localhost
+                CookieSecure = CookieSecureOption.SameAsRequest,
                 CookieName = "MyAppCookie",
                 ExpireTimeSpan = TimeSpan.FromMinutes(30),
                 CookieSameSite = SameSiteMode.Strict,
@@ -134,6 +135,10 @@ namespace doanwebnangcao
                 }
             });
             app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
+
+            // Cấu hình SignalR
+            app.MapSignalR();
+
             Log.Information("OWIN Configuration completed.");
         }
     }

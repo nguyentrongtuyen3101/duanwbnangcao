@@ -29,5 +29,21 @@ namespace doanwebnangcao.Models
         public DbSet<Size> Sizes { get; set; } // Thêm DbSet cho Size
         public DbSet<Color> Colors { get; set; } // Thêm DbSet cho Color
         public DbSet<ProductVariant> ProductVariants { get; set; } // Thêm DbSet cho ProductVariant
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            // Quan hệ tin nhắn (Messages)
+            modelBuilder.Entity<ChatMessage>()
+                .HasRequired(m => m.Sender)
+                .WithMany(u => u.SentMessages)
+                .HasForeignKey(m => m.SenderId)
+                .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<ChatMessage>()
+                .HasRequired(m => m.Receiver)
+                .WithMany(u => u.ReceivedMessages)
+                .HasForeignKey(m => m.ReceiverId)
+                .WillCascadeOnDelete(false);
+        }
     }
 }

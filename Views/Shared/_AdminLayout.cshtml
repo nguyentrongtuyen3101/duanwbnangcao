@@ -196,7 +196,6 @@
                 background-color: #dc2626;
                 border-color: #dc2626;
             }
-
         /* CSS riêng cho SanPham */
         .table th:nth-child(1), .table td:nth-child(1) {
             width: 5%;
@@ -256,9 +255,8 @@
                 transform: scale(1.05);
                 transition: transform 0.2s ease-in-out;
             }
-
         /* CSS riêng cho Sizes và Colors */
-        .table th:nth-child(1), .table td:nth-child(1) (222, 223):not(:first-child), .table td:nth-child(1) {
+        .table th:nth-child(1), .table td:nth-child(1):not(:first-child), .table td:nth-child(1) {
             width: 5%;
         }
 
@@ -304,6 +302,10 @@
             </a>
             <a href="@Url.Action("Colors", "Admin")" class="btn btn-nav @(ViewBag.ActivePage == "Colors" ? "active" : "")">
                 <i class="fas fa-palette me-1"></i> Màu sắc
+            </a>
+            <!-- Chat Icon -->
+            <a href="@Url.Action("chatbox", "Chat")" class="btn btn-nav">
+                <i class="fas fa-comments me-1"></i> Chat
             </a>
             <!-- Notifications -->
             <div class="dropdown me-3">

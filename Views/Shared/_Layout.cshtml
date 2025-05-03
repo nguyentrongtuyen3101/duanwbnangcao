@@ -31,7 +31,6 @@
                 <img class="preloader__img" src="~/pep/images/preloader.png" alt="">
             </div>
         </div>
-
         <!--====== Main App ======-->
         <div id="app">
 
@@ -141,7 +140,7 @@
                                             <!--====== End - Dropdown ======-->
                                         </li>
                                         <li data-tooltip="tooltip" data-placement="left" title="Contact">
-                                            <a href="tel:+0900901904"><i class="fas fa-phone-volume"></i></a>
+                                            <a href="@Url.Action("chatbox", "Chat")"><i class="fas fa-comment-alt"></i></a>
                                         </li>
                                         <li data-tooltip="tooltip" data-placement="left" title="Mail">
                                             <a href="mailto:contact@domain.com"><i class="far fa-envelope"></i></a>
@@ -571,6 +570,7 @@
     <!--====== End - Main Header ======-->
     <div class="body-content">
         @RenderBody()
+     
     </div>
     @if (!User.IsInRole("Admin"))
     {
@@ -1016,6 +1016,7 @@
             </div>
         </div>
     </noscript>
+   
     @RenderSection("Scripts", required: false)
     @RenderSection("Styles", required: false)
 </body>

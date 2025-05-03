@@ -56,6 +56,9 @@ C:\Users\admin\Desktop\doanwebnangcao\bin\EntityFramework.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\EntityFramework.SqlServer.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.Identity.Core.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.Identity.Owin.dll
+C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.SignalR.Client.dll
+C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.SignalR.Core.dll
+C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.SignalR.SystemWeb.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.Owin.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.Owin.Host.HttpListener.dll
@@ -97,6 +100,12 @@ C:\Users\admin\Desktop\doanwebnangcao\bin\EntityFramework.xml
 C:\Users\admin\Desktop\doanwebnangcao\bin\EntityFramework.SqlServer.xml
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.Identity.Core.xml
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.Identity.Owin.xml
+C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.SignalR.Client.pdb
+C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.SignalR.Client.xml
+C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.SignalR.Core.pdb
+C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.SignalR.Core.xml
+C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.SignalR.SystemWeb.pdb
+C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.SignalR.SystemWeb.xml
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.Owin.xml
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.Owin.Host.HttpListener.xml
@@ -143,4 +152,4 @@ C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.csproj.CoreCompil
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.csproj.CopyComplete
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.dll
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.pdb
-C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.SyncWithCurrentDatabase.resources
+C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.AddChatMessagesTable.resources
