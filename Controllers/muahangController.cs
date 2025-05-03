@@ -6,20 +6,22 @@ using System.Linq;
 using System.Web.Mvc;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Text;
 using System.Diagnostics;
 using System.Web;
 using Newtonsoft.Json;
+using System.Configuration;
+using webbanxe.Payments;
+using System.Text;
 
 namespace doanwebnangcao.Controllers
 {
     public class MuahangController : Controller
     {
-        private const string VNPay_TmnCode = "3D8U719S";
-        private const string VNPay_HashSecret = "14X61NZKV0USRUXHQPYYM2MSFZDHGNLJ";
-        private const string VNPay_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-        private const string VNPay_ReturnUrl = "http://localhost/Muahang/VNPayPending"; // Cần thay bằng URL công khai khi thử nghiệm VNPay
+        private readonly string VNPay_TmnCode = ConfigurationManager.AppSettings["vnp_TmnCode"];
+        private readonly string VNPay_HashSecret = ConfigurationManager.AppSettings["vnp_HashSecret"];
+        private readonly string VNPay_Url = ConfigurationManager.AppSettings["vnp_Url"];
+        private readonly string VNPay_Api = ConfigurationManager.AppSettings["vnp_Api"];
+        private readonly string VNPay_ReturnUrl = ConfigurationManager.AppSettings["vnp_ReturnUrl"];
 
         private readonly ApplicationDbContext _context;
         public MuahangController()
@@ -42,7 +44,6 @@ namespace doanwebnangcao.Controllers
 
             try
             {
-                // Kiểm tra biến thể sản phẩm
                 var productVariant = _context.ProductVariants
                     .Include(pv => pv.Product)
                     .Include(pv => pv.Size)
@@ -50,19 +51,11 @@ namespace doanwebnangcao.Controllers
                     .SingleOrDefault(pv => pv.Id == variantId && pv.ProductId == productId);
 
                 if (productVariant == null)
-                {
-                    TempData["ErrorMessage"] = "Sản phẩm hoặc biến thể không tồn tại.";
-                    return RedirectToAction("sanphamdetailt", "HangMoiVe", new { id = productId });
-                }
+                    return ErrorRedirect("Sản phẩm hoặc biến thể không tồn tại.", productId);
 
-                // Kiểm tra số lượng tồn kho
                 if (productVariant.StockQuantity < quantity)
-                {
-                    TempData["ErrorMessage"] = $"Sản phẩm {productVariant.Product.Name} không đủ số lượng tồn kho.";
-                    return RedirectToAction("sanphamdetailt", "HangMoiVe", new { id = productId });
-                }
+                    return ErrorRedirect($"Sản phẩm {productVariant.Product.Name} không đủ số lượng tồn kho.", productId);
 
-                // Tạo đối tượng tạm thời để lưu thông tin sản phẩm
                 var buyNowItem = new BuyNowItem
                 {
                     ProductVariantId = variantId,
@@ -74,17 +67,13 @@ namespace doanwebnangcao.Controllers
                     ColorName = productVariant.Color?.Name
                 };
 
-                // Lưu vào TempData để sử dụng trong action Dathang
                 TempData["BuyNowItem"] = JsonConvert.SerializeObject(buyNowItem);
-
-                // Chuyển hướng đến trang đặt hàng
                 return RedirectToAction("Dathang");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error in BuyNow: {ex.Message}");
-                TempData["ErrorMessage"] = "Có lỗi xảy ra khi xử lý yêu cầu mua ngay. Vui lòng thử lại.";
-                return RedirectToAction("sanphamdetailt", "HangMoiVe", new { id = productId });
+                return ErrorRedirect("Có lỗi xảy ra khi xử lý yêu cầu mua ngay. Vui lòng thử lại.", productId);
             }
         }
 
@@ -107,27 +96,19 @@ namespace doanwebnangcao.Controllers
                 .Where(a => a.UserId == userId)
                 .ToList();
 
-            var model = new OrderViewModel
-            {
-                Address = new Address()
-            };
-
-            // Khai báo biến cart một lần
+            var model = new OrderViewModel { Address = new Address() };
             Cart cart = null;
             BuyNowItem buyNowItem = null;
 
-            // Kiểm tra xem có BuyNowItem trong TempData không
             if (TempData["BuyNowItem"] != null)
             {
                 var buyNowItemJson = TempData["BuyNowItem"].ToString();
                 buyNowItem = JsonConvert.DeserializeObject<BuyNowItem>(buyNowItemJson);
                 ViewBag.BuyNowItem = buyNowItem;
-                // Giữ TempData để sử dụng trong PlaceOrder
                 TempData["BuyNowItem"] = buyNowItemJson;
             }
             else
             {
-                // Nếu không có BuyNowItem, sử dụng giỏ hàng
                 cart = _context.Carts
                     .Include(c => c.CartDetails)
                     .Include(c => c.CartDetails.Select(cd => cd.ProductVariant))
@@ -155,13 +136,11 @@ namespace doanwebnangcao.Controllers
 
             int userId = (int)Session["UserId"];
 
-            // Validate PhoneNumber
             if (!string.IsNullOrEmpty(model.Address.PhoneNumber) && !Regex.IsMatch(model.Address.PhoneNumber, @"^\d{10,15}$"))
             {
                 ModelState.AddModelError("Address.PhoneNumber", "Số điện thoại phải từ 10-15 chữ số và chỉ chứa số.");
             }
 
-            // Khai báo biến cart và buyNowItem một lần
             Cart cart = null;
             BuyNowItem buyNowItem = null;
 
@@ -169,33 +148,7 @@ namespace doanwebnangcao.Controllers
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
                 Debug.WriteLine("ModelState Errors: " + string.Join(", ", errors));
-
-                TempData["ErrorMessage"] = "Thông tin không hợp lệ. Vui lòng kiểm tra lại.";
-                ViewBag.PaymentMethods = _context.PaymentMethods.Where(pm => pm.IsActive).ToList();
-                ViewBag.SelectedAddress = _context.Addresses
-                    .Where(a => a.UserId == userId)
-                    .OrderByDescending(a => a.Id)
-                    .FirstOrDefault();
-                ViewBag.UserAddresses = _context.Addresses.Where(a => a.UserId == userId).ToList();
-
-                if (TempData["BuyNowItem"] != null)
-                {
-                    var buyNowItemJson = TempData["BuyNowItem"].ToString();
-                    buyNowItem = JsonConvert.DeserializeObject<BuyNowItem>(buyNowItemJson);
-                    ViewBag.BuyNowItem = buyNowItem;
-                    TempData["BuyNowItem"] = buyNowItemJson;
-                }
-                else
-                {
-                    cart = _context.Carts
-                        .Include(c => c.CartDetails)
-                        .Include(c => c.CartDetails.Select(cd => cd.ProductVariant))
-                        .Include(c => c.CartDetails.Select(cd => cd.ProductVariant.Product))
-                        .SingleOrDefault(c => c.UserId == userId);
-                    ViewBag.Cart = cart;
-                }
-
-                return View("Dathang", model);
+                return LoadDathangView(model, userId, "Thông tin không hợp lệ. Vui lòng kiểm tra lại.", ref cart, ref buyNowItem);
             }
 
             var address = new Address
@@ -212,28 +165,7 @@ namespace doanwebnangcao.Controllers
             _context.SaveChanges();
 
             model.Address.Id = address.Id;
-            ViewBag.PaymentMethods = _context.PaymentMethods.Where(pm => pm.IsActive).ToList();
-            ViewBag.SelectedAddress = address;
-            ViewBag.UserAddresses = _context.Addresses.Where(a => a.UserId == userId).ToList();
-
-            if (TempData["BuyNowItem"] != null)
-            {
-                var buyNowItemJson = TempData["BuyNowItem"].ToString();
-                buyNowItem = JsonConvert.DeserializeObject<BuyNowItem>(buyNowItemJson);
-                ViewBag.BuyNowItem = buyNowItem;
-                TempData["BuyNowItem"] = buyNowItemJson;
-            }
-            else
-            {
-                cart = _context.Carts
-                    .Include(c => c.CartDetails)
-                    .Include(c => c.CartDetails.Select(cd => cd.ProductVariant))
-                    .Include(c => c.CartDetails.Select(cd => cd.ProductVariant.Product))
-                    .SingleOrDefault(c => c.UserId == userId);
-                ViewBag.Cart = cart;
-            }
-
-            return View("Dathang", model);
+            return LoadDathangView(model, userId, null, ref cart, ref buyNowItem, address);
         }
 
         // POST: Muahang/UpdateShippingAddress
@@ -251,7 +183,6 @@ namespace doanwebnangcao.Controllers
 
             try
             {
-                // Kiểm tra địa chỉ có thuộc về người dùng không
                 var address = _context.Addresses
                     .SingleOrDefault(a => a.Id == ShippingAddressId && a.UserId == userId);
 
@@ -261,16 +192,8 @@ namespace doanwebnangcao.Controllers
                     return RedirectToAction("Dathang");
                 }
 
-                // Load lại trang đặt hàng với địa chỉ đã chọn
-                var userAddresses = _context.Addresses
-                    .Where(a => a.UserId == userId)
-                    .ToList();
-                var model = new OrderViewModel
-                {
-                    Address = new Address()
-                };
-
-                // Khai báo biến cart và buyNowItem một lần
+                var userAddresses = _context.Addresses.Where(a => a.UserId == userId).ToList();
+                var model = new OrderViewModel { Address = new Address() };
                 Cart cart = null;
                 BuyNowItem buyNowItem = null;
 
@@ -318,43 +241,13 @@ namespace doanwebnangcao.Controllers
             }
 
             int userId = (int)Session["UserId"];
-
-            // Khai báo biến cart và buyNowItem một lần
             Cart cart = null;
             BuyNowItem buyNowItem = null;
 
             if (AcceptTerms != true)
             {
                 TempData["ErrorMessage"] = "Vui lòng đồng ý với điều khoản dịch vụ.";
-                var latestAddress = _context.Addresses
-                    .Where(a => a.UserId == userId)
-                    .OrderByDescending(a => a.Id)
-                    .FirstOrDefault();
-                var userAddresses = _context.Addresses
-                    .Where(a => a.UserId == userId)
-                    .ToList();
-                ViewBag.PaymentMethods = _context.PaymentMethods.Where(pm => pm.IsActive).ToList();
-                ViewBag.SelectedAddress = latestAddress;
-                ViewBag.UserAddresses = userAddresses;
-
-                if (TempData["BuyNowItem"] != null)
-                {
-                    var buyNowItemJson = TempData["BuyNowItem"].ToString();
-                    buyNowItem = JsonConvert.DeserializeObject<BuyNowItem>(buyNowItemJson);
-                    ViewBag.BuyNowItem = buyNowItem;
-                    TempData["BuyNowItem"] = buyNowItemJson;
-                }
-                else
-                {
-                    cart = _context.Carts
-                        .Include(c => c.CartDetails)
-                        .Include(c => c.CartDetails.Select(cd => cd.ProductVariant))
-                        .Include(c => c.CartDetails.Select(cd => cd.ProductVariant.Product))
-                        .SingleOrDefault(c => c.UserId == userId);
-                    ViewBag.Cart = cart;
-                }
-
-                return View("Dathang", model);
+                return LoadDathangView(model, userId, null, ref cart, ref buyNowItem);
             }
 
             var paymentMethod = _context.PaymentMethods.SingleOrDefault(pm => pm.Id == PaymentMethodId);
@@ -375,14 +268,12 @@ namespace doanwebnangcao.Controllers
                 return RedirectToAction("Dathang");
             }
 
-            // Kiểm tra xem có BuyNowItem không
             if (TempData["BuyNowItem"] != null)
             {
                 var buyNowItemJson = TempData["BuyNowItem"].ToString();
                 buyNowItem = JsonConvert.DeserializeObject<BuyNowItem>(buyNowItemJson);
             }
 
-            // Nếu không có BuyNowItem, lấy giỏ hàng
             if (buyNowItem == null)
             {
                 cart = _context.Carts
@@ -398,7 +289,6 @@ namespace doanwebnangcao.Controllers
                 }
             }
 
-            // Kiểm tra số lượng tồn kho
             if (buyNowItem != null)
             {
                 var productVariant = _context.ProductVariants
@@ -422,7 +312,6 @@ namespace doanwebnangcao.Controllers
                 }
             }
 
-            // Tạo đơn hàng
             var order = new Order
             {
                 UserId = userId,
@@ -434,10 +323,9 @@ namespace doanwebnangcao.Controllers
                 Notes = model.OrderNote
             };
 
-            // Tạo chi tiết đơn hàng
             if (buyNowItem != null)
             {
-                order.TotalAmount = buyNowItem.UnitPrice * buyNowItem.Quantity + 4; // Phí vận chuyển
+                order.TotalAmount = buyNowItem.UnitPrice * buyNowItem.Quantity + 4;
                 var orderDetail = new OrderDetail
                 {
                     Order = order,
@@ -450,7 +338,7 @@ namespace doanwebnangcao.Controllers
             }
             else
             {
-                order.TotalAmount = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity) + 4; // Phí vận chuyển
+                order.TotalAmount = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity) + 4;
                 foreach (var cartDetail in cart.CartDetails)
                 {
                     var orderDetail = new OrderDetail
@@ -468,7 +356,6 @@ namespace doanwebnangcao.Controllers
             _context.Orders.Add(order);
             _context.SaveChanges();
 
-            // Xử lý thanh toán
             if (string.Equals(paymentMethod.Name, "Thanh toán qua VNP", StringComparison.OrdinalIgnoreCase))
             {
                 return ProcessVNPayPayment(order);
@@ -480,7 +367,6 @@ namespace doanwebnangcao.Controllers
             else
             {
                 TempData["ErrorMessage"] = "Phương thức thanh toán không được hỗ trợ, nhưng đơn hàng đã được ghi nhận.";
-                // Xóa TempData["BuyNowItem"] sau khi hoàn tất đơn hàng
                 TempData.Remove("BuyNowItem");
                 return RedirectToAction("Quanlydonhang");
             }
@@ -491,41 +377,51 @@ namespace doanwebnangcao.Controllers
         {
             try
             {
-                string vnp_TxnRef = order.Id.ToString();
+                if (order.TotalAmount <= 0)
+                    throw new Exception("Số tiền thanh toán không hợp lệ.");
+
+                string vnp_TxnRef = $"{order.Id}_{DateTime.Now.Ticks}";
                 string vnp_OrderInfo = $"Thanh toan don hang {order.Id}";
                 long vnp_Amount = (long)(order.TotalAmount * 100);
+                string vnp_CreateDate = DateTime.Now.ToString("yyyyMMddHHmmss");
 
-                var vnpayParams = new Dictionary<string, string>
+                var vnpay = new VnPay();
+                vnpay.AddRequestData("vnp_Version", VnPay.VERSION);
+                vnpay.AddRequestData("vnp_Command", "pay");
+                vnpay.AddRequestData("vnp_TmnCode", VNPay_TmnCode);
+                vnpay.AddRequestData("vnp_Amount", vnp_Amount.ToString());
+                vnpay.AddRequestData("vnp_CreateDate", vnp_CreateDate);
+                vnpay.AddRequestData("vnp_CurrCode", "VND");
+                vnpay.AddRequestData("vnp_IpAddr", HashAndGetIP.GetIpAddress(HttpContext));
+                vnpay.AddRequestData("vnp_Locale", "vn");
+                vnpay.AddRequestData("vnp_OrderInfo", vnp_OrderInfo);
+                vnpay.AddRequestData("vnp_OrderType", "250000");
+                vnpay.AddRequestData("vnp_ReturnUrl", VNPay_ReturnUrl);
+                vnpay.AddRequestData("vnp_TxnRef", vnp_TxnRef);
+
+                // Log các tham số trước khi tạo chữ ký
+                StringBuilder paramsLog = new StringBuilder("VNPay Params Before Hash: ");
+                foreach (var param in vnpay.GetType().GetField("requestData", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(vnpay) as SortedList<string, string>)
                 {
-                    { "vnp_Version", "2.1.0" },
-                    { "vnp_Command", "pay" },
-                    { "vnp_TmnCode", VNPay_TmnCode },
-                    { "vnp_Amount", vnp_Amount.ToString() },
-                    { "vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss") },
-                    { "vnp_CurrCode", "VND" },
-                    { "vnp_IpAddr", GetClientIpAddress() },
-                    { "vnp_Locale", "vn" },
-                    { "vnp_OrderInfo", vnp_OrderInfo },
-                    { "vnp_OrderType", "250000" },
-                    { "vnp_ReturnUrl", VNPay_ReturnUrl + "?orderId=" + order.Id },
-                    { "vnp_TxnRef", vnp_TxnRef },
-                    { "vnp_SecureHashType", "SHA512" }
-                };
+                    paramsLog.Append($"{param.Key}={param.Value}&");
+                }
+                Debug.WriteLine(paramsLog.ToString().TrimEnd('&'));
 
-                var sortedParams = vnpayParams.OrderBy(kvp => kvp.Key).ToList();
-                var signData = string.Join("&", sortedParams.Select(kvp => $"{kvp.Key}={HttpUtility.UrlEncode(kvp.Value, Encoding.UTF8)}"));
-                var vnp_SecureHash = HmacSHA512(VNPay_HashSecret, signData);
-                vnpayParams.Remove("vnp_SecureHashType");
-                vnpayParams.Add("vnp_SecureHash", vnp_SecureHash);
+                // Log thêm thông tin hệ thống
+                Debug.WriteLine($"System Time: {DateTime.Now.ToString("yyyyMMddHHmmss")}");
+                Debug.WriteLine($"System TimeZone: {TimeZoneInfo.Local.Id}");
+                Debug.WriteLine($"VNPay Params - TxnRef: {vnp_TxnRef}, Amount: {vnp_Amount}, CreateDate: {vnp_CreateDate}");
+                Debug.WriteLine($"ReturnUrl: {VNPay_ReturnUrl}");
 
-                var paymentUrl = VNPay_Url + "?" + string.Join("&", vnpayParams.Select(kvp => $"{kvp.Key}={HttpUtility.UrlEncode(kvp.Value, Encoding.UTF8)}"));
+                string paymentUrl = vnpay.CreateRequestUrl(VNPay_Url, VNPay_HashSecret);
+                Debug.WriteLine($"Payment URL: {paymentUrl}");
+
                 return Redirect(paymentUrl);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error in ProcessVNPayPayment: {ex.Message}");
-                TempData["ErrorMessage"] = "Có lỗi xảy ra khi xử lý thanh toán VNPay. Vui lòng thử lại.";
-                // Xóa TempData["BuyNowItem"] nếu có lỗi
+                TempData["ErrorMessage"] = "Có lỗi khi khởi tạo thanh toán VNPay. Vui lòng thử lại.";
                 TempData.Remove("BuyNowItem");
                 return RedirectToAction("Quanlydonhang");
             }
@@ -540,9 +436,7 @@ namespace doanwebnangcao.Controllers
                 {
                     var variant = _context.ProductVariants.SingleOrDefault(v => v.Id == buyNowItem.ProductVariantId);
                     if (variant != null)
-                    {
                         variant.StockQuantity -= buyNowItem.Quantity;
-                    }
                 }
                 else if (cart != null)
                 {
@@ -550,11 +444,8 @@ namespace doanwebnangcao.Controllers
                     {
                         var variant = _context.ProductVariants.SingleOrDefault(v => v.Id == cartDetail.ProductVariantId);
                         if (variant != null)
-                        {
                             variant.StockQuantity -= cartDetail.Quantity;
-                        }
                     }
-                    // Xóa giỏ hàng
                     _context.CartDetails.RemoveRange(cart.CartDetails);
                     _context.Carts.Remove(cart);
                 }
@@ -563,7 +454,6 @@ namespace doanwebnangcao.Controllers
                 _context.SaveChanges();
 
                 TempData["SuccessMessage"] = "Đặt hàng thành công!";
-                // Xóa TempData["BuyNowItem"] sau khi hoàn tất đơn hàng
                 TempData.Remove("BuyNowItem");
                 return RedirectToAction("Quanlydonhang");
             }
@@ -571,18 +461,9 @@ namespace doanwebnangcao.Controllers
             {
                 Debug.WriteLine($"Error in ProcessCODPayment: {ex.Message}");
                 TempData["ErrorMessage"] = "Có lỗi xảy ra khi xử lý đơn hàng COD. Vui lòng thử lại.";
-                // Xóa TempData["BuyNowItem"] nếu có lỗi
                 TempData.Remove("BuyNowItem");
                 return RedirectToAction("Quanlydonhang");
             }
-        }
-
-        // GET: Muahang/VNPayPending
-        [HttpGet]
-        public ActionResult VNPayPending(int orderId)
-        {
-            ViewBag.OrderId = orderId;
-            return View();
         }
 
         // GET: Muahang/VNPayReturn
@@ -591,66 +472,75 @@ namespace doanwebnangcao.Controllers
         {
             try
             {
-                var vnpayData = Request.QueryString;
-                string vnp_SecureHash = vnpayData["vnp_SecureHash"];
-                string vnp_TxnRef = vnpayData["vnp_TxnRef"];
-                string vnp_ResponseCode = vnpayData["vnp_ResponseCode"];
-
-                var vnpayParams = new Dictionary<string, string>();
+                var vnpay = new VnPay();
                 foreach (string key in Request.QueryString.AllKeys)
                 {
-                    if (key != "vnp_SecureHash")
+                    if (!string.IsNullOrEmpty(Request.QueryString[key]))
                     {
-                        vnpayParams.Add(key, Request.QueryString[key]);
+                        vnpay.AddResponseData(key, Request.QueryString[key]);
                     }
                 }
 
-                var sortedParams = vnpayParams.OrderBy(kvp => kvp.Key).ToList();
-                var signData = string.Join("&", sortedParams.Select(kvp => $"{kvp.Key}={HttpUtility.UrlEncode(kvp.Value, Encoding.UTF8)}"));
-                var computedHash = HmacSHA512(VNPay_HashSecret, signData);
+                string vnp_SecureHash = vnpay.GetResponseData("vnp_SecureHash");
+                string vnp_TxnRef = vnpay.GetResponseData("vnp_TxnRef");
+                string vnp_ResponseCode = vnpay.GetResponseData("vnp_ResponseCode");
+                string vnp_Amount = vnpay.GetResponseData("vnp_Amount");
 
-                if (computedHash != vnp_SecureHash)
+                Debug.WriteLine($"VNPayReturn - TxnRef: {vnp_TxnRef}, ResponseCode: {vnp_ResponseCode}, Amount: {vnp_Amount}");
+
+                if (string.IsNullOrEmpty(vnp_SecureHash) || string.IsNullOrEmpty(vnp_TxnRef) || string.IsNullOrEmpty(vnp_ResponseCode))
                 {
+                    TempData["ErrorMessage"] = "Dữ liệu trả về từ VNPay không hợp lệ.";
+                    return RedirectToAction("Quanlydonhang");
+                }
+
+                if (!vnpay.ValidateSignature(vnp_SecureHash, VNPay_HashSecret))
+                {
+                    Debug.WriteLine($"Invalid signature: {vnp_SecureHash}");
                     TempData["ErrorMessage"] = "Chữ ký không hợp lệ. Thanh toán không được xác nhận.";
-                    // Xóa TempData["BuyNowItem"] nếu có lỗi
-                    TempData.Remove("BuyNowItem");
+                    return RedirectToAction("Quanlydonhang");
+                }
+
+                string[] txnRefParts = vnp_TxnRef.Split('_');
+                if (txnRefParts.Length == 0 || !int.TryParse(txnRefParts[0], out int orderId))
+                {
+                    TempData["ErrorMessage"] = "Mã giao dịch không hợp lệ.";
+                    return RedirectToAction("Quanlydonhang");
+                }
+
+                var order = _context.Orders
+                    .Include(o => o.OrderDetails)
+                    .SingleOrDefault(o => o.Id == orderId);
+
+                if (order == null)
+                {
+                    TempData["ErrorMessage"] = "Đơn hàng không tồn tại.";
+                    return RedirectToAction("Quanlydonhang");
+                }
+
+                if (order.Status != OrderStatus.Pending)
+                {
+                    TempData["ErrorMessage"] = "Đơn hàng đã được xử lý trước đó.";
+                    return RedirectToAction("Quanlydonhang");
+                }
+
+                long vnpAmount = long.Parse(vnp_Amount) / 100;
+                if (vnpAmount != (long)order.TotalAmount)
+                {
+                    TempData["ErrorMessage"] = "Số tiền thanh toán không khớp với đơn hàng.";
                     return RedirectToAction("Quanlydonhang");
                 }
 
                 if (vnp_ResponseCode == "00")
                 {
-                    int orderId = int.Parse(vnp_TxnRef);
-                    var order = _context.Orders
-                        .Include(o => o.OrderDetails)
-                        .SingleOrDefault(o => o.Id == orderId);
-
-                    if (order == null)
-                    {
-                        TempData["ErrorMessage"] = "Đơn hàng không tồn tại.";
-                        // Xóa TempData["BuyNowItem"] nếu có lỗi
-                        TempData.Remove("BuyNowItem");
-                        return RedirectToAction("Quanlydonhang");
-                    }
-
-                    if (order.Status != OrderStatus.Pending)
-                    {
-                        TempData["ErrorMessage"] = "Đơn hàng đã được xử lý trước đó.";
-                        // Xóa TempData["BuyNowItem"] nếu có lỗi
-                        TempData.Remove("BuyNowItem");
-                        return RedirectToAction("Quanlydonhang");
-                    }
-
                     order.Status = OrderStatus.Confirmed;
                     foreach (var detail in order.OrderDetails)
                     {
                         var variant = _context.ProductVariants.SingleOrDefault(v => v.Id == detail.ProductVariantId);
                         if (variant != null)
-                        {
                             variant.StockQuantity -= detail.Quantity;
-                        }
                     }
 
-                    // Xóa giỏ hàng nếu không phải BuyNow
                     var cart = _context.Carts
                         .Include(c => c.CartDetails)
                         .SingleOrDefault(c => c.UserId == order.UserId);
@@ -661,27 +551,16 @@ namespace doanwebnangcao.Controllers
                     }
 
                     _context.SaveChanges();
-
                     TempData["SuccessMessage"] = "Thanh toán thành công! Đơn hàng của bạn đã được xác nhận.";
                 }
                 else
                 {
-                    int orderId = int.Parse(vnp_TxnRef);
-                    var order = _context.Orders
-                        .Include(o => o.OrderDetails)
-                        .SingleOrDefault(o => o.Id == orderId);
-
-                    if (order != null)
-                    {
-                        _context.OrderDetails.RemoveRange(order.OrderDetails);
-                        _context.Orders.Remove(order);
-                        _context.SaveChanges();
-                    }
-
-                    TempData["ErrorMessage"] = "Thanh toán thất bại. Đơn hàng đã bị hủy.";
+                    _context.OrderDetails.RemoveRange(order.OrderDetails);
+                    _context.Orders.Remove(order);
+                    _context.SaveChanges();
+                    TempData["ErrorMessage"] = $"Thanh toán thất bại. Mã lỗi: {vnp_ResponseCode}.";
                 }
 
-                // Xóa TempData["BuyNowItem"] sau khi hoàn tất thanh toán VNPay
                 TempData.Remove("BuyNowItem");
                 return RedirectToAction("Quanlydonhang");
             }
@@ -689,8 +568,81 @@ namespace doanwebnangcao.Controllers
             {
                 Debug.WriteLine($"Error in VNPayReturn: {ex.Message}");
                 TempData["ErrorMessage"] = "Có lỗi xảy ra khi xử lý kết quả thanh toán VNPay.";
-                // Xóa TempData["BuyNowItem"] nếu có lỗi
                 TempData.Remove("BuyNowItem");
+                return RedirectToAction("Quanlydonhang");
+            }
+        }
+
+        // POST: Muahang/QueryTransaction
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult QueryTransaction(string txnRef, string orderId)
+        {
+            try
+            {
+                if (!int.TryParse(orderId, out int parsedOrderId))
+                {
+                    TempData["ErrorMessage"] = "Mã đơn hàng không hợp lệ.";
+                    return RedirectToAction("Quanlydonhang");
+                }
+
+                var order = _context.Orders.SingleOrDefault(o => o.Id == parsedOrderId && o.UserId == (int)Session["UserId"]);
+                if (order == null)
+                {
+                    TempData["ErrorMessage"] = "Đơn hàng không tồn tại hoặc bạn không có quyền truy cập.";
+                    return RedirectToAction("Quanlydonhang");
+                }
+
+                var vnpay = new VnPay();
+                vnpay.AddRequestData("vnp_Version", VnPay.VERSION);
+                vnpay.AddRequestData("vnp_Command", "querydr");
+                vnpay.AddRequestData("vnp_TmnCode", VNPay_TmnCode);
+                vnpay.AddRequestData("vnp_TxnRef", txnRef);
+                vnpay.AddRequestData("vnp_OrderInfo", $"Tra cứu giao dịch cho đơn hàng {orderId}");
+                vnpay.AddRequestData("vnp_TransDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
+                vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
+                vnpay.AddRequestData("vnp_IpAddr", HashAndGetIP.GetIpAddress(HttpContext));
+
+                using (var client = new System.Net.WebClient())
+                {
+                    var queryString = vnpay.CreateRequestUrl("", VNPay_HashSecret).TrimStart('?');
+                    client.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
+                    var response = client.UploadString(VNPay_Api, "POST", queryString);
+                    Debug.WriteLine($"Phản hồi tra cứu VNPay: {response}");
+
+                    var responseDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(response);
+
+                    if (responseDict.ContainsKey("vnp_ResponseCode") && responseDict["vnp_ResponseCode"] == "00")
+                    {
+                        if (order.Status == OrderStatus.Pending)
+                        {
+                            order.Status = OrderStatus.Confirmed;
+                            foreach (var detail in order.OrderDetails)
+                            {
+                                var variant = _context.ProductVariants.SingleOrDefault(v => v.Id == detail.ProductVariantId);
+                                if (variant != null)
+                                    variant.StockQuantity -= detail.Quantity;
+                            }
+                            _context.SaveChanges();
+                            TempData["SuccessMessage"] = "Tra cứu giao dịch thành công! Đơn hàng đã được xác nhận.";
+                        }
+                        else
+                        {
+                            TempData["SuccessMessage"] = "Giao dịch đã được xác nhận trước đó.";
+                        }
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = $"Tra cứu giao dịch thất bại. Mã lỗi: {responseDict["vnp_ResponseCode"]}.";
+                    }
+                }
+
+                return RedirectToAction("Quanlydonhang");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Lỗi trong QueryTransaction: {ex.Message}");
+                TempData["ErrorMessage"] = "Có lỗi xảy ra khi tra cứu giao dịch VNPay.";
                 return RedirectToAction("Quanlydonhang");
             }
         }
@@ -706,7 +658,6 @@ namespace doanwebnangcao.Controllers
             }
 
             int userId = (int)Session["UserId"];
-
             var orders = _context.Orders
                 .Include(o => o.OrderDetails)
                 .Include(o => o.OrderDetails.Select(od => od.ProductVariant))
@@ -729,7 +680,6 @@ namespace doanwebnangcao.Controllers
             }
 
             int userId = (int)Session["UserId"];
-
             var order = _context.Orders
                 .Include(o => o.OrderDetails)
                 .Include(o => o.OrderDetails.Select(od => od.ProductVariant))
@@ -772,14 +722,12 @@ namespace doanwebnangcao.Controllers
                     return RedirectToAction("Quanlydonhang");
                 }
 
-                // Chỉ cho phép hủy nếu trạng thái là Pending hoặc Confirmed
                 if (order.Status == OrderStatus.Shipped || order.Status == OrderStatus.Delivered || order.Status == OrderStatus.Cancelled)
                 {
                     TempData["ErrorMessage"] = "Đơn hàng không thể hủy do đã ở trạng thái vận chuyển, đã giao hoặc đã bị hủy.";
                     return RedirectToAction("Quanlydonhang");
                 }
 
-                // Cập nhật trạng thái đơn hàng thành Cancelled
                 order.Status = OrderStatus.Cancelled;
                 _context.Entry(order).State = EntityState.Modified;
                 _context.SaveChanges();
@@ -795,32 +743,46 @@ namespace doanwebnangcao.Controllers
             }
         }
 
-        // Helper method: Tạo chữ ký HMAC-SHA512
-        private string HmacSHA512(string key, string inputData)
+        // Helper method: Redirect with error message
+        private ActionResult ErrorRedirect(string message, int productId)
         {
-            var hash = new StringBuilder();
-            byte[] keyBytes = Encoding.UTF8.GetBytes(key);
-            byte[] inputBytes = Encoding.UTF8.GetBytes(inputData);
-            using (var hmac = new HMACSHA512(keyBytes))
-            {
-                byte[] hashValue = hmac.ComputeHash(inputBytes);
-                foreach (var theByte in hashValue)
-                {
-                    hash.Append(theByte.ToString("x2"));
-                }
-            }
-            return hash.ToString();
+            TempData["ErrorMessage"] = message;
+            return RedirectToAction("sanphamdetailt", "HangMoiVe", new { id = productId });
         }
 
-        // Helper method: Lấy địa chỉ IP của client
-        private string GetClientIpAddress()
+        // Helper method: Load Dathang view with data
+        private ActionResult LoadDathangView(OrderViewModel model, int userId, string errorMessage, ref Cart cart, ref BuyNowItem buyNowItem, Address selectedAddress = null)
         {
-            string ipAddress = Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
-            if (string.IsNullOrEmpty(ipAddress))
+            if (!string.IsNullOrEmpty(errorMessage))
+                TempData["ErrorMessage"] = errorMessage;
+
+            var latestAddress = selectedAddress ?? _context.Addresses
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.Id)
+                .FirstOrDefault();
+            var userAddresses = _context.Addresses.Where(a => a.UserId == userId).ToList();
+
+            if (TempData["BuyNowItem"] != null)
             {
-                ipAddress = Request.ServerVariables["REMOTE_ADDR"];
+                var buyNowItemJson = TempData["BuyNowItem"].ToString();
+                buyNowItem = JsonConvert.DeserializeObject<BuyNowItem>(buyNowItemJson);
+                ViewBag.BuyNowItem = buyNowItem;
+                TempData["BuyNowItem"] = buyNowItemJson;
             }
-            return ipAddress ?? "127.0.0.1";
+            else
+            {
+                cart = _context.Carts
+                    .Include(c => c.CartDetails)
+                    .Include(c => c.CartDetails.Select(cd => cd.ProductVariant))
+                    .Include(c => c.CartDetails.Select(cd => cd.ProductVariant.Product))
+                    .SingleOrDefault(c => c.UserId == userId);
+                ViewBag.Cart = cart;
+            }
+
+            ViewBag.PaymentMethods = _context.PaymentMethods.Where(pm => pm.IsActive).ToList();
+            ViewBag.SelectedAddress = latestAddress;
+            ViewBag.UserAddresses = userAddresses;
+            return View("Dathang", model);
         }
 
         protected override void Dispose(bool disposing)

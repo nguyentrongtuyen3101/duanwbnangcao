@@ -10,7 +10,8 @@ using System.Web.Mvc;
 using Microsoft.AspNet.Identity.Owin;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Identity;
-using static System.Net.WebRequestMethods;
+using System.Net.Mail;
+using System.Net;
 
 namespace doanwebnangcao.Controllers
 {
@@ -138,6 +139,92 @@ namespace doanwebnangcao.Controllers
                 return RedirectToAction("DangNhap", "Home");
             }
             return View(model);
+        }
+
+        public ActionResult quenmk()
+        {
+            return View("quenmk");
+        }
+
+        [HttpPost]
+        public JsonResult SendOtp(string Email)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Email == Email);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "Email không tồn tại!" });
+            }
+
+            Random rand = new Random();
+            string otp = rand.Next(100000, 999999).ToString();
+            Session["Otp"] = otp;
+            Session["OtpEmail"] = Email;
+
+            try
+            {
+                SendEmail(Email, "Mã OTP Đặt Lại Mật Khẩu", $"Mã OTP của bạn là: {otp}");
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi khi gửi OTP: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public ActionResult ForgotPassword(string Email, string NewPassword, string ConfirmPassword, string Otp)
+        {
+            if (NewPassword != ConfirmPassword)
+            {
+                ViewBag.ErrorMessage = "Mật khẩu mới và xác nhận mật khẩu không khớp!";
+                return View("quenmk");
+            }
+
+            var user = _context.Users.FirstOrDefault(u => u.Email == Email);
+            if (user == null)
+            {
+                ViewBag.ErrorMessage = "Email không tồn tại!";
+                return View("quenmk");
+            }
+
+            if (Session["Otp"] == null || Session["OtpEmail"] == null ||
+                Session["Otp"].ToString() != Otp || Session["OtpEmail"].ToString() != Email)
+            {
+                ViewBag.ErrorMessage = "OTP không hợp lệ!";
+                return View("quenmk");
+            }
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(NewPassword);
+            _context.SaveChanges();
+
+            Session.Remove("Otp");
+            Session.Remove("OtpEmail");
+
+            return RedirectToAction("DangNhap", "Home");
+        }
+
+        private void SendEmail(string toEmail, string subject, string body)
+        {
+            var fromEmail = "tinhluc2@gmail.com";
+            var fromPassword = "axqnsafslczyhcuy";
+
+            var smtpClient = new SmtpClient("smtp.gmail.com")
+            {
+                Port = 587,
+                Credentials = new NetworkCredential(fromEmail, fromPassword),
+                EnableSsl = true,
+            };
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(fromEmail),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = false,
+            };
+            mailMessage.To.Add(toEmail);
+
+            smtpClient.Send(mailMessage);
         }
 
         public ActionResult SignUpWithGoogle()
@@ -274,7 +361,6 @@ namespace doanwebnangcao.Controllers
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
                 new Claim(ClaimTypes.Name, user.Email),
-                
             };
 
             var identity = new ClaimsIdentity(claims, "ApplicationCookie");
@@ -318,16 +404,13 @@ namespace doanwebnangcao.Controllers
             ViewBag.ErrorMessage = message;
             return View();
         }
+
         public ActionResult DangXuat()
         {
-            // Xóa cookie authentication
             var authManager = HttpContext.GetOwinContext().Authentication;
             authManager.SignOut("ApplicationCookie");
-
-            // Xóa tất cả thông tin trong Session
             HttpContext.Session.Clear();
             HttpContext.Session.Abandon();
-
             return RedirectToAction("DangNhap", "Home");
         }
     }

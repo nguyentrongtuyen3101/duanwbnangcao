@@ -8,6 +8,18 @@
     var userAddresses = ViewBag.UserAddresses as List<Address>;
     var cart = ViewBag.Cart as Cart;
     var buyNowItem = ViewBag.BuyNowItem as BuyNowItem;
+
+    // Tính tổng số tiền
+    decimal total = 0;
+    if (buyNowItem != null)
+    {
+        total = buyNowItem.UnitPrice * buyNowItem.Quantity + 4; // Phí vận chuyển
+    }
+    else if (cart != null && cart.CartDetails != null)
+    {
+        var subtotal = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
+        total = subtotal + 4; // Phí vận chuyển
+    }
 }
 
 <main>
@@ -255,21 +267,7 @@
                                                     </tr>
                                                     <tr>
                                                         <td>TỔNG CỘNG</td>
-                                                        <td>
-                                                            @{
-                                                                decimal total = 0;
-                                                                if (buyNowItem != null)
-                                                                {
-                                                                    total = buyNowItem.UnitPrice * buyNowItem.Quantity + 4; // Phí vận chuyển
-                                                                }
-                                                                else if (cart != null && cart.CartDetails != null)
-                                                                {
-                                                                    var subtotal = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
-                                                                    total = subtotal + 4; // Phí vận chuyển
-                                                                }
-                                                            }
-                                                            $@total.ToString("F2")
-                                                        </td>
+                                                        <td>$@total.ToString("F2")</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -282,6 +280,7 @@
                                             {
                                                 @Html.AntiForgeryToken()
                                                 @Html.HiddenFor(model => model.OrderNote)
+                                                @Html.Hidden("TotalAmount", total) <!-- Thêm trường ẩn để gửi tổng số tiền -->
                                                 <div class="u-s-m-b-10">
                                                     @if (paymentMethods != null && paymentMethods.Any())
                                                     {

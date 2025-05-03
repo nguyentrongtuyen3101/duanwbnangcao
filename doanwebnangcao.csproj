@@ -294,6 +294,8 @@
     <Compile Include="Models\using System%3b.cs" />
     <Compile Include="Models\Wishlist.cs" />
     <Compile Include="Modules\LoggingModule.cs" />
+    <Compile Include="Payments\HashAndGetIP.cs" />
+    <Compile Include="Payments\VnPay.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
@@ -660,6 +662,7 @@
     <Content Include="Views\yeuthich\wishlist.cshtml" />
     <Content Include="Views\GioHang\giohang.cshtml" />
     <Content Include="Views\Chat\chatbox.cshtml" />
+    <Content Include="Views\Home\quenmk.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
