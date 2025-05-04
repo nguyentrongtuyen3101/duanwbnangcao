@@ -128,16 +128,20 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <!-- Thêm nút Hủy đơn hàng -->
+                                        <!-- Thêm nút Hủy đơn hàng với validate -->
                                         @if (Model.Status != doanwebnangcao.Models.OrderStatus.Delivered && Model.Status != doanwebnangcao.Models.OrderStatus.Cancelled)
                                         {
-                                            using (Html.BeginForm("CancelOrder", "muahang", new { orderId = Model.Id }, FormMethod.Post, new { onsubmit = "return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');" }))
+                                            using (Html.BeginForm("CancelOrder", "muahang", new { orderId = Model.Id }, FormMethod.Post, new { id = "cancelOrderForm", @onsubmit = "return validateCancelOrder();" }))
                                             {
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn--e-transparent-platinum-b-2" style="background-color: #ff4444; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-top: 10px;">
                                                     Hủy đơn hàng
                                                 </button>
                                             }
+                                        }
+                                        else if (Model.Status == doanwebnangcao.Models.OrderStatus.Shipped)
+                                        {
+                                            <p class="text-danger" style="margin-top: 10px;">Không thể hủy đơn hàng vì đang trong trạng thái vận chuyển.</p>
                                         }
                                     </div>
                                 </div>
@@ -364,3 +368,41 @@
     </div>
     <!--====== End - App Content ======-->
 </main>
+
+@section Scripts {
+    <script>
+        function validateCancelOrder() {
+            var form = document.getElementById('cancelOrderForm');
+            if (form) {
+                var status = '@Model.Status';
+                if (status === 'Shipped') {
+                    alert('Không thể hủy đơn hàng vì đang trong trạng thái vận chuyển.');
+                    return false;
+                }
+                if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')) {
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+
+        // Hiển thị thông báo khi hủy thành công (nếu có TempData)
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+                setTimeout(function() {
+                    alert('@TempData["SuccessMessage"]');
+                }, 100);
+            </text>
+        }
+        else if (TempData["ErrorMessage"] != null)
+        {
+            <text>
+                setTimeout(function() {
+                    alert('@TempData["ErrorMessage"]');
+                }, 100);
+            </text>
+        }
+    </script>
+}

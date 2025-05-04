@@ -82,7 +82,7 @@ namespace doanwebnangcao
                     {
                         HttpOnly = true,
                         Secure = true,
-                        SameSite = SameSiteMode.Strict
+                        SameSite = SameSiteMode.None
                     });
                 }
                 Log.Information("Processing request: {Path}", context.Request.Path);
@@ -95,10 +95,10 @@ namespace doanwebnangcao
                 AuthenticationType = "ApplicationCookie",
                 LoginPath = new PathString("/Home/DangNhap"),
                 CookieHttpOnly = true,
-                CookieSecure = CookieSecureOption.SameAsRequest,
+                CookieSecure = CookieSecureOption.Always,
                 CookieName = "MyAppCookie",
                 ExpireTimeSpan = TimeSpan.FromMinutes(30),
-                CookieSameSite = SameSiteMode.Strict,
+                CookieSameSite = SameSiteMode.None,
                 Provider = new CookieAuthenticationProvider
                 {
                     OnException = context =>

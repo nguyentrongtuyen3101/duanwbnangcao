@@ -131,7 +131,26 @@
                                 <div class="dash__box dash__box--shadow dash__box--radius dash__box--bg-white u-s-m-b-30">
                                     <div class="dash__pad-2">
                                         <h1 class="dash__h1 u-s-m-b-14">My Orders</h1>
-                                        <span class="dash__text u-s-m-b-30">Here you can see all products that have been delivered.</span>
+                                        <span class="dash__text u-s-m-b-30">Here you can see all products that have been order.</span>
+                                        <!-- Hiển thị thông báo nếu có -->
+                                        @if (TempData["SuccessMessage"] != null)
+                                        {
+                                            <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-bottom: 20px;background-color: #FF4500;color:white;text-align:center;">
+                                                @TempData["SuccessMessage"]
+                                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                        }
+                                        else if (TempData["ErrorMessage"] != null)
+                                        {
+                                            <div class="alert alert-danger alert-dismissible fade show" role="alert" style="margin-bottom: 20px; background-color: #FF4500;color:white;text-align:center">
+                                                @TempData["ErrorMessage"]
+                                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                        }
                                         <form class="m-order u-s-m-b-30">
                                             <div class="m-order__select-wrapper">
                                                 <label class="u-s-m-r-8" for="my-order-sort">Show:</label>
@@ -232,3 +251,27 @@
     </div>
     <!--====== End - App Content ======-->
 </main>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Hiển thị thông báo nếu có TempData
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>
+                    setTimeout(function() {
+                        $('.alert-success').fadeIn();
+                    }, 100);
+                </text>
+            }
+            else if (TempData["ErrorMessage"] != null)
+            {
+                <text>
+                    setTimeout(function() {
+                        $('.alert-danger').fadeIn();
+                    }, 100);
+                </text>
+            }
+        });
+    </script>
+}

@@ -225,6 +225,7 @@
     <Compile Include="Controllers\muahangController.cs" />
     <Compile Include="Controllers\profileController.cs" />
     <Compile Include="Controllers\QuanLyDonHangController.cs" />
+    <Compile Include="Controllers\quanlythanhtoanController.cs" />
     <Compile Include="Controllers\ThanhToanAdminController.cs" />
     <Compile Include="Controllers\trangchuController.cs" />
     <Compile Include="Controllers\yeuthichController.cs" />
@@ -663,6 +664,7 @@
     <Content Include="Views\GioHang\giohang.cshtml" />
     <Content Include="Views\Chat\chatbox.cshtml" />
     <Content Include="Views\Home\quenmk.cshtml" />
+    <Content Include="Views\quanlythanhtoan\thanhtoanmanager.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

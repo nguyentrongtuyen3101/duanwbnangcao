@@ -299,7 +299,7 @@
             <div class="modal-body">
                 <form id="editProductForm" action="@Url.Action("EditProduct", "Admin")" method="post" enctype="multipart/form-data">
                     <input type="hidden" id="editProductId" name="Id" />
-                    <input type="hidden" name="page" value=""/>
+                    <input type="hidden" name="page" value="" />
                     <div class="mb-3">
                         <label for="editSubcategoryId" class="form-label fw-bold">Danh mục con</label>
                         @if (subcategories != null && subcategories.Any())

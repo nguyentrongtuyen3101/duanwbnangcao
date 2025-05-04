@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using System.Configuration;
 using webbanxe.Payments;
 using System.Text;
+using System.Security.Claims;
 
 namespace doanwebnangcao.Controllers
 {
@@ -366,7 +367,7 @@ namespace doanwebnangcao.Controllers
             }
             else
             {
-                TempData["ErrorMessage"] = "Phương thức thanh toán không được hỗ trợ, nhưng đơn hàng đã được ghi nhận.";
+                TempData["ErrorMessage"] = "Đặt hàng thành công,đơn hàng đang chờ xử lý!";
                 TempData.Remove("BuyNowItem");
                 return RedirectToAction("Quanlydonhang");
             }
@@ -453,7 +454,7 @@ namespace doanwebnangcao.Controllers
                 order.Status = OrderStatus.Confirmed;
                 _context.SaveChanges();
 
-                TempData["SuccessMessage"] = "Đặt hàng thành công!";
+                TempData["SuccessMessage"] = "Đặt hàng thành công và chờ xử lý!";
                 TempData.Remove("BuyNowItem");
                 return RedirectToAction("Quanlydonhang");
             }
@@ -467,11 +468,22 @@ namespace doanwebnangcao.Controllers
         }
 
         // GET: Muahang/VNPayReturn
+        [Authorize]
         [HttpGet]
         public ActionResult VNPayReturn()
         {
             try
             {
+                var claimsPrincipal = User as ClaimsPrincipal;
+                var userId = claimsPrincipal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int parsedUserId))
+                {
+                    TempData["ErrorMessage"] = "Vui lòng đăng nhập.";
+                    return RedirectToAction("DangNhap", "Home");
+                }
+
+                Session["UserId"] = parsedUserId;
+
                 var vnpay = new VnPay();
                 foreach (string key in Request.QueryString.AllKeys)
                 {
@@ -480,7 +492,6 @@ namespace doanwebnangcao.Controllers
                         vnpay.AddResponseData(key, Request.QueryString[key]);
                     }
                 }
-
                 string vnp_SecureHash = vnpay.GetResponseData("vnp_SecureHash");
                 string vnp_TxnRef = vnpay.GetResponseData("vnp_TxnRef");
                 string vnp_ResponseCode = vnpay.GetResponseData("vnp_ResponseCode");
@@ -551,7 +562,7 @@ namespace doanwebnangcao.Controllers
                     }
 
                     _context.SaveChanges();
-                    TempData["SuccessMessage"] = "Thanh toán thành công! Đơn hàng của bạn đã được xác nhận.";
+                    TempData["SuccessMessage"] = "Thanh toán và đặt hàng thành công và chờ xử lý!";
                 }
                 else
                 {
@@ -732,8 +743,8 @@ namespace doanwebnangcao.Controllers
                 _context.Entry(order).State = EntityState.Modified;
                 _context.SaveChanges();
 
-                TempData["SuccessMessage"] = "Hủy đơn hàng thành công!";
-                return RedirectToAction("Quanlydonhang");
+                TempData["SuccessMessage"] = "HUY DON HANG THANH CONG!";
+                return RedirectToAction("Quanlychitietdonhang", new { orderId = orderId });
             }
             catch (Exception ex)
             {
