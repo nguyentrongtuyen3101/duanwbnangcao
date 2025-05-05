@@ -4,6 +4,8 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using doanwebnangcao.Models;
+using doanwebnangcao.ViewModels;
+using System.Data.Entity;
 
 namespace doanwebnangcao.Controllers
 {
@@ -19,71 +21,96 @@ namespace doanwebnangcao.Controllers
         // GET: trangchu
         public ActionResult trangchu()
         {
-            // Truy vấn danh sách Category, bao gồm Subcategories và Products
-            var categories = _context.Categories
-                .Where(c => c.IsActive)
-                .Select(c => new
-                {
-                    c.Id,
-                    c.Name,
-                    Subcategories = c.Subcategories
-                        .Where(s => s.IsActive)
-                        .Select(s => new
-                        {
-                            s.Id,
-                            s.Name,
-                            Products = s.Products
-                                .Where(p => p.IsActive)
-                                .OrderBy(p => Guid.NewGuid()) // Sắp xếp ngẫu nhiên
-                                .Take(4) // Lấy tối đa 4 sản phẩm
-                                .Select(p => new { p.Id, p.Name })
-                                .ToList()
-                        })
-                        .ToList(),
-                    ImageUrls = c.Subcategories
-                        .Where(s => s.IsActive)
-                        .SelectMany(s => s.Products)
-                        .Where(p => p.IsActive && p.ImageUrl != null)
-                        .OrderBy(p => Guid.NewGuid()) // Sắp xếp ngẫu nhiên
-                        .Take(2) // Lấy tối đa 2 hình ảnh từ tất cả sản phẩm trong Category
-                        .Select(p => p.ImageUrl)
-                        .ToList()
-                })
-                .ToList();
-
-            // Truyền dữ liệu vào ViewBag để sử dụng trong _Layout.cshtml
-            ViewBag.Categories = categories.Select(c => new Category
+            var viewModel = new HomeViewModel
             {
-                Id = c.Id,
-                Name = c.Name,
-                Subcategories = c.Subcategories.Select(s => new Subcategory
-                {
-                    Id = s.Id,
-                    Name = s.Name,
-                    Products = s.Products.Select(p => new Product
-                    {
-                        Id = p.Id,
-                        Name = p.Name
-                    }).ToList()
-                }).ToList()
-            }).ToList();
+                // TOP TRENDING: Lấy 12 sản phẩm mới nhất cho mỗi danh mục
+                TopTrending = _context.Products
+                    .Include(p => p.Subcategory)
+                    .Include(p => p.Subcategory.Category)
+                    .Include(p => p.ProductVariants)
+                    .Include(p => p.ProductImages)
+                    .Include(p => p.Reviews)
+                    .Where(p => p.IsActive)
+                    .GroupBy(p => p.Subcategory.CategoryId)
+                    .SelectMany(g => g.OrderByDescending(p => p.CreatedAt).Take(12))
+                    .ToList(),
 
-            // Truyền danh sách ImageUrls vào ViewBag riêng biệt
-            ViewBag.CategoryImages = categories.ToDictionary(
-                c => c.Id,
-                c => c.ImageUrls
-            );
+                // DEAL OF THE DAY: Sản phẩm có giảm giá
+                DealOfTheDay = _context.Products
+                    .Include(p => p.Subcategory)
+                    .Include(p => p.Subcategory.Category)
+                    .Include(p => p.ProductVariants)
+                    .Include(p => p.ProductImages)
+                    .Include(p => p.Reviews)
+                    .Where(p => p.IsActive && p.DiscountedPrice.HasValue)
+                    .OrderByDescending(p => p.DiscountedPrice)
+                    .Take(2)
+                    .ToList(),
 
-            return View();
-        }
+                // NEW ARRIVALS: Sản phẩm mới nhất
+                NewArrivals = _context.Products
+                    .Include(p => p.Subcategory)
+                    .Include(p => p.Subcategory.Category)
+                    .Include(p => p.ProductVariants)
+                    .Include(p => p.ProductImages)
+                    .Include(p => p.Reviews)
+                    .Where(p => p.IsActive)
+                    .OrderByDescending(p => p.CreatedAt)
+                    .Take(6)
+                    .ToList(),
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                _context?.Dispose();
-            }
-            base.Dispose(disposing);
+                // FEATURED PRODUCTS: Sản phẩm có đánh giá cao
+                FeaturedProducts = _context.Products
+                    .Include(p => p.Subcategory)
+                    .Include(p => p.Subcategory.Category)
+                    .Include(p => p.ProductVariants)
+                    .Include(p => p.ProductImages)
+                    .Include(p => p.Reviews)
+                    .Where(p => p.IsActive && p.Reviews.Any())
+                    .OrderByDescending(p => p.Reviews.Average(r => r.Rating))
+                    .Take(4)
+                    .ToList(),
+
+                // SPECIAL PRODUCTS: Sản phẩm bán chạy
+                SpecialProducts = _context.Products
+                    .Include(p => p.Subcategory)
+                    .Include(p => p.Subcategory.Category)
+                    .Include(p => p.ProductImages)
+                    .Where(p => p.IsActive)
+                    .OrderByDescending(p => p.OrderDetails.Count)
+                    .Take(3)
+                    .ToList(),
+
+                // WEEKLY PRODUCTS: Sản phẩm có giảm giá, chọn ngẫu nhiên
+                WeeklyProducts = _context.Products
+                    .Include(p => p.Subcategory)
+                    .Include(p => p.Subcategory.Category)
+                    .Include(p => p.ProductImages)
+                    .Include(p => p.Reviews) // Thêm Reviews để đồng bộ
+                    .Where(p => p.IsActive && p.DiscountedPrice.HasValue)
+                    .OrderBy(x => Guid.NewGuid()) // Chọn ngẫu nhiên
+                    .Take(3)
+                    .ToList(),
+
+                // FLASH PRODUCTS: Sản phẩm mới nhất
+                FlashProducts = _context.Products
+                    .Include(p => p.Subcategory)
+                    .Include(p => p.Subcategory.Category)
+                    .Include(p => p.ProductImages)
+                    .Include(p => p.Reviews) // Thêm Reviews để đồng bộ
+                    .Where(p => p.IsActive)
+                    .OrderByDescending(p => p.CreatedAt)
+                    .Take(3)
+                    .ToList(),
+
+                // Lấy danh sách Categories
+                Categories = _context.Categories
+                    .Where(c => c.IsActive)
+                    .OrderBy(c => c.Name)
+                    .ToList()
+            };
+
+            return View(viewModel);
         }
     }
 }

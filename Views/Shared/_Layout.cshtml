@@ -21,6 +21,21 @@
             height: 230px;
             margin-bottom: 10px;
         }
+
+        .chat-badge {
+            position: absolute;
+            top: 15px;
+            right: 55px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
     </style>
 </head>
 <body class="config">
@@ -43,7 +58,7 @@
                         <!--====== Primary Nav ======-->
                         <div class="primary-nav">
                             <!--====== Main Logo ======-->
-                            <a class="main-logo" href="index.html">
+                            <a class="main-logo" href="@Url.Action("trangchu", "trangchu")">
                                 <img src="~/pep/images/logo/logo-1.png" alt="">
                             </a>
                             <!--====== End - Main Logo ======-->
@@ -102,7 +117,7 @@
                                                 <li class="has-dropdown has-dropdown--ul-right-100">
                                                     <a>Language<i class="fas fa-angle-down u-s-m-l-6"></i></a>
                                                     <!--====== Dropdown ======-->
-                                                    <span class="js-menu-toggle"></span>
+                                                    <span class="js-menu-toggle Teen"></span>
                                                     <ul style="width:120px">
                                                         <li>
                                                             <a class="u-c-brand">ENGLISH</a>
@@ -139,8 +154,11 @@
                                             </ul>
                                             <!--====== End - Dropdown ======-->
                                         </li>
-                                        <li data-tooltip="tooltip" data-placement="left" title="Contact">
-                                            <a href="@Url.Action("chatbox", "Chat")"><i class="fas fa-comment-alt"></i></a>
+                                        <li data-tooltip="tooltip" data-placement="left" title="Contact" class="position-relative">
+                                            <a href="@Url.Action("chatbox", "Chat")" id="chatLink">
+                                                <i class="fas fa-comment-alt"></i>
+                                                <span class="chat-badge" id="chatBadge" style="display: none;">0</span>
+                                            </a>
                                         </li>
                                         <li data-tooltip="tooltip" data-placement="left" title="Mail">
                                             <a href="mailto:contact@domain.com"><i class="far fa-envelope"></i></a>
@@ -384,9 +402,7 @@
                                                 <li>
                                                     <a href="@Url.Action("Wishlist", "yeuthich")">Wishlist</a>
                                                 </li>
-                                                <li>
-                                                    <a href="checkout.html">Checkout</a>
-                                                </li>
+                                              
                                             </ul>
                                             <!--====== End - Dropdown ======-->
                                         </li>
@@ -435,122 +451,13 @@
                                     <!--====== List ======-->
                                     <ul class="ah-list ah-list--design1 ah-list--link-color-secondary">
                                         <li>
-                                            <a href="index.html"><i class="fas fa-home u-c-brand"></i></a>
+                                            <a href="@Url.Action("trangchu", "trangchu")"><i class="fas fa-home u-c-brand"></i></a>
                                         </li>
                                         <li>
-                                            <a href="wishlist.html"><i class="far fa-heart"></i></a>
+                                            <a href="@Url.Action("Wishlist", "yeuthich")"><i class="far fa-heart"></i></a>
                                         </li>
                                         <li class="has-dropdown">
-                                            <a class="mini-cart-shop-link">
-                                                <i class="fas fa-shopping-bag"></i>
-                                                <span class="total-item-round">2</span>
-                                            </a>
-                                            <!--====== Dropdown ======-->
-                                            <span class="js-menu-toggle"></span>
-                                            <div class="mini-cart">
-                                                <!--====== Mini Product Container ======-->
-                                                <div class="mini-product-container gl-scroll u-s-m-b-15">
-                                                    <!--====== Card for mini cart ======-->
-                                                    <div class="card-mini-product">
-                                                        <div class="mini-product">
-                                                            <div class="mini-product__image-wrapper">
-                                                                <a class="mini-product__link" href="product-detail.html">
-                                                                    <img class="u-img-fluid" src="images/product/electronic/product3.jpg" alt="">
-                                                                </a>
-                                                            </div>
-                                                            <div class="mini-product__info-wrapper">
-                                                                <span class="mini-product__category">
-                                                                    <a href="shop-side-version-2.html">Electronics</a>
-                                                                </span>
-                                                                <span class="mini-product__name">
-                                                                    <a href="product-detail.html">Yellow Wireless Headphone</a>
-                                                                </span>
-                                                                <span class="mini-product__quantity">1 x</span>
-                                                                <span class="mini-product__price">$8</span>
-                                                            </div>
-                                                        </div>
-                                                        <a class="mini-product__delete-link far fa-trash-alt"></a>
-                                                    </div>
-                                                    <!--====== End - Card for mini cart ======-->
-                                                    <!--====== Card for mini cart ======-->
-                                                    <div class="card-mini-product">
-                                                        <div class="mini-product">
-                                                            <div class="mini-product__image-wrapper">
-                                                                <a class="mini-product__link" href="product-detail.html">
-                                                                    <img class="u-img-fluid" src="images/product/electronic/product18.jpg" alt="">
-                                                                </a>
-                                                            </div>
-                                                            <div class="mini-product__info-wrapper">
-                                                                <span class="mini-product__category">
-                                                                    <a href="shop-side-version-2.html">Electronics</a>
-                                                                </span>
-                                                                <span class="mini-product__name">
-                                                                    <a href="product-detail.html">Nikon DSLR Camera 4k</a>
-                                                                </span>
-                                                                <span class="mini-product__quantity">1 x</span>
-                                                                <span class="mini-product__price">$8</span>
-                                                            </div>
-                                                        </div>
-                                                        <a class="mini-product__delete-link far fa-trash-alt"></a>
-                                                    </div>
-                                                    <!--====== End - Card for mini cart ======-->
-                                                    <!--====== Card for mini cart ======-->
-                                                    <div class="card-mini-product">
-                                                        <div class="mini-product">
-                                                            <div class="mini-product__image-wrapper">
-                                                                <a class="mini-product__link" href="product-detail.html">
-                                                                    <img class="u-img-fluid" src="images/product/women/product8.jpg" alt="">
-                                                                </a>
-                                                            </div>
-                                                            <div class="mini-product__info-wrapper">
-                                                                <span class="mini-product__category">
-                                                                    <a href="shop-side-version-2.html">Women Clothing</a>
-                                                                </span>
-                                                                <span class="mini-product__name">
-                                                                    <a href="product-detail.html">New Dress D Nice Elegant</a>
-                                                                </span>
-                                                                <span class="mini-product__quantity">1 x</span>
-                                                                <span class="mini-product__price">$8</span>
-                                                            </div>
-                                                        </div>
-                                                        <a class="mini-product__delete-link far fa-trash-alt"></a>
-                                                    </div>
-                                                    <!--====== End - Card for mini cart ======-->
-                                                    <!--====== Card for mini cart ======-->
-                                                    <div class="card-mini-product">
-                                                        <div class="mini-product">
-                                                            <div class="mini-product__image-wrapper">
-                                                                <a class="mini-product__link" href="product-detail.html">
-                                                                    <img class="u-img-fluid" src="images/product/men/product8.jpg" alt="">
-                                                                </a>
-                                                            </div>
-                                                            <div class="mini-product__info-wrapper">
-                                                                <span class="mini-product__category">
-                                                                    <a href="shop-side-version-2.html">Men Clothing</a>
-                                                                </span>
-                                                                <span class="mini-product__name">
-                                                                    <a href="product-detail.html">New Fashion D Nice Elegant</a>
-                                                                </span>
-                                                                <span class="mini-product__quantity">1 x</span>
-                                                                <span class="mini-product__price">$8</span>
-                                                            </div>
-                                                        </div>
-                                                        <a class="mini-product__delete-link far fa-trash-alt"></a>
-                                                    </div>
-                                                    <!--====== End - Card for mini cart ======-->
-                                                </div>
-                                                <!--====== End - Mini Product Container ======-->
-                                                <!--====== Mini Product Statistics ======-->
-                                                <div class="mini-product-stat">
-
-                                                    <div class="mini-action">
-                                                        <a class="mini-link btn--e-brand-b-2" href="checkout.html">PROCEED TO CHECKOUT</a>
-                                                        <a class="mini-link btn--e-transparent-secondary-b-2" href="cart.html">VIEW CART</a>
-                                                    </div>
-                                                </div>
-                                                <!--====== End - Mini Product Statistics ======-->
-                                            </div>
-                                            <!--====== End - Dropdown ======-->
+                                            <a href="@Url.Action("giohang", "GioHang")"><i class="fas fa-shopping-bag"></i></a>
                                         </li>
                                     </ul>
                                     <!--====== End - List ======-->
@@ -570,7 +477,7 @@
     <!--====== End - Main Header ======-->
     <div class="body-content">
         @RenderBody()
-     
+
     </div>
     @if (!User.IsInRole("Admin"))
     {
@@ -936,47 +843,6 @@
             </div>
         </div>
         <!--====== End - Add to Cart Modal ======-->
-        <!--====== Newsletter Subscribe Modal ======
-        <div class="modal fade new-l" id="newsletter-modal">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content modal--shadow">
-                    <button class="btn new-l__dismiss fas fa-times" type="button" data-dismiss="modal"></button>
-                    <div class="modal-body">
-                        <div class="row u-s-m-x-0">
-                            <div class="col-lg-6 new-l__col-1 u-s-p-x-0">
-                                <a class="new-l__img-wrap u-d-block" href="shop-side-version-2.html">
-                                    <img class="u-img-fluid u-d-block" src="images/newsletter/newsletter.jpg" alt="">
-                                </a>
-                            </div>
-                            <div class="col-lg-6 new-l__col-2">
-                                <div class="new-l__section u-s-m-t-30">
-                                    <div class="u-s-m-b-8 new-l--center">
-                                        <h3 class="new-l__h3">Newsletter</h3>
-                                    </div>
-                                    <div class="u-s-m-b-30 new-l--center">
-                                        <p class="new-l__p1">Sign up for emails to get the scoop on new arrivals, special sales and more.</p>
-                                    </div>
-                                    <form class="new-l__form">
-                                        <div class="u-s-m-b-15">
-                                            <input class="news-l__input" type="text" placeholder="E-mail Address">
-                                        </div>
-                                        <div class="u-s-m-b-15">
-                                            <button class="btn btn--e-brand-b-2" type="submit">Sign up!</button>
-                                        </div>
-                                    </form>
-                                    <div class="u-s-m-b-15 new-l--center">
-                                        <p class="new-l__p2">By Signing up, you agree to receive Reshop offers,<br />promotions and other commercial messages. You may unsubscribe at any time.</p>
-                                    </div>
-                                    <div class="u-s-m-b-15 new-l--center">
-                                        <a class="new-l__link" data-dismiss="modal">No Thanks</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>-->
     }
 
     <!--====== End - Main App ======-->
@@ -1001,6 +867,57 @@
     <!--====== App ======-->
     <script src="~/pep/js/app.js"></script>
 
+    <!--====== SignalR ======-->
+    <script src="/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="/signalr/hubs"></script>
+
+    <script>
+        $(function () {
+            var chat = $.connection.chatHub;
+            var currentUserId = '@Session["UserId"]';
+
+            // Cập nhật badge tin nhắn chưa đọc trong header
+            chat.client.updateUnreadMessagesCountForHeader = function (count) {
+                var badge = $('#chatBadge');
+                if (count > 0) {
+                    badge.text(count);
+                    badge.show();
+                } else {
+                    badge.hide();
+                }
+            };
+
+            // Nhận tin nhắn mới
+            chat.client.receiveMessage = function (message) {
+                if (message.ReceiverId == currentUserId) {
+                    // Cập nhật số lượng tin nhắn chưa đọc
+                    $.get('@Url.Action("GetUnreadMessagesCount", "Chat")', { userId: currentUserId }, function (response) {
+                        if (response.success) {
+                            chat.client.updateUnreadMessagesCountForHeader(response.count);
+                        }
+                    });
+                }
+            };
+
+            // Kết nối SignalR
+            $.connection.hub.qs = { 'userId': currentUserId };
+            $.connection.hub.start().done(function () {
+                console.log('SignalR connected');
+                // Lấy số lượng tin nhắn chưa đọc khi khởi động
+                $.get('@Url.Action("GetUnreadMessagesCount", "Chat")', { userId: currentUserId }, function (response) {
+                    if (response.success) {
+                        chat.client.updateUnreadMessagesCountForHeader(response.count);
+                    }
+                });
+            });
+
+            // Khi nhấp vào biểu tượng chat, ẩn badge
+            $('#chatLink').on('click', function () {
+                $('#chatBadge').hide();
+            });
+        });
+    </script>
+
     <!--====== Noscript ======-->
     <noscript>
         <div class="app-setting">
@@ -1016,7 +933,7 @@
             </div>
         </div>
     </noscript>
-   
+
     @RenderSection("Scripts", required: false)
     @RenderSection("Styles", required: false)
 </body>

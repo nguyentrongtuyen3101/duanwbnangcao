@@ -13,6 +13,7 @@ using System.Configuration;
 using webbanxe.Payments;
 using System.Text;
 using System.Security.Claims;
+using System.Net.Http;
 
 namespace doanwebnangcao.Controllers
 {
@@ -28,6 +29,81 @@ namespace doanwebnangcao.Controllers
         public MuahangController()
         {
             _context = new ApplicationDbContext();
+        }
+
+        // POST: Muahang/ApplyCoupon
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ApplyCoupon(string CouponCode)
+        {
+            if (Session["UserId"] == null)
+            {
+                return Json(new { success = false, message = "Vui lòng đăng nhập." });
+            }
+
+            int userId = (int)Session["UserId"];
+            Cart cart = null;
+            BuyNowItem buyNowItem = null;
+
+            var coupon = _context.Coupons.SingleOrDefault(c => c.Code == CouponCode && c.IsActive);
+            if (coupon == null)
+            {
+                return Json(new { success = false, message = "Mã giảm giá không tồn tại hoặc không hợp lệ." });
+            }
+
+            if (coupon.EndDate < DateTime.Now)
+            {
+                return Json(new { success = false, message = "Mã giảm giá đã hết hạn." });
+            }
+
+            if (coupon.UsedCount >= coupon.MaxUsage && coupon.MaxUsage > 0)
+            {
+                return Json(new { success = false, message = "Mã giảm giá đã hết số lần sử dụng." });
+            }
+
+            decimal originalTotal = 0;
+            if (TempData["BuyNowItem"] != null)
+            {
+                var buyNowItemJson = TempData["BuyNowItem"].ToString();
+                buyNowItem = JsonConvert.DeserializeObject<BuyNowItem>(buyNowItemJson);
+                originalTotal = buyNowItem.UnitPrice * buyNowItem.Quantity + 4;
+                TempData["BuyNowItem"] = buyNowItemJson; // Giữ lại TempData
+            }
+            else
+            {
+                cart = _context.Carts
+                    .Include(c => c.CartDetails)
+                    .SingleOrDefault(c => c.UserId == userId);
+                originalTotal = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity) + 4;
+            }
+
+            decimal discountAmount = 0;
+            if (coupon.DiscountPercentage.HasValue)
+            {
+                discountAmount = originalTotal * (coupon.DiscountPercentage.Value / 100);
+            }
+            else if (coupon.DiscountAmount.HasValue)
+            {
+                discountAmount = coupon.DiscountAmount.Value;
+                discountAmount = Math.Min(discountAmount, originalTotal);
+            }
+
+            // Tăng UsedCount
+            coupon.UsedCount += 1;
+            _context.Entry(coupon).State = EntityState.Modified;
+            _context.SaveChanges();
+
+            TempData["AppliedCoupon"] = CouponCode;
+            TempData["DiscountAmount"] = discountAmount;
+            TempData["CouponId"] = coupon.Id; // Lưu CouponId để sử dụng trong PlaceOrder
+
+            return Json(new
+            {
+                success = true,
+                message = $"Áp dụng mã giảm giá {CouponCode} thành công! Giảm: ${discountAmount:F2}",
+                discountAmount = discountAmount,
+                couponCode = CouponCode
+            });
         }
 
         // POST: Muahang/BuyNow
@@ -354,6 +430,23 @@ namespace doanwebnangcao.Controllers
                 }
             }
 
+            // Áp dụng mã giảm giá nếu có
+            string appliedCoupon = TempData["AppliedCoupon"] as string;
+            if (!string.IsNullOrEmpty(appliedCoupon))
+            {
+                var coupon = _context.Coupons.SingleOrDefault(c => c.Code == appliedCoupon && c.IsActive);
+                if (coupon != null)
+                {
+                    order.CouponId = coupon.Id;
+                    order.DiscountApplied = TempData["DiscountAmount"] as decimal? ?? 0;
+                    order.TotalAmount -= order.DiscountApplied;
+                }
+                TempData.Remove("AppliedCoupon");
+                TempData.Remove("DiscountAmount");
+                TempData.Remove("CouponId");
+            }
+
+            order.TotalAmount = order.TotalAmount < 0 ? 0 : order.TotalAmount;
             _context.Orders.Add(order);
             _context.SaveChanges();
 
@@ -367,7 +460,7 @@ namespace doanwebnangcao.Controllers
             }
             else
             {
-                TempData["ErrorMessage"] = "Đặt hàng thành công,đơn hàng đang chờ xử lý!";
+                TempData["SuccessMessage"] = "Đặt hàng thành công, đơn hàng đang chờ xử lý!";
                 TempData.Remove("BuyNowItem");
                 return RedirectToAction("Quanlydonhang");
             }
@@ -399,20 +492,6 @@ namespace doanwebnangcao.Controllers
                 vnpay.AddRequestData("vnp_OrderType", "250000");
                 vnpay.AddRequestData("vnp_ReturnUrl", VNPay_ReturnUrl);
                 vnpay.AddRequestData("vnp_TxnRef", vnp_TxnRef);
-
-                // Log các tham số trước khi tạo chữ ký
-                StringBuilder paramsLog = new StringBuilder("VNPay Params Before Hash: ");
-                foreach (var param in vnpay.GetType().GetField("requestData", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(vnpay) as SortedList<string, string>)
-                {
-                    paramsLog.Append($"{param.Key}={param.Value}&");
-                }
-                Debug.WriteLine(paramsLog.ToString().TrimEnd('&'));
-
-                // Log thêm thông tin hệ thống
-                Debug.WriteLine($"System Time: {DateTime.Now.ToString("yyyyMMddHHmmss")}");
-                Debug.WriteLine($"System TimeZone: {TimeZoneInfo.Local.Id}");
-                Debug.WriteLine($"VNPay Params - TxnRef: {vnp_TxnRef}, Amount: {vnp_Amount}, CreateDate: {vnp_CreateDate}");
-                Debug.WriteLine($"ReturnUrl: {VNPay_ReturnUrl}");
 
                 string paymentUrl = vnpay.CreateRequestUrl(VNPay_Url, VNPay_HashSecret);
                 Debug.WriteLine($"Payment URL: {paymentUrl}");

@@ -2,7 +2,7 @@
 @{
     ViewBag.Title = "Đăng nhập";
 }
-<main >
+<main>
     <div class="app-content">
         <!--====== Section 1 ======-->
         <div class="u-s-p-y-60">
@@ -50,13 +50,13 @@
                                     <!-- Hiển thị thông báo lỗi -->
                                     @if (TempData["ErrorMessage"] != null)
                                     {
-                                        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+                                        <div class="alert alert-danger text-danger">@TempData["ErrorMessage"]</div>
                                     }
                                     @if (!string.IsNullOrEmpty(Request.QueryString["message"]))
                                     {
-                                        <div class="alert alert-danger">@Html.Raw(Request.QueryString["message"])</div>
+                                        <div class="alert alert-danger text-danger">@Html.Raw(Request.QueryString["message"])</div>
                                     }
-                                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+                                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger text-danger" })
 
                                     <h1 class="gl-h1">KHÁCH HÀNG MỚI</h1>
                                     <span class="gl-text u-s-m-b-30">Bằng cách tạo tài khoản tại cửa hàng của chúng tôi, bạn sẽ có thể thực hiện quá trình thanh toán nhanh hơn, lưu địa chỉ giao hàng, xem và theo dõi đơn hàng trong tài khoản của bạn và hơn thế nữa.</span>
@@ -67,22 +67,8 @@
                                     <span class="gl-text u-s-m-b-30">Nếu bạn đã có tài khoản, vui lòng đăng nhập.</span>
                                     @using (Html.BeginForm("DangNhap", "Home", FormMethod.Post, new { @class = "l-f-o__form" }))
                                     {
-                                      
-                                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-                                        <div class="gl-s-api">
-                                            <div class="u-s-m-b-15">
-                                                <a class="gl-s-api__btn gl-s-api__btn--fb" href="@Url.Action("SignUpWithFacebook", "Home")">
-                                                    <i class="fab fa-facebook-f"></i>
-                                                    <span>Đăng nhập bằng Facebook</span>
-                                                </a>
-                                            </div>
-                                            <div class="u-s-m-b-15">
-                                                <a class="gl-s-api__btn gl-s-api__btn--gplus" href="@Url.Action("SignUpWithGoogle", "Home")">
-                                                    <i class="fab fa-google"></i>
-                                                    <span>Đăng nhập bằng Google</span>
-                                                </a>
-                                            </div>
-                                        </div>
+                                        @Html.ValidationSummary(true, "", new { @class = "text-danger u-s-m-b-15" })
+
                                         <div class="u-s-m-b-30">
                                             <label class="gl-label" for="login-email">E-MAIL *</label>
                                             @Html.TextBoxFor(m => m.Email, new { @class = "input-text input-text--primary-style", id = "login-email", placeholder = "Nhập E-mail" })
@@ -121,3 +107,21 @@
         <!--====== End - Section 2 ======-->
     </div>
 </main>
+
+<style>
+    .text-danger {
+        color: #ff0000 !important; /* Màu đỏ cho thông báo lỗi */
+        font-size: 14px;
+        display: block;
+        margin-top: 5px;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #ff0000;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+</style>

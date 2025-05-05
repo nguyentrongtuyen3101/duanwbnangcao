@@ -61,6 +61,9 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="EPPlus, Version=4.5.3.3, Culture=neutral, PublicKeyToken=ea159fdaa78159a1, processorArchitecture=MSIL">
+      <HintPath>packages\EPPlus.4.5.3.3\lib\net40\EPPlus.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.Identity.Core.2.2.4\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
     </Reference>
@@ -119,6 +122,7 @@
     <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
       <HintPath>packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="Serilog, Version=4.2.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
       <HintPath>packages\Serilog.4.2.0\lib\net471\Serilog.dll</HintPath>
     </Reference>
@@ -212,6 +216,7 @@
     <Reference Include="WebGrease, Version=1.6.5135.21930, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
     </Reference>
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\BundleConfig.cs" />
@@ -222,11 +227,13 @@
     <Compile Include="Controllers\GioHangController.cs" />
     <Compile Include="Controllers\hangmoiveController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\khuyenmaicodeController.cs" />
     <Compile Include="Controllers\muahangController.cs" />
     <Compile Include="Controllers\profileController.cs" />
     <Compile Include="Controllers\QuanLyDonHangController.cs" />
     <Compile Include="Controllers\quanlythanhtoanController.cs" />
     <Compile Include="Controllers\ThanhToanAdminController.cs" />
+    <Compile Include="Controllers\thongkeController.cs" />
     <Compile Include="Controllers\trangchuController.cs" />
     <Compile Include="Controllers\yeuthichController.cs" />
     <Compile Include="DTO\OrderViewModel.cs" />
@@ -280,9 +287,11 @@
     <Compile Include="Models\Color.cs" />
     <Compile Include="Models\Coupon.cs" />
     <Compile Include="DTO\LoginViewModel.cs" />
+    <Compile Include="Models\HomeViewModel.cs" />
     <Compile Include="Models\MessageDto.cs" />
     <Compile Include="Models\Order.cs" />
     <Compile Include="Models\OrderDetail.cs" />
+    <Compile Include="Models\OrderStatsViewModel.cs" />
     <Compile Include="Models\Payment.cs" />
     <Compile Include="Models\PaymentMethod.cs" />
     <Compile Include="Models\Product.cs" />
@@ -352,6 +361,7 @@
     <Content Include="pep\images\banners\banner-mega-7.jpg" />
     <Content Include="pep\images\banners\banner-mega-8.jpg" />
     <Content Include="pep\images\banners\banner-mega-9.jpg" />
+    <Content Include="pep\images\banners\Betterimage.ai_1746444567936.jpeg" />
     <Content Include="pep\images\banners\i3-banner-1.jpg" />
     <Content Include="pep\images\banners\i3-banner-2.jpg" />
     <Content Include="pep\images\blog\avatar-2.jpg" />
@@ -384,6 +394,10 @@
     <Content Include="pep\images\collection\coll-4.jpg" />
     <Content Include="pep\images\favicon.png" />
     <Content Include="pep\images\loading.gif" />
+    <Content Include="pep\images\logo\Betterimage.ai_1746450312455.jpeg" />
+    <Content Include="pep\images\logo\Betterimage.ai_1746450328181.jpeg" />
+    <Content Include="pep\images\logo\Betterimage.ai_1746450340806.jpeg" />
+    <Content Include="pep\images\logo\Betterimage.ai_1746450354753.jpeg" />
     <Content Include="pep\images\logo\logo-1.png" />
     <Content Include="pep\images\logo\logo-2.png" />
     <Content Include="pep\images\newsletter\newsletter.jpg" />
@@ -665,9 +679,12 @@
     <Content Include="Views\Chat\chatbox.cshtml" />
     <Content Include="Views\Home\quenmk.cshtml" />
     <Content Include="Views\quanlythanhtoan\thanhtoanmanager.cshtml" />
+    <Content Include="Views\khuyenmaicode\khuyenmaimanager.cshtml" />
+    <Content Include="Views\thongke\thongke.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Uploads\ChatFiles\" />
     <Folder Include="Uploads\Products\" />
   </ItemGroup>
   <ItemGroup>

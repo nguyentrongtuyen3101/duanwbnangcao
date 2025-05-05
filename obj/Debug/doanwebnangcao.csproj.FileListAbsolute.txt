@@ -153,3 +153,5 @@ C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.csproj.CopyComple
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.dll
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.pdb
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.AddChatMessagesTable.resources
+C:\Users\admin\Desktop\doanwebnangcao\bin\EPPlus.dll
+C:\Users\admin\Desktop\doanwebnangcao\bin\EPPlus.xml

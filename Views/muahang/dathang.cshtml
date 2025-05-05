@@ -11,15 +11,22 @@
 
     // Tính tổng số tiền
     decimal total = 0;
+    decimal originalTotal = 0;
+    decimal discountAmount = TempData["DiscountAmount"] as decimal? ?? 0;
+    string appliedCoupon = TempData["AppliedCoupon"] as string ?? "";
+
     if (buyNowItem != null)
     {
-        total = buyNowItem.UnitPrice * buyNowItem.Quantity + 4; // Phí vận chuyển
+        originalTotal = buyNowItem.UnitPrice * buyNowItem.Quantity + 4; // Phí vận chuyển
+        total = originalTotal - discountAmount;
     }
     else if (cart != null && cart.CartDetails != null)
     {
         var subtotal = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
-        total = subtotal + 4; // Phí vận chuyển
+        originalTotal = subtotal + 4; // Phí vận chuyển
+        total = originalTotal - discountAmount;
     }
+    total = total < 0 ? 0 : total; // Đảm bảo tổng không âm
 }
 
 <main>
@@ -51,44 +58,7 @@
                     <div class="row">
                         <div class="col-lg-12">
                             <div id="checkout-msg-group">
-                                <div class="msg u-s-m-b-30">
-                                    <span class="msg__text">
-                                        Khách hàng quay lại?
-                                        <a class="gl-link" href="#return-customer" data-toggle="collapse">Nhấn để đăng nhập</a>
-                                    </span>
-                                    <div class="collapse" id="return-customer" data-parent="#checkout-msg-group">
-                                        <div class="l-f u-s-m-b-16">
-                                            <span class="gl-text u-s-m-b-16">Nếu bạn có tài khoản, vui lòng đăng nhập.</span>
-                                            <form class="l-f__form" action="@Url.Action("DangNhap", "Home")" method="post">
-                                                @Html.AntiForgeryToken()
-                                                <div class="gl-inline">
-                                                    <div class="u-s-m-b-15">
-                                                        <label class="gl-label" for="login-email">E-MAIL *</label>
-                                                        <input class="input-text input-text--primary-style" type="text" id="login-email" name="Email" placeholder="Nhập E-mail" required>
-                                                    </div>
-                                                    <div class="u-s-m-b-15">
-                                                        <label class="gl-label" for="login-password">MẬT KHẨU *</label>
-                                                        <input class="input-text input-text--primary-style" type="password" id="login-password" name="Password" placeholder="Nhập mật khẩu" required>
-                                                    </div>
-                                                </div>
-                                                <div class="gl-inline">
-                                                    <div class="u-s-m-b-15">
-                                                        <button class="btn btn--e-transparent-brand-b-2" type="submit">ĐĂNG NHẬP</button>
-                                                    </div>
-                                                    <div class="u-s-m-b-15">
-                                                        <a class="gl-link" href="@Url.Action("LostPassword", "Home")">Quên mật khẩu?</a>
-                                                    </div>
-                                                </div>
-                                                <div class="check-box">
-                                                    <input type="checkbox" id="remember-me" name="RememberMe">
-                                                    <div class="check-box__state check-box__state--primary">
-                                                        <label class="check-box__label" for="remember-me">Ghi nhớ tôi</label>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
+                                
                                 <div class="msg">
                                     <span class="msg__text">
                                         Có mã giảm giá?
@@ -97,18 +67,24 @@
                                     <div class="collapse" id="have-coupon" data-parent="#checkout-msg-group">
                                         <div class="c-f u-s-m-b-16">
                                             <span class="gl-text u-s-m-b-16">Nhập mã giảm giá nếu bạn có.</span>
-                                            <form class="c-f__form" action="@Url.Action("ApplyCoupon", "Muahang")" method="post">
+                                            <span class="gl-text u-s-m-b-16 text-bg-danger">Lưu ý: khi bạn ấn áp dụng ,mã giảm giá sẽ được áp dụng ngay cho đơn hàng ngay cả khi bạn không đặt hàng</span>
+                                            <form class="c-f__form" id="coupon-form">
                                                 @Html.AntiForgeryToken()
                                                 <div class="u-s-m-b-16">
                                                     <div class="u-s-m-b-15">
                                                         <label for="coupon"></label>
-                                                        <input class="input-text input-text--primary-style" type="text" id="coupon" name="CouponCode" placeholder="Mã giảm giá">
+                                                        <input class="input-text input-text--primary-style" type="text" id="coupon" name="CouponCode" placeholder="Mã giảm giá" required>
                                                     </div>
                                                     <div class="u-s-m-b-15">
-                                                        <button class="btn btn--e-transparent-brand-b-2" type="submit">ÁP DỤNG</button>
+                                                        <button class="btn btn--e-transparent-brand-b-2" type="submit" id="apply-coupon-btn">ÁP DỤNG</button>
                                                     </div>
                                                 </div>
+                                                <div id="coupon-message" class="u-s-m-t-10"></div>
                                             </form>
+                                            @if (!string.IsNullOrEmpty(appliedCoupon))
+                                            {
+                                                <p class="gl-text u-s-m-t-10" id="applied-coupon-message">Mã giảm giá <strong>@appliedCoupon</strong> đã được áp dụng. Giảm: $@discountAmount.ToString("F2")</p>
+                                            }
                                         </div>
                                     </div>
                                 </div>
@@ -265,9 +241,16 @@
                                                         <td>THUẾ</td>
                                                         <td>$0.00</td>
                                                     </tr>
+                                                    @if (discountAmount > 0)
+                                                    {
+                                                        <tr>
+                                                            <td>GIẢM GIÁ (@appliedCoupon)</td>
+                                                            <td>-$@discountAmount.ToString("F2")</td>
+                                                        </tr>
+                                                    }
                                                     <tr>
                                                         <td>TỔNG CỘNG</td>
-                                                        <td>$@total.ToString("F2")</td>
+                                                        <td id="total-amount">$@total.ToString("F2")</td>
                                                     </tr>
                                                 </tbody>
                                             </table>
@@ -280,7 +263,7 @@
                                             {
                                                 @Html.AntiForgeryToken()
                                                 @Html.HiddenFor(model => model.OrderNote)
-                                                @Html.Hidden("TotalAmount", total) <!-- Thêm trường ẩn để gửi tổng số tiền -->
+                                                @Html.Hidden("TotalAmount", total)
                                                 <div class="u-s-m-b-10">
                                                     @if (paymentMethods != null && paymentMethods.Any())
                                                     {
@@ -321,7 +304,6 @@
                     </div>
                 </div>
             </div>
-            <!--====== End - Section 3 ======-->
             <!--====== Modal for Edit Shipping Address ======-->
             <div class="modal fade" id="edit-ship-address" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" role="document">
@@ -343,7 +325,7 @@
                                             @foreach (var address in userAddresses)
                                             {
                                                 <option value="@address.Id" @(address.Id == (selectedAddress != null ? selectedAddress.Id : 0) ? "selected" : "")>
-                                                    @address.FullName, @address.AddressLine, @address.City, @address.Country, @address.PhoneNumber
+                                                    @address.FullName, @address.AddressLine, @selectedAddress.City, @address.Country, @address.PhoneNumber
                                                 </option>
                                             }
                                         </select>
@@ -440,6 +422,16 @@
             transform: scale(1);
             opacity: 1;
         }
+
+        .coupon-success {
+            color: green;
+            font-weight: bold;
+        }
+
+        .coupon-error {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 
     <script>
@@ -461,6 +453,40 @@
             // Initialize modal
             $('.ship-b__edit').on('click', function () {
                 $('#edit-ship-address').modal('show');
+            });
+
+            // Handle coupon form submission with AJAX
+            $("#coupon-form").on("submit", function (e) {
+                e.preventDefault();
+                var formData = $(this).serialize();
+                $.ajax({
+                    url: '@Url.Action("ApplyCoupon", "Muahang")',
+                    type: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        $("#coupon-message").removeClass("coupon-success coupon-error");
+                        if (response.success) {
+                            $("#coupon-message").addClass("coupon-success").text(response.message);
+                            $("#applied-coupon-message").html(`Mã giảm giá <strong>${response.couponCode}</strong> đã được áp dụng. Giảm: $${response.discountAmount.toFixed(2)}`);
+                            var originalTotal = parseFloat('@originalTotal');
+                            var newTotal = originalTotal - response.discountAmount;
+                            newTotal = newTotal < 0 ? 0 : newTotal;
+                            $("#total-amount").text(`$${newTotal.toFixed(2)}`);
+                            if (response.discountAmount > 0) {
+                                var discountRow = `<tr><td>GIẢM GIÁ (${response.couponCode})</td><td>-$${response.discountAmount.toFixed(2)}</td></tr>`;
+                                $("#total-amount").parent().parent().before(discountRow);
+                            }
+                            $("#coupon").val(""); // Clear input
+                            // Vô hiệu hóa nút "Áp dụng" sau khi áp dụng mã thành công
+                            $("#apply-coupon-btn").prop("disabled", true).addClass("disabled").text("ĐÃ ÁP DỤNG");
+                        } else {
+                            $("#coupon-message").addClass("coupon-error").text(response.message);
+                        }
+                    },
+                    error: function () {
+                        $("#coupon-message").addClass("coupon-error").text("Có lỗi xảy ra. Vui lòng thử lại.");
+                    }
+                });
             });
         });
     </script>
