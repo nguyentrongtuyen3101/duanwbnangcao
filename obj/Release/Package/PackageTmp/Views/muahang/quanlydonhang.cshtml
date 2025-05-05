@@ -1,0 +1,277 @@
+﻿@model List<doanwebnangcao.Models.Order>
+@using System.Linq
+
+@{
+    ViewBag.Title = "Quản lý đơn hàng";
+
+    // Lấy thông tin người dùng từ session
+    string userName = "Khách";
+    if (Session["FullName"] != null)
+    {
+        userName = Session["FullName"].ToString();
+    }
+
+    // Tính số lượng đơn hàng
+    int orderCount = 0;
+    if (Model != null)
+    {
+        orderCount = Model.Count;
+    }
+
+    // Tính số lượng đơn hàng bị hủy
+    int canceledOrderCount = 0;
+    if (Model != null)
+    {
+        foreach (var order in Model)
+        {
+            if (order.Status == doanwebnangcao.Models.OrderStatus.Cancelled)
+            {
+                canceledOrderCount++;
+            }
+        }
+    }
+
+    // Truy vấn số lượng wishlist
+    int userId = 0;
+    if (Session["UserId"] != null)
+    {
+        userId = (int)Session["UserId"];
+    }
+
+    int wishlistCount = 0;
+    if (userId != 0)
+    {
+        var dbContext = new doanwebnangcao.Models.ApplicationDbContext();
+        wishlistCount = dbContext.Wishlists.Count(w => w.UserId == userId);
+    }
+}
+
+<main>
+    <!--====== App Content ======-->
+    <div class="app-content">
+        <!--====== Section 1 ======-->
+        <div class="u-s-p-y-60">
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="container">
+                    <div class="breadcrumb">
+                        <div class="breadcrumb__wrap">
+                            <ul class="breadcrumb__list">
+                                <li class="has-separator">
+                                    <a href="@Url.Action("trangchu", "trangchu")">Home</a>
+                                </li>
+                                <li class="is-marked">
+                                    <a href="@Url.Action("quanlydonhang", "muahang")">My Orders</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--====== End - Section 1 ======-->
+        <!--====== Section 2 ======-->
+        <div class="u-s-p-b-60">
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="dash">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-3 col-md-12">
+                                <!--====== Dashboard Features ======-->
+                                <div class="dash__box dash__box--bg-white dash__box--shadow u-s-m-b-30">
+                                    <div class="dash__pad-1">
+                                        <span class="dash__text u-s-m-b-16">Hello, @userName</span>
+                                        <ul class="dash__f-list">
+                                            <li>
+                                                <a href="@Url.Action("trangcanhan", "profile")">Manage My Account</a>
+                                            </li>
+                                            <li>
+                                                <a href="@Url.Action("myprofile", "profile")">My Profile</a>
+                                            </li>
+                                            <li>
+                                                <a href="@Url.Action("editaddress", "profile")">Address Book</a>
+                                            </li>
+                                            <li>
+                                                <a class="dash-active" href="@Url.Action("quanlydonhang", "muahang")">My Orders</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="dash__box dash__box--bg-white dash__box--shadow dash__box--w">
+                                    <div class="dash__pad-1">
+                                        <ul class="dash__w-list">
+                                            <li>
+                                                <div class="dash__w-wrap">
+                                                    <span class="dash__w-icon dash__w-icon-style-1"><i class="fas fa-cart-arrow-down"></i></span>
+                                                    <span class="dash__w-text">@orderCount</span>
+                                                    <span class="dash__w-name">Orders Placed</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="dash__w-wrap">
+                                                    <span class="dash__w-icon dash__w-icon-style-2"><i class="fas fa-times"></i></span>
+                                                    <span class="dash__w-text">@canceledOrderCount</span>
+                                                    <span class="dash__w-name">Cancel Orders</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="dash__w-wrap">
+                                                    <span class="dash__w-icon dash__w-icon-style-3"><i class="far fa-heart"></i></span>
+                                                    <span class="dash__w-text">@wishlistCount</span>
+                                                    <span class="dash__w-name">Wishlist</span>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <!--====== End - Dashboard Features ======-->
+                            </div>
+                            <div class="col-lg-9 col-md-12">
+                                <div class="dash__box dash__box--shadow dash__box--radius dash__box--bg-white u-s-m-b-30">
+                                    <div class="dash__pad-2">
+                                        <h1 class="dash__h1 u-s-m-b-14">My Orders</h1>
+                                        <span class="dash__text u-s-m-b-30">Here you can see all products that have been order.</span>
+                                        <!-- Hiển thị thông báo nếu có -->
+                                        @if (TempData["SuccessMessage"] != null)
+                                        {
+                                            <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-bottom: 20px;background-color: #FF4500;color:white;text-align:center;">
+                                                @TempData["SuccessMessage"]
+                                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                        }
+                                        else if (TempData["ErrorMessage"] != null)
+                                        {
+                                            <div class="alert alert-danger alert-dismissible fade show" role="alert" style="margin-bottom: 20px; background-color: #FF4500;color:white;text-align:center">
+                                                @TempData["ErrorMessage"]
+                                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                        }
+                                        <form class="m-order u-s-m-b-30">
+                                            <div class="m-order__select-wrapper">
+                                                <label class="u-s-m-r-8" for="my-order-sort">Show:</label>
+                                                <select class="select-box select-box--primary-style" id="my-order-sort">
+                                                    <option selected>Last 5 orders</option>
+                                                    <option>Last 15 days</option>
+                                                    <option>Last 30 days</option>
+                                                    <option>Last 6 months</option>
+                                                    <option>Orders placed in 2018</option>
+                                                    <option>All Orders</option>
+                                                </select>
+                                            </div>
+                                        </form>
+                                        <div class="m-order__list">
+                                            @if (Model != null && Model.Any())
+                                            {
+                                                foreach (var order in Model)
+                                                {
+                                                    // Lấy OrderDetail đầu tiên để hiển thị thông tin đại diện
+                                                    var firstDetail = order.OrderDetails.FirstOrDefault();
+                                                    string productName = "Unknown Product";
+                                                    string imageUrl = "/images/placeholder.jpg";
+                                                    int totalQuantity = 0;
+
+                                                    if (firstDetail != null)
+                                                    {
+                                                        var product = firstDetail.ProductVariant != null ? firstDetail.ProductVariant.Product : null;
+                                                        productName = product != null ? product.Name : "Unknown Product";
+                                                        imageUrl = firstDetail.ProductVariant != null
+                                                            ? (!string.IsNullOrEmpty(firstDetail.ProductVariant.VariantImageUrl) ? firstDetail.ProductVariant.VariantImageUrl : (product != null && !string.IsNullOrEmpty(product.ImageUrl) ? product.ImageUrl : "/images/placeholder.jpg"))
+                                                            : "/images/placeholder.jpg";
+                                                        totalQuantity = order.OrderDetails.Sum(d => d.Quantity); // Tổng số lượng sản phẩm trong đơn hàng
+                                                    }
+
+                                                    <div class="m-order__get">
+                                                        <div class="manage-o__header u-s-m-b-30">
+                                                            <div class="dash-l-r">
+                                                                <div>
+                                                                    <div class="manage-o__text-2 u-c-secondary">Order #@order.Id</div>
+                                                                    <div class="manage-o__text u-c-silver">Placed on @order.OrderDate.ToString("dd MMM yyyy HH:mm:ss")</div>
+                                                                </div>
+                                                                <div>
+                                                                    <div class="dash__link dash__link--brand">
+                                                                        <a href="@Url.Action("quanlychitietdonhang", "muahang", new { orderId = order.Id })">MANAGE</a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="manage-o__description">
+                                                            <div class="description__container">
+                                                                <div class="description__img-wrap">
+                                                                    <img class="u-img-fluid" src="@imageUrl" alt="@productName" onerror="this.src='/images/placeholder.jpg'" />
+                                                                </div>
+                                                                <div class="description-title">@productName</div>
+                                                            </div>
+                                                            <div class="description__info-wrap">
+                                                                <div>
+                                                                    <span class="manage-o__badge badge--@order.Status.ToString().ToLower()">@order.Status</span>
+                                                                </div>
+                                                                <div>
+                                                                    <span class="manage-o__text-2 u-c-silver">
+                                                                        Total Quantity:
+                                                                        <span class="manage-o__text-2 u-c-secondary">@totalQuantity</span>
+                                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <span class="manage-o__text-2 u-c-silver">
+                                                                        Total:
+                                                                        <span class="manage-o__text-2 u-c-secondary">$@order.TotalAmount.ToString("F2")</span>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <div class="m-order__get">
+                                                    <div class="manage-o__description">
+                                                        <div class="description__container">
+                                                            <div class="description-title">No orders found.</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Section Content ======-->
+        </div>
+        <!--====== End - Section 2 ======-->
+    </div>
+    <!--====== End - App Content ======-->
+</main>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Hiển thị thông báo nếu có TempData
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>
+                    setTimeout(function() {
+                        $('.alert-success').fadeIn();
+                    }, 100);
+                </text>
+            }
+            else if (TempData["ErrorMessage"] != null)
+            {
+                <text>
+                    setTimeout(function() {
+                        $('.alert-danger').fadeIn();
+                    }, 100);
+                </text>
+            }
+        });
+    </script>
+}

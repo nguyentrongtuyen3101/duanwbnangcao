@@ -1,0 +1,185 @@
+﻿@model List<doanwebnangcao.Models.Payment>
+@using doanwebnangcao.Models
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Quản lý Thanh toán";
+    ViewBag.ActivePage = "QuanLyThanhToan";
+}
+
+<h2 class="mb-4 text-dark">Quản lý Thanh toán</h2>
+
+<!-- Danh sách thanh toán -->
+<div class="card">
+    <div class="card-header">
+        <span>Danh sách thanh toán</span>
+    </div>
+    <div class="card-body p-4">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 5%; min-width: 50px;">ID</th>
+                        <th style="width: 10%; min-width: 100px;">Đơn hàng</th>
+                        <th style="width: 15%; min-width: 150px;">Khách hàng</th>
+                        <th style="width: 15%; min-width: 150px;">Ngày thanh toán</th>
+                        <th style="width: 10%; min-width: 100px;">Số tiền</th>
+                        <th style="width: 15%; min-width: 150px;">Hình thức thanh toán</th>
+                        <th style="width: 10%; min-width: 100px;">Ảnh sản phẩm</th>
+                        <th style="width: 10%; min-width: 100px;">Trạng thái</th>
+                        <th style="width: 10%; min-width: 100px;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var payment in Model)
+                        {
+                            // Get the image from the first OrderDetail's ProductVariant
+                            var order = payment.Order;
+                            var firstOrderDetail = order != null && order.OrderDetails != null ? order.OrderDetails.FirstOrDefault() : null;
+                            string imageUrl = null;
+                            if (firstOrderDetail != null)
+                            {
+                                imageUrl = (firstOrderDetail.ProductVariant != null && firstOrderDetail.ProductVariant.ProductImages != null && firstOrderDetail.ProductVariant.ProductImages.Any(pi => pi.IsMain))
+                                    ? firstOrderDetail.ProductVariant.ProductImages.First(pi => pi.IsMain).ImageUrl
+                                    : (firstOrderDetail.ProductVariant != null ? firstOrderDetail.ProductVariant.VariantImageUrl : null);
+                            }
+
+                            // Xác định màu sắc cho trạng thái thanh toán
+                            string statusClass = payment.Status == "Đã thanh toán" ? "bg-success" : "bg-danger";
+
+                            <tr>
+                                <td style="font-size: 12px;">@payment.Id</td>
+                                <td style="font-size: 12px;">@payment.OrderId</td>
+                                <td style="font-size: 12px;">@(order != null && order.User != null ? order.User.Email : "Không xác định")</td>
+                                <td style="font-size: 12px;">@payment.PaymentDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td style="font-size: 12px;">@payment.Amount.ToString("N0") VNĐ</td>
+                                <td style="font-size: 12px;">@(payment.PaymentMethod != null ? payment.PaymentMethod.Name : "Không xác định")</td>
+                                <td style="font-size: 12px;">
+                                    <div class="image-frame" style="border: 1px solid #ddd; border-radius: 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0 auto;">
+                                        @if (!string.IsNullOrEmpty(imageUrl) && System.IO.File.Exists(Server.MapPath(imageUrl)))
+                                        {
+                                            <img src="@Url.Content(imageUrl)" alt="Ảnh sản phẩm" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                                        }
+                                        else
+                                        {
+                                            <span style="font-size: 10px; color: #666;">Ảnh sản phẩm</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td style="font-size: 12px;">
+                                    <span class="badge rounded-pill @statusClass">
+                                        @payment.Status
+                                    </span>
+                                </td>
+                                <td style="font-size: 12px;">
+                                    <div class="d-flex gap-1" style="flex-wrap: nowrap;">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input payment-status" data-payment-id="@payment.Id" @(payment.Status == "Đã thanh toán" ? "checked" : "") />
+                                            <label class="form-check-label">Đã thanh toán</label>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4" style="font-size: 12px;">Không có thanh toán nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Phân trang -->
+        @if (ViewBag.TotalPages > 1)
+        {
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-4">
+                    <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("thanhtoanmanager", new { page = ViewBag.CurrentPage - 1 })">Trước</a>
+                    </li>
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("thanhtoanmanager", new { page = i })">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("thanhtoanmanager", new { page = ViewBag.CurrentPage + 1 })">Tiếp</a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="text-center" style="font-size: 12px;">
+                <p>Hiển thị bản ghi @(ViewBag.CurrentPage * ViewBag.PageSize - ViewBag.PageSize + 1) đến @(ViewBag.CurrentPage * ViewBag.PageSize > ViewBag.TotalRecords ? ViewBag.TotalRecords : ViewBag.CurrentPage * ViewBag.PageSize) của @ViewBag.TotalRecords bản ghi</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .table th, .table td {
+            padding: 4px 6px;
+            vertical-align: middle;
+            font-size: 12px; /* Giảm kích thước chữ để tránh che khuất */
+        }
+
+        .image-frame {
+            margin: 0;
+        }
+
+        .table-responsive {
+            min-height: 200px; /* Đảm bảo bảng có không gian tối thiểu */
+        }
+
+        .table th {
+            min-width: 50px; /* Đảm bảo cột tiêu đề không bị thu hẹp quá mức */
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            $(".payment-status").on("change", function () {
+                const paymentId = $(this).data("payment-id");
+                const isPaid = $(this).is(":checked");
+
+                $.ajax({
+                    url: '@Url.Action("UpdatePaymentStatus", "quanlythanhtoan")',
+                    type: 'POST',
+                    data: { paymentId: paymentId, isPaid: isPaid },
+                    success: function (response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload(); // Tải lại trang để cập nhật trạng thái
+                        } else {
+                            alert(response.message);
+                            $(this).prop("checked", !isPaid); // Hoàn tác nếu lỗi
+                        }
+                    },
+                    error: function () {
+                        alert("Đã có lỗi xảy ra khi cập nhật trạng thái thanh toán.");
+                        $(this).prop("checked", !isPaid); // Hoàn tác nếu lỗi
+                    }
+                });
+            });
+        });
+    </script>
+}

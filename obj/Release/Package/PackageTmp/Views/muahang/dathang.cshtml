@@ -1,0 +1,493 @@
+﻿@model doanwebnangcao.DTO.OrderViewModel
+@using doanwebnangcao.Models
+
+@{
+    ViewBag.Title = "Đặt hàng";
+    var paymentMethods = ViewBag.PaymentMethods as List<PaymentMethod>;
+    var selectedAddress = ViewBag.SelectedAddress as Address;
+    var userAddresses = ViewBag.UserAddresses as List<Address>;
+    var cart = ViewBag.Cart as Cart;
+    var buyNowItem = ViewBag.BuyNowItem as BuyNowItem;
+
+    // Tính tổng số tiền
+    decimal total = 0;
+    decimal originalTotal = 0;
+    decimal discountAmount = TempData["DiscountAmount"] as decimal? ?? 0;
+    string appliedCoupon = TempData["AppliedCoupon"] as string ?? "";
+
+    if (buyNowItem != null)
+    {
+        originalTotal = buyNowItem.UnitPrice * buyNowItem.Quantity + 4; // Phí vận chuyển
+        total = originalTotal - discountAmount;
+    }
+    else if (cart != null && cart.CartDetails != null)
+    {
+        var subtotal = cart.CartDetails.Sum(cd => cd.UnitPrice * cd.Quantity);
+        originalTotal = subtotal + 4; // Phí vận chuyển
+        total = originalTotal - discountAmount;
+    }
+    total = total < 0 ? 0 : total; // Đảm bảo tổng không âm
+}
+
+<main>
+    <div class="app-content">
+        <!--====== Section 1 ======-->
+        <div class="u-s-p-y-60">
+            <div class="section__content">
+                <div class="container">
+                    <div class="breadcrumb">
+                        <div class="breadcrumb__wrap">
+                            <ul class="breadcrumb__list">
+                                <li class="has-separator">
+                                    <a href="@Url.Action("trangchu", "trangchu")">Home</a>
+                                </li>
+                                <li class="is-marked">
+                                    <a href="#">Checkout</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--====== End - Section 1 ======-->
+        <!--====== Section 2 ======-->
+        <div class="u-s-p-b-60">
+            <div class="section__content">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div id="checkout-msg-group">
+                                
+                                <div class="msg">
+                                    <span class="msg__text">
+                                        Có mã giảm giá?
+                                        <a class="gl-link" href="#have-coupon" data-toggle="collapse">Nhấn để nhập mã</a>
+                                    </span>
+                                    <div class="collapse" id="have-coupon" data-parent="#checkout-msg-group">
+                                        <div class="c-f u-s-m-b-16">
+                                            <span class="gl-text u-s-m-b-16">Nhập mã giảm giá nếu bạn có.</span>
+                                            <span class="gl-text u-s-m-b-16 text-bg-danger">Lưu ý: khi bạn ấn áp dụng ,mã giảm giá sẽ được áp dụng ngay cho đơn hàng ngay cả khi bạn không đặt hàng</span>
+                                            <form class="c-f__form" id="coupon-form">
+                                                @Html.AntiForgeryToken()
+                                                <div class="u-s-m-b-16">
+                                                    <div class="u-s-m-b-15">
+                                                        <label for="coupon"></label>
+                                                        <input class="input-text input-text--primary-style" type="text" id="coupon" name="CouponCode" placeholder="Mã giảm giá" required>
+                                                    </div>
+                                                    <div class="u-s-m-b-15">
+                                                        <button class="btn btn--e-transparent-brand-b-2" type="submit" id="apply-coupon-btn">ÁP DỤNG</button>
+                                                    </div>
+                                                </div>
+                                                <div id="coupon-message" class="u-s-m-t-10"></div>
+                                            </form>
+                                            @if (!string.IsNullOrEmpty(appliedCoupon))
+                                            {
+                                                <p class="gl-text u-s-m-t-10" id="applied-coupon-message">Mã giảm giá <strong>@appliedCoupon</strong> đã được áp dụng. Giảm: $@discountAmount.ToString("F2")</p>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--====== End - Section 2 ======-->
+        <!--====== Section 3 ======-->
+        <div class="u-s-p-b-60">
+            <div class="section__content">
+                <div class="container">
+                    <div class="checkout-f">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <h1 class="checkout-f__h1">THÔNG TIN GIAO HÀNG</h1>
+                                @using (Html.BeginForm("SaveAddressAndOrder", "Muahang", FormMethod.Post, new { @class = "checkout-f__delivery" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <div class="u-s-m-b-30">
+                                        <div class="gl-inline">
+                                            <div class="u-s-m-b-15">
+                                                <label class="gl-label" for="billing-fullname">HỌ TÊN *</label>
+                                                @Html.TextBoxFor(model => model.Address.FullName, new { @class = "input-text input-text--primary-style", @id = "billing-fullname", @maxlength = "100", @required = "required" })
+                                                @Html.ValidationMessageFor(model => model.Address.FullName, "", new { @class = "text-danger" })
+                                            </div>
+                                        </div>
+                                        <div class="u-s-m-b-15">
+                                            <label class="gl-label" for="billing-phone">SỐ ĐIỆN THOẠI *</label>
+                                            @Html.TextBoxFor(model => model.Address.PhoneNumber, new { @class = "input-text input-text--primary-style", @id = "billing-phone", @maxlength = "15", @required = "required", @type = "tel" })
+                                            @Html.ValidationMessageFor(model => model.Address.PhoneNumber, "", new { @class = "text-danger" })
+                                        </div>
+                                        <div class="u-s-m-b-15">
+                                            <label class="gl-label" for="billing-street">ĐỊA CHỈ *</label>
+                                            @Html.TextBoxFor(model => model.Address.AddressLine, new { @class = "input-text input-text--primary-style", @id = "billing-street", @maxlength = "200", @required = "required", @placeholder = "Tên nhà và tên đường" })
+                                            @Html.ValidationMessageFor(model => model.Address.AddressLine, "", new { @class = "text-danger" })
+                                        </div>
+                                        <div class="u-s-m-b-15">
+                                            <label class="gl-label" for="billing-town-city">THÀNH PHỐ *</label>
+                                            @Html.TextBoxFor(model => model.Address.City, new { @class = "input-text input-text--primary-style", @id = "billing-town-city", @maxlength = "100", @required = "required" })
+                                            @Html.ValidationMessageFor(model => model.Address.City, "", new { @class = "text-danger" })
+                                        </div>
+                                        <div class="u-s-m-b-15">
+                                            <label class="gl-label" for="billing-country">QUỐC GIA *</label>
+                                            @Html.DropDownListFor(model => model.Address.Country, new SelectList(new[] { "Việt Nam", "United States", "United Kingdom" }), "Chọn quốc gia", new { @class = "select-box select-box--primary-style", @id = "billing-country", @required = "required" })
+                                            @Html.ValidationMessageFor(model => model.Address.Country, "", new { @class = "text-danger" })
+                                        </div>
+                                        <div class="u-s-m-b-10">
+                                            <label class="gl-label" for="order-note">GHI CHÚ ĐƠN HÀNG</label>
+                                            @Html.TextAreaFor(model => model.OrderNote, new { @class = "text-area text-area--primary-style", @id = "order-note", @maxlength = "500" })
+                                        </div>
+                                        <div>
+                                            <button class="btn btn--e-transparent-brand-b-2" type="submit">LƯU</button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="col-lg-6">
+                                <h1 class="checkout-f__h1">TÓM TẮT ĐƠN HÀNG</h1>
+                                <div class="o-summary">
+                                    <div class="o-summary__section u-s-m-b-30">
+                                        <div class="o-summary__item-wrap gl-scroll">
+                                            @if (buyNowItem != null)
+                                            {
+                                                <!-- Hiển thị sản phẩm từ BuyNowItem (Mua Ngay) -->
+                                                <div class="o-card">
+                                                    <div class="o-card__flex">
+                                                        <div class="o-card__img-wrap">
+                                                            <img class="u-img-fluid" src="@buyNowItem.VariantImageUrl" alt="@buyNowItem.ProductName" onerror="this.src='/images/placeholder.jpg'" />
+                                                        </div>
+                                                        <div class="o-card__info-wrap">
+                                                            <span class="o-card__name"><a href="#">@buyNowItem.ProductName</a></span>
+                                                            <span class="o-card__variant">
+                                                                @(buyNowItem.SizeName != null ? "Kích thước: " + buyNowItem.SizeName : "")
+                                                                @(buyNowItem.ColorName != null ? " - Màu: " + buyNowItem.ColorName : "")
+                                                            </span>
+                                                            <span class="o-card__quantity">Số lượng x @buyNowItem.Quantity</span>
+                                                            <span class="o-card__price">$@buyNowItem.UnitPrice.ToString("F2")</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else if (cart != null && cart.CartDetails != null && cart.CartDetails.Any())
+                                            {
+                                                <!-- Hiển thị sản phẩm từ giỏ hàng -->
+                                                foreach (var cartDetail in cart.CartDetails)
+                                                {
+                                                    var product = cartDetail.ProductVariant.Product;
+                                                    var variant = cartDetail.ProductVariant;
+                                                    var imageUrl = !string.IsNullOrEmpty(variant.VariantImageUrl) ? variant.VariantImageUrl : product.ImageUrl ?? "/images/placeholder.jpg";
+                                                    <div class="o-card">
+                                                        <div class="o-card__flex">
+                                                            <div class="o-card__img-wrap">
+                                                                <img class="u-img-fluid" src="@imageUrl" alt="@product.Name" onerror="this.src='/images/placeholder.jpg'" />
+                                                            </div>
+                                                            <div class="o-card__info-wrap">
+                                                                <span class="o-card__name"><a href="@Url.Action("sanphamdetailt", "HangMoiVe", new { id = product.Id })">@product.Name</a></span>
+                                                                <span class="o-card__variant">
+                                                                    @(variant.Size != null ? "Kích thước: " + variant.Size.Name : "")
+                                                                    @(variant.Color != null ? " - Màu: " + variant.Color.Name : "")
+                                                                </span>
+                                                                <span class="o-card__quantity">Số lượng x @cartDetail.Quantity</span>
+                                                                <span class="o-card__price">$@cartDetail.UnitPrice.ToString("F2")</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <p>Chưa có sản phẩm trong đơn hàng.</p>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="o-summary__section u-s-m-b-30">
+                                        <div class="o-summary__box">
+                                            <h1 class="checkout-f__h1">THÔNG TIN GIAO HÀNG & THANH TOÁN</h1>
+                                            <div class="ship-b">
+                                                <span class="ship-b__text">Giao hàng đến:</span>
+                                                <div class="ship-b__box u-s-m-b-10">
+                                                    @if (selectedAddress != null)
+                                                    {
+                                                        <p class="ship-b__p">
+                                                            @selectedAddress.FullName, @selectedAddress.AddressLine, @selectedAddress.City, @selectedAddress.Country, @selectedAddress.PhoneNumber
+                                                        </p>
+                                                        <a class="ship-b__edit btn--e-transparent-platinum-b-2" data-modal="modal" data-modal-id="#edit-ship-address">Sửa</a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <p class="ship-b__p">Chưa có địa chỉ giao hàng.</p>
+                                                    }
+                                                </div>
+                                                <div class="ship-b__box">
+                                                    <span class="ship-b__text">Thanh toán tại địa chỉ giao hàng đã chọn</span>
+                                                    @if (selectedAddress != null)
+                                                    {
+                                                        <a class="ship-b__edit btn--e-transparent-platinum-b-2" data-modal="modal" data-modal-id="#edit-ship-address">Sửa</a>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="o-summary__section u-s-m-b-30">
+                                        <div class="o-summary__box">
+                                            <table class="o-summary__table">
+                                                <tbody>
+                                                    <tr>
+                                                        <td>PHÍ VẬN CHUYỂN</td>
+                                                        <td>$4.00</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>THUẾ</td>
+                                                        <td>$0.00</td>
+                                                    </tr>
+                                                    @if (discountAmount > 0)
+                                                    {
+                                                        <tr>
+                                                            <td>GIẢM GIÁ (@appliedCoupon)</td>
+                                                            <td>-$@discountAmount.ToString("F2")</td>
+                                                        </tr>
+                                                    }
+                                                    <tr>
+                                                        <td>TỔNG CỘNG</td>
+                                                        <td id="total-amount">$@total.ToString("F2")</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="o-summary__section u-s-m-b-30">
+                                        <div class="o-summary__box">
+                                            <h1 class="checkout-f__h1">THÔNG TIN THANH TOÁN</h1>
+                                            @using (Html.BeginForm("PlaceOrder", "Muahang", FormMethod.Post, new { @id = "payment-form", @class = "checkout-f__payment" }))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                @Html.HiddenFor(model => model.OrderNote)
+                                                @Html.Hidden("TotalAmount", total)
+                                                <div class="u-s-m-b-10">
+                                                    @if (paymentMethods != null && paymentMethods.Any())
+                                                    {
+                                                        foreach (var method in paymentMethods)
+                                                        {
+                                                            <div class="radio-box">
+                                                                <input type="radio" id="payment-@method.Id" name="PaymentMethodId" value="@method.Id" required>
+                                                                <div class="radio-box__state radio-box__state--primary">
+                                                                    <label class="radio-box__label" for="payment-@method.Id">@method.Name</label>
+                                                                </div>
+                                                            </div>
+                                                            <span class="gl-text u-s-m-t-6">@method.Description</span>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <p>Không có phương thức thanh toán nào.</p>
+                                                    }
+                                                </div>
+                                                <div class="u-s-m-b-15">
+                                                    <div class="check-box">
+                                                        <input type="checkbox" id="term-and-condition" name="AcceptTerms" value="true" required>
+                                                        <div class="check-box__state check-box__state--primary">
+                                                            <label class="check-box__label" for="term-and-condition">Tôi đồng ý với </label>
+                                                        </div>
+                                                        <a class="gl-link" href="#">Điều khoản dịch vụ.</a>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <button class="btn btn--e-brand-b-2" type="submit">ĐẶT HÀNG</button>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== Modal for Edit Shipping Address ======-->
+            <div class="modal fade" id="edit-ship-address" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content custom-modal-content">
+                        <div class="modal-header custom-modal-header">
+                            <h5 class="modal-title">Chọn Địa Chỉ Giao Hàng và Phương Thức Vận Chuyển</h5>
+                            <button type="button" class="custom-close" data-dismiss="modal" aria-label="Close">
+                                <span>×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="edit-address-form" action="@Url.Action("UpdateShippingAddress", "Muahang")" method="post">
+                                @Html.AntiForgeryToken()
+                                <div class="u-s-m-b-15">
+                                    <label class="gl-label">Chọn địa chỉ giao hàng:</label>
+                                    @if (userAddresses != null && userAddresses.Any())
+                                    {
+                                        <select class="select-box select-box--primary-style" name="ShippingAddressId" id="shipping-address-id">
+                                            @foreach (var address in userAddresses)
+                                            {
+                                                <option value="@address.Id" @(address.Id == (selectedAddress != null ? selectedAddress.Id : 0) ? "selected" : "")>
+                                                    @address.FullName, @address.AddressLine, @selectedAddress.City, @address.Country, @address.PhoneNumber
+                                                </option>
+                                            }
+                                        </select>
+                                    }
+                                    else
+                                    {
+                                        <p>Chưa có địa chỉ nào. Vui lòng thêm địa chỉ mới.</p>
+                                    }
+                                </div>
+                                <div class="u-s-m-b-15">
+                                    <button class="custom-save-btn" type="submit">LƯU</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Modal ======-->
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <style>
+        /* Custom modal styles */
+        .custom-modal-content {
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: none;
+        }
+
+        .custom-modal-header {
+            border-bottom: none;
+            padding: 20px 25px;
+            background-color: #f8f9fa;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .custom-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #666;
+            transition: color 0.3s ease;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+            .custom-close:hover {
+                color: #ff4d4d;
+                background-color: #f1f1f1;
+            }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .custom-save-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            cursor: pointer;
+        }
+
+            .custom-save-btn:hover {
+                background-color: #0056b3;
+                transform: translateY(-2px);
+            }
+
+        .modal.fade .modal-dialog {
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .modal.show .modal-dialog {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .coupon-success {
+            color: green;
+            font-weight: bold;
+        }
+
+        .coupon-error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            // Validate phone number
+            $("#billing-phone").on("input", function () {
+                var phone = $(this).val();
+                if (!/^\d{10,15}$/.test(phone)) {
+                    $(this).next(".text-danger").text("Số điện thoại phải từ 10-15 chữ số.");
+                } else {
+                    $(this).next(".text-danger").text("");
+                }
+            });
+
+            // Ensure checkboxes are clickable
+            $(".check-box__state").css("pointer-events", "auto");
+            $(".radio-box__state").css("pointer-events", "auto");
+
+            // Initialize modal
+            $('.ship-b__edit').on('click', function () {
+                $('#edit-ship-address').modal('show');
+            });
+
+            // Handle coupon form submission with AJAX
+            $("#coupon-form").on("submit", function (e) {
+                e.preventDefault();
+                var formData = $(this).serialize();
+                $.ajax({
+                    url: '@Url.Action("ApplyCoupon", "Muahang")',
+                    type: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        $("#coupon-message").removeClass("coupon-success coupon-error");
+                        if (response.success) {
+                            $("#coupon-message").addClass("coupon-success").text(response.message);
+                            $("#applied-coupon-message").html(`Mã giảm giá <strong>${response.couponCode}</strong> đã được áp dụng. Giảm: $${response.discountAmount.toFixed(2)}`);
+                            var originalTotal = parseFloat('@originalTotal');
+                            var newTotal = originalTotal - response.discountAmount;
+                            newTotal = newTotal < 0 ? 0 : newTotal;
+                            $("#total-amount").text(`$${newTotal.toFixed(2)}`);
+                            if (response.discountAmount > 0) {
+                                var discountRow = `<tr><td>GIẢM GIÁ (${response.couponCode})</td><td>-$${response.discountAmount.toFixed(2)}</td></tr>`;
+                                $("#total-amount").parent().parent().before(discountRow);
+                            }
+                            $("#coupon").val(""); // Clear input
+                            // Vô hiệu hóa nút "Áp dụng" sau khi áp dụng mã thành công
+                            $("#apply-coupon-btn").prop("disabled", true).addClass("disabled").text("ĐÃ ÁP DỤNG");
+                        } else {
+                            $("#coupon-message").addClass("coupon-error").text(response.message);
+                        }
+                    },
+                    error: function () {
+                        $("#coupon-message").addClass("coupon-error").text("Có lỗi xảy ra. Vui lòng thử lại.");
+                    }
+                });
+            });
+        });
+    </script>
+}

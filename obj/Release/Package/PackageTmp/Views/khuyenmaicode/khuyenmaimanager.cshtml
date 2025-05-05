@@ -1,0 +1,500 @@
+﻿@model List<doanwebnangcao.Models.Coupon>
+@using System.Linq
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Quản lý Mã giảm giá";
+    ViewBag.ActivePage = "Coupons";
+}
+
+<h2 class="mb-4 text-dark">Quản lý Mã giảm giá</h2>
+
+<!-- Form thêm mã giảm giá -->
+<div class="card mb-4">
+    <div class="card-header">
+        <span>Thêm mã giảm giá mới</span>
+    </div>
+    <div class="card-body p-4">
+        @using (Html.BeginForm("CreateCoupon", "khuyenmaicode", FormMethod.Post, new { id = "addCouponForm" }))
+        {
+            @Html.AntiForgeryToken()
+            <div class="row mb-3">
+                <label for="Code" class="col-md-3 col-form-label fw-bold">Mã giảm giá</label>
+                <div class="col-md-9">
+                    @Html.TextBox("Code", ViewBag.RandomCode as string, new { @class = "form-control", @readonly = "readonly" })
+                    <small class="form-text text-muted">Mã được tạo tự động.</small>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="DiscountType" class="col-md-3 col-form-label fw-bold">Loại giảm giá</label>
+                <div class="col-md-9">
+                    <select class="form-control" id="DiscountType" name="DiscountType" onchange="toggleDiscountFields()">
+                        <option value="percentage">Theo phần trăm</option>
+                        <option value="amount">Theo số tiền</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-3" id="percentageField">
+                <label for="DiscountPercentage" class="col-md-3 col-form-label fw-bold">Phần trăm giảm</label>
+                <div class="col-md-9">
+                    @Html.TextBox("DiscountPercentage", null, new { @class = "form-control", type = "number", step = "0.1", min = "0", max = "100" })
+                    @Html.ValidationMessage("DiscountPercentage", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="row mb-3" id="amountField" style="display: none;">
+                <label for="DiscountAmount" class="col-md-3 col-form-label fw-bold">Số tiền giảm</label>
+                <div class="col-md-9">
+                    @Html.TextBox("DiscountAmount", null, new { @class = "form-control", type = "number", step = "1000", min = "0" })
+                    @Html.ValidationMessage("DiscountAmount", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="StartDate" class="col-md-3 col-form-label fw-bold">Ngày bắt đầu</label>
+                <div class="col-md-9">
+                    <input type="date" class="form-control" id="StartDate" name="StartDate" value="@DateTime.Today.ToString("yyyy-MM-dd")" readonly />
+                    <small class="form-text text-muted">Mặc định là ngày hôm nay.</small>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="UsageLimitDays" class="col-md-3 col-form-label fw-bold">Số ngày giới hạn</label>
+                <div class="col-md-9">
+                    @Html.TextBox("UsageLimitDays", null, new { @class = "form-control", type = "number", min = "1", @oninput = "updateEndDate()" })
+                    @Html.ValidationMessage("UsageLimitDays", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="EndDate" class="col-md-3 col-form-label fw-bold">Ngày kết thúc</label>
+                <div class="col-md-9">
+                    <input type="date" class="form-control" id="EndDate" name="EndDate" readonly />
+                    @Html.ValidationMessage("EndDate", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="MaxUsage" class="col-md-3 col-form-label fw-bold">Số lần sử dụng tối đa</label>
+                <div class="col-md-9">
+                    @Html.TextBox("MaxUsage", null, new { @class = "form-control", type = "number", min = "0" })
+                    @Html.ValidationMessage("MaxUsage", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="IsActive" class="col-md-3 col-form-label fw-bold">Trạng thái</label>
+                <div class="col-md-9">
+                    <div class="form-check">
+                        @Html.CheckBox("IsActive", true, new { @class = "form-check-input" })
+                        <label class="form-check-label" for="IsActive">Hoạt động</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-9 offset-md-3">
+                    <button type="submit" class="btn btn-primary me-2"><i class="fas fa-save me-1"></i> Thêm mã giảm giá</button>
+                    <button type="reset" class="btn btn-secondary"><i class="fas fa-undo me-1"></i> Làm mới</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Danh sách mã giảm giá -->
+<div class="card">
+    <div class="card-header">
+        <span>Danh sách mã giảm giá</span>
+    </div>
+    <div class="card-body p-4">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 3%;">#</th>
+                        <th style="width: 6%;">Mã giảm giá</th>
+                        <th style="width: 6%;">Giảm giá</th>
+                        <th style="width: 6%;">Ngày bắt đầu</th>
+                        <th style="width: 6%;">Ngày kết thúc</th>
+                        <th style="width: 6%;">Số lần sử dụng</th>
+                        <th style="width: 6%;">Số lần đã dùng</th>
+                        <th style="width: 6%;">Trạng thái</th>
+                        <th style="width: 10%;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        int index = 1;
+                        foreach (var coupon in Model)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@coupon.Code</td>
+                                <td>
+                                    @if (coupon.DiscountPercentage.HasValue)
+                                    {
+                                        @Html.Raw(coupon.DiscountPercentage.ToString() + " %")
+                                    }
+                                    else if (coupon.DiscountAmount.HasValue)
+                                    {
+                                        @Html.Raw(coupon.DiscountAmount.Value.ToString("N0") + " VNĐ")
+                                    }
+                                </td>
+                                <td>@coupon.StartDate.ToString("dd/MM/yyyy")</td>
+                                <td>@coupon.EndDate.ToString("dd/MM/yyyy")</td>
+                                <td>@coupon.MaxUsage</td>
+                                <td>@coupon.UsedCount</td>
+                                <td>
+                                    <span class="badge rounded-pill @(coupon.IsActive ? "bg-success" : "bg-danger")">
+                                        @(coupon.IsActive ? "Hoạt động" : "Không hoạt động")
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning me-1" onclick="editCoupon(@coupon.Id, '@coupon.Code', '@(coupon.DiscountPercentage.HasValue ? coupon.DiscountPercentage.ToString() : "")', '@(coupon.DiscountAmount.HasValue ? coupon.DiscountAmount.ToString() : "")', '@coupon.StartDate.ToString("yyyy-MM-dd")', '@coupon.EndDate.ToString("yyyy-MM-dd")', '@coupon.MaxUsage', '@coupon.IsActive')">
+                                        <i class="fas fa-edit me-1"></i> Sửa
+                                    </button>
+                                    <a href="@Url.Action("DeleteCoupon", "khuyenmaicode", new { id = coupon.Id })" class="btn btn-sm btn-danger me-1" onclick="return confirm('Bạn có chắc muốn xóa mã giảm giá này? Lưu ý: Xóa mã giảm giá có thể ảnh hưởng đến đơn hàng liên quan.')">
+                                        <i class="fas fa-trash me-1"></i> Xóa
+                                    </a>
+                                    <button class="btn btn-sm btn-info" onclick="showGiftModal(@coupon.Id, '@coupon.Code')">
+                                        <i class="fas fa-gift me-1"></i> Tặng
+                                    </button>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">Không có mã giảm giá nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chỉnh sửa mã giảm giá -->
+<div class="modal fade" id="editCouponModal" tabindex="-1" aria-labelledby="editCouponModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCouponModalLabel">Chỉnh sửa mã giảm giá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @using (Html.BeginForm("EditCoupon", "khuyenmaicode", FormMethod.Post, new { id = "editCouponForm" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="editCouponId" name="Id" />
+
+                    <div class="mb-3">
+                        <label for="editCode" class="form-label fw-bold">Mã giảm giá</label>
+                        <input type="text" class="form-control" id="editCode" name="Code" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editDiscountType" class="form-label fw-bold">Loại giảm giá</label>
+                        <select class="form-control" id="editDiscountType" name="DiscountType" onchange="toggleEditDiscountFields()">
+                            <option value="percentage">Theo phần trăm</option>
+                            <option value="amount">Theo số tiền</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="editPercentageField">
+                        <label for="editDiscountPercentage" class="form-label fw-bold">Phần trăm giảm</label>
+                        @Html.TextBox("DiscountPercentage", null, new { @class = "form-control", id = "editDiscountPercentage", type = "number", step = "0.1", min = "0", max = "100" })
+                        @Html.ValidationMessage("DiscountPercentage", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3" id="editAmountField" style="display: none;">
+                        <label for="editDiscountAmount" class="form-label fw-bold">Số tiền giảm</label>
+                        @Html.TextBox("DiscountAmount", null, new { @class = "form-control", id = "editDiscountAmount", type = "number", step = "1000", min = "0" })
+                        @Html.ValidationMessage("DiscountAmount", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editStartDate" class="form-label fw-bold">Ngày bắt đầu</label>
+                        <input type="date" class="form-control" id="editStartDate" name="StartDate" />
+                        @Html.ValidationMessage("StartDate", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editUsageLimitDays" class="form-label fw-bold">Số ngày giới hạn</label>
+                        @Html.TextBox("UsageLimitDays", null, new { @class = "form-control", id = "editUsageLimitDays", type = "number", min = "1", @oninput = "updateEditEndDate()" })
+                        @Html.ValidationMessage("UsageLimitDays", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editEndDate" class="form-label fw-bold">Ngày kết thúc</label>
+                        <input type="date" class="form-control" id="editEndDate" name="EndDate" readonly />
+                        @Html.ValidationMessage("EndDate", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editMaxUsage" class="form-label fw-bold">Số lần sử dụng tối đa</label>
+                        @Html.TextBox("MaxUsage", null, new { @class = "form-control", id = "editMaxUsage", type = "number", min = "0" })
+                        @Html.ValidationMessage("MaxUsage", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editIsActive" class="form-label fw-bold">Trạng thái</label>
+                        <div class="form-check">
+                            @Html.CheckBox("IsActive", true, new { @class = "form-check-input", id = "editIsActive" })
+                            <label class="form-check-label" for="editIsActive">Hoạt động</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Lưu thay đổi</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times me-1"></i> Đóng</button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal tặng mã giảm giá -->
+<div class="modal fade" id="giftModal" tabindex="-1" aria-labelledby="giftModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="giftModalLabel">Chọn người dùng để tặng mã giảm giá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="userListContainer"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden input để lưu token chống giả mạo -->
+<input type="hidden" id="RequestVerificationToken" value="@Html.AntiForgeryToken().ToString()" />
+
+@section Scripts {
+    <style>
+        /* Định dạng bảng trong modal tặng mã giảm giá */
+        #userListContainer table {
+            width: 100%;
+            table-layout: fixed; /* Đảm bảo các cột có kích thước cố định */
+        }
+
+        #userListContainer th, #userListContainer td {
+            padding: 8px; /* Khoảng cách bên trong ô */
+            text-align: left;
+            overflow: hidden; /* Ẩn nội dung tràn */
+            text-overflow: ellipsis; /* Hiển thị dấu ... nếu nội dung quá dài */
+            white-space: nowrap; /* Không xuống dòng */
+        }
+
+            #userListContainer th:nth-child(1), #userListContainer td:nth-child(1) {
+                width: 80%; /* Cột Email chiếm 80% */
+            }
+
+            #userListContainer th:nth-child(2), #userListContainer td:nth-child(2) {
+                width: 20%; /* Cột Hành động chiếm 20% */
+                text-align: center; /* Căn giữa nút Tặng */
+            }
+
+        #userListContainer .btn-sm {
+            padding: 4px 8px; /* Giảm kích thước nút Tặng */
+            font-size: 12px; /* Giảm kích thước chữ */
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            // Validation cho form thêm mã giảm giá
+            $("#addCouponForm").validate({
+                rules: {
+                    DiscountPercentage: { required: function () { return $("#DiscountType").val() === "percentage"; }, min: 0, max: 100 },
+                    DiscountAmount: { required: function () { return $("#DiscountType").val() === "amount"; }, min: 0 },
+                    UsageLimitDays: { required: true, min: 1 },
+                    MaxUsage: { required: true, min: 0 }
+                },
+                messages: {
+                    DiscountPercentage: {
+                        required: "Vui lòng nhập phần trăm giảm giá",
+                        min: "Phần trăm giảm phải lớn hơn hoặc bằng 0",
+                        max: "Phần trăm giảm không được vượt quá 100"
+                    },
+                    DiscountAmount: {
+                        required: "Vui lòng nhập số tiền giảm",
+                        min: "Số tiền giảm phải lớn hơn hoặc bằng 0"
+                    },
+                    UsageLimitDays: {
+                        required: "Vui lòng nhập số ngày giới hạn",
+                        min: "Số ngày giới hạn phải lớn hơn 0"
+                    },
+                    MaxUsage: {
+                        required: "Vui lòng nhập số lần sử dụng tối đa",
+                        min: "Số lần sử dụng tối đa phải lớn hơn hoặc bằng 0"
+                    }
+                }
+            });
+
+            // Validation cho form chỉnh sửa mã giảm giá
+            $("#editCouponForm").validate({
+                rules: {
+                    DiscountPercentage: { required: function () { return $("#editDiscountType").val() === "percentage"; }, min: 0, max: 100 },
+                    DiscountAmount: { required: function () { return $("#editDiscountType").val() === "amount"; }, min: 0 },
+                    UsageLimitDays: { required: true, min: 1 },
+                    MaxUsage: { required: true, min: 0 },
+                    StartDate: { required: true }
+                },
+                messages: {
+                    DiscountPercentage: {
+                        required: "Vui lòng nhập phần trăm giảm giá",
+                        min: "Phần trăm giảm phải lớn hơn hoặc bằng 0",
+                        max: "Phần trăm giảm không được vượt quá 100"
+                    },
+                    DiscountAmount: {
+                        required: "Vui lòng nhập số tiền giảm",
+                        min: "Số tiền giảm phải lớn hơn hoặc bằng 0"
+                    },
+                    UsageLimitDays: {
+                        required: "Vui lòng nhập số ngày giới hạn",
+                        min: "Số ngày giới hạn phải lớn hơn 0"
+                    },
+                    MaxUsage: {
+                        required: "Vui lòng nhập số lần sử dụng tối đa",
+                        min: "Số lần sử dụng tối đa phải lớn hơn hoặc bằng 0"
+                    },
+                    StartDate: {
+                        required: "Vui lòng chọn ngày bắt đầu"
+                    }
+                }
+            });
+        });
+
+        // Hàm chuyển đổi trường giảm giá
+        function toggleDiscountFields() {
+            var discountType = $("#DiscountType").val();
+            if (discountType === "percentage") {
+                $("#percentageField").show();
+                $("#amountField").hide();
+                $("#DiscountAmount").val("");
+            } else {
+                $("#percentageField").hide();
+                $("#amountField").show();
+                $("#DiscountPercentage").val("");
+            }
+        }
+
+        // Hàm chuyển đổi trường giảm giá trong modal chỉnh sửa
+        function toggleEditDiscountFields() {
+            var discountType = $("#editDiscountType").val();
+            if (discountType === "percentage") {
+                $("#editPercentageField").show();
+                $("#editAmountField").hide();
+                $("#editDiscountAmount").val("");
+            } else {
+                $("#editPercentageField").hide();
+                $("#editAmountField").show();
+                $("#editDiscountPercentage").val("");
+            }
+        }
+
+        // Hàm cập nhật ngày kết thúc
+        function updateEndDate() {
+            var startDate = new Date($("#StartDate").val());
+            var usageLimitDays = parseInt($("#UsageLimitDays").val()) || 0;
+            if (usageLimitDays > 0) {
+                var endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + usageLimitDays);
+                $("#EndDate").val(endDate.toISOString().split("T")[0]);
+            } else {
+                $("#EndDate").val("");
+            }
+        }
+
+        // Hàm cập nhật ngày kết thúc trong modal chỉnh sửa
+        function updateEditEndDate() {
+            var startDate = new Date($("#editStartDate").val());
+            var usageLimitDays = parseInt($("#editUsageLimitDays").val()) || 0;
+            if (usageLimitDays > 0 && !isNaN(startDate)) {
+                var endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + usageLimitDays);
+                $("#editEndDate").val(endDate.toISOString().split("T")[0]);
+            } else {
+                $("#editEndDate").val("");
+            }
+        }
+
+        // Hàm mở modal chỉnh sửa và điền dữ liệu
+        function editCoupon(id, code, discountPercentage, discountAmount, startDate, endDate, maxUsage, isActive) {
+            $("#editCouponId").val(id);
+            $("#editCode").val(code);
+            $("#editDiscountType").val(discountPercentage ? "percentage" : "amount");
+            $("#editDiscountPercentage").val(discountPercentage || "");
+            $("#editDiscountAmount").val(discountAmount || "");
+            $("#editStartDate").val(startDate);
+            $("#editEndDate").val(endDate);
+            $("#editMaxUsage").val(maxUsage);
+            $("#editIsActive").prop("checked", isActive === "True");
+            toggleEditDiscountFields();
+            updateEditEndDate();
+            $("#editCouponModal").modal("show");
+        }
+
+        // Hàm hiển thị modal tặng mã giảm giá
+        function showGiftModal(couponId, couponCode) {
+            $.ajax({
+                url: '@Url.Action("ShowGiftModal", "khuyenmaicode")',
+                type: 'GET',
+                data: { id: couponId },
+                success: function (response) {
+                    if (response.success) {
+                        var token = $("#RequestVerificationToken").val().match(/value="([^"]+)"/)[1]; // Lấy token từ hidden input
+                        var userListHtml = '<table class="table table-hover"><thead><tr><th>Email</th><th>Hành động</th></tr></thead><tbody>';
+                        if (response.data && response.data.length > 0) {
+                            response.data.forEach(function (user) {
+                                userListHtml += '<tr><td>' + user.email + '</td><td>' +
+                                    '<form action="@Url.Action("GiftCouponToUser", "khuyenmaicode")" method="post">' +
+                                    '<input type="hidden" name="__RequestVerificationToken" value="' + token + '" />' +
+                                    '<input type="hidden" name="couponId" value="' + couponId + '" />' +
+                                    '<input type="hidden" name="userId" value="' + user.id + '" />' +
+                                    '<button type="submit" class="btn btn-sm btn-success">Tặng</button>' +
+                                    '</form></td></tr>';
+                            });
+                        } else {
+                            userListHtml += '<tr><td colspan="2" class="text-center text-muted">Không có người dùng nào để tặng.</td></tr>';
+                        }
+                        userListHtml += '</tbody></table>';
+                        $("#userListContainer").html(userListHtml);
+                    } else {
+                        $("#userListContainer").html('<p class="text-danger text-center">' + response.message + '</p>');
+                    }
+                    $("#giftModal").modal("show");
+                },
+                error: function () {
+                    $("#userListContainer").html('<p class="text-danger text-center">Có lỗi xảy ra khi tải danh sách người dùng.</p>');
+                    $("#giftModal").modal("show");
+                }
+            });
+        }
+    </script>
+}

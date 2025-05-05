@@ -1,0 +1,127 @@
+﻿@model doanwebnangcao.Models.LoginViewModel
+@{
+    ViewBag.Title = "Đăng nhập";
+}
+<main>
+    <div class="app-content">
+        <!--====== Section 1 ======-->
+        <div class="u-s-p-y-60">
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="container">
+                    <div class="breadcrumb">
+                        <div class="breadcrumb__wrap">
+                            <ul class="breadcrumb__list">
+                                <li class="has-separator">
+                                    <a href="index.html">Home</a>
+                                </li>
+                                <li class="is-marked">
+                                    <a href="@Url.Action("DangKy", "Home")">Signup</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--====== End - Section 1 ======-->
+        <!--====== Section 2 ======-->
+        <div class="u-s-p-b-60">
+            <!--====== Section Intro ======-->
+            <div class="section__intro u-s-m-b-60">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="section__text-wrap">
+                                <h1 class="section__heading u-c-secondary">ĐÃ ĐĂNG KÝ?</h1>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Section Intro ======-->
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="container">
+                    <div class="row row--center">
+                        <div class="col-lg-6 col-md-8 u-s-m-b-30">
+                            <div class="l-f-o">
+                                <div class="l-f-o__pad-box">
+                                    <!-- Hiển thị thông báo lỗi -->
+                                    @if (TempData["ErrorMessage"] != null)
+                                    {
+                                        <div class="alert alert-danger text-danger">@TempData["ErrorMessage"]</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Request.QueryString["message"]))
+                                    {
+                                        <div class="alert alert-danger text-danger">@Html.Raw(Request.QueryString["message"])</div>
+                                    }
+                                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger text-danger" })
+
+                                    <h1 class="gl-h1">KHÁCH HÀNG MỚI</h1>
+                                    <span class="gl-text u-s-m-b-30">Bằng cách tạo tài khoản tại cửa hàng của chúng tôi, bạn sẽ có thể thực hiện quá trình thanh toán nhanh hơn, lưu địa chỉ giao hàng, xem và theo dõi đơn hàng trong tài khoản của bạn và hơn thế nữa.</span>
+                                    <div class="u-s-m-b-15">
+                                        <a class="l-f-o__create-link btn--e-transparent-brand-b-2" href="@Url.Action("DangKy", "Home")">TẠO TÀI KHOẢN</a>
+                                    </div>
+                                    <h1 class="gl-h1">ĐĂNG NHẬP</h1>
+                                    <span class="gl-text u-s-m-b-30">Nếu bạn đã có tài khoản, vui lòng đăng nhập.</span>
+                                    @using (Html.BeginForm("DangNhap", "Home", FormMethod.Post, new { @class = "l-f-o__form" }))
+                                    {
+                                        @Html.ValidationSummary(true, "", new { @class = "text-danger u-s-m-b-15" })
+
+                                        <div class="u-s-m-b-30">
+                                            <label class="gl-label" for="login-email">E-MAIL *</label>
+                                            @Html.TextBoxFor(m => m.Email, new { @class = "input-text input-text--primary-style", id = "login-email", placeholder = "Nhập E-mail" })
+                                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                                        </div>
+                                        <div class="u-s-m-b-30">
+                                            <label class="gl-label" for="login-password">MẬT KHẨU *</label>
+                                            @Html.PasswordFor(m => m.Password, new { @class = "input-text input-text--primary-style", id = "login-password", placeholder = "Nhập Mật khẩu" })
+                                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                                        </div>
+                                        <div class="gl-inline">
+                                            <div class="u-s-m-b-30">
+                                                <button class="btn btn--e-transparent-brand-b-2" type="submit">ĐĂNG NHẬP</button>
+                                            </div>
+                                            <div class="u-s-m-b-30">
+                                                <a class="gl-link" href="@Url.Action("quenmk", "Home")">Quên Mật Khẩu?</a>
+                                            </div>
+                                        </div>
+                                        <div class="u-s-m-b-30">
+                                            <div class="check-box">
+                                                <input type="checkbox" id="remember-me">
+                                                <div class="check-box__state check-box__state--primary">
+                                                    <label class="check-box__label" for="remember-me">Ghi Nhớ Tôi</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Section Content ======-->
+        </div>
+        <!--====== End - Section 2 ======-->
+    </div>
+</main>
+
+<style>
+    .text-danger {
+        color: #ff0000 !important; /* Màu đỏ cho thông báo lỗi */
+        font-size: 14px;
+        display: block;
+        margin-top: 5px;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #ff0000;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+</style>

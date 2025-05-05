@@ -1,0 +1,281 @@
+﻿@model List<doanwebnangcao.Models.Subcategory>
+@using System.Linq
+
+@{
+    ViewBag.Title = "Quản lý Danh mục con";
+    ViewBag.ActivePage = "danhmucon";
+    var categories = ViewBag.Categories as List<doanwebnangcao.Models.Category>;
+}
+
+<h2 class="mb-4 text-dark">Quản lý Danh mục con</h2>
+
+<!-- Form thêm danh mục con -->
+<div class="card mb-4">
+    <div class="card-header">
+        <span>Thêm danh mục con mới</span>
+    </div>
+    <div class="card-body p-4">
+        @using (Html.BeginForm("CreateSubcategory", "Admin", FormMethod.Post, new { id = "addSubcategoryForm" }))
+        {
+            <div class="row mb-3">
+                <label for="CategoryId" class="col-md-3 col-form-label fw-bold">Danh mục cha</label>
+                <div class="col-md-9">
+                    @if (categories != null && categories.Any())
+                    {
+                        <select name="CategoryId" class="form-control" required>
+                            <option value="">-- Chọn danh mục cha --</option>
+                            @foreach (var category in categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <select class="form-control" disabled>
+                            <option>Không có danh mục cha nào</option>
+                        </select>
+                        <p class="text-danger">Vui lòng thêm danh mục cha trước khi tạo danh mục con.</p>
+                    }
+                    @Html.ValidationMessage("CategoryId", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="Name" class="col-md-3 col-form-label fw-bold">Tên danh mục con</label>
+                <div class="col-md-9">
+                    @Html.TextBox("Name", null, new { @class = "form-control", required = "required", maxlength = "100" })
+                    @Html.ValidationMessage("Name", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="Description" class="col-md-3 col-form-label fw-bold">Mô tả</label>
+                <div class="col-md-9">
+                    @Html.TextArea("Description", null, new { @class = "form-control", rows = "3", maxlength = "500" })
+                    @Html.ValidationMessage("Description", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="IsActive" class="col-md-3 col-form-label fw-bold">Trạng thái</label>
+                <div class="col-md-9">
+                    <div class="form-check">
+                        @Html.CheckBox("IsActive", true, new { @class = "form-check-input" })
+                        <label class="form-check-label" for="IsActive">Hoạt động</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-9 offset-md-3">
+                    <button type="submit" class="btn btn-primary me-2" @(categories != null && categories.Any() ? "" : "disabled")>
+                        <i class="fas fa-save me-1"></i> Thêm danh mục con
+                    </button>
+                    <button type="reset" class="btn btn-secondary"><i class="fas fa-undo me-1"></i> Làm mới</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Danh sách danh mục con -->
+<div class="card">
+    <div class="card-header">
+        <span>Danh sách danh mục con</span>
+    </div>
+    <div class="card-body p-4">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th class="col-1">#</th>
+                        <th class="col-2">Danh mục cha</th>
+                        <th class="col-2">Tên danh mục con</th>
+                        <th class="col-3 d-none d-md-table-cell">Mô tả</th>
+                        <th class="col-2">Trạng thái</th>
+                        <th class="col-2">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        int index = 1;
+                        foreach (var subcategory in Model)
+                        {
+                            <tr>
+                                <td class="col-1 p-2">@index</td>
+                                <td class="col-2 p-2 text-truncate">@(subcategory.Category != null ? subcategory.Category.Name : "Không có danh mục cha")</td>
+                                <td class="col-2 p-2 text-truncate">@subcategory.Name</td>
+                                <td class="col-3 p-2 text-truncate d-none d-md-table-cell">@subcategory.Description</td>
+                                <td class="col-2 p-2">
+                                    <span class="badge rounded-pill @(subcategory.IsActive ? "bg-success" : "bg-danger")">
+                                        @(subcategory.IsActive ? "Hoạt động" : "Không hoạt động")
+                                    </span>
+                                </td>
+                                <td class="col-2 p-2">
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-warning" onclick="editSubcategory(@subcategory.Id, @subcategory.CategoryId, '@subcategory.Name', '@subcategory.Description', '@subcategory.IsActive')">
+                                            <i class="fas fa-edit me-1"></i> Sửa
+                                        </button>
+                                        <a href="@Url.Action("DeleteSubcategory", "Admin", new { id = subcategory.Id })" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa danh mục con này? Lưu ý: Xóa danh mục con có thể ảnh hưởng đến sản phẩm liên quan.')">
+                                            <i class="fas fa-trash me-1"></i> Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Không có danh mục con nào</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chỉnh sửa danh mục con -->
+<div class="modal fade" id="editSubcategoryModal" tabindex="-1" aria-labelledby="editSubcategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSubcategoryModalLabel">Chỉnh sửa danh mục con</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @using (Html.BeginForm("EditSubcategory", "Admin", FormMethod.Post, new { id = "editSubcategoryForm" }))
+                {
+                    <input type="hidden" id="editSubcategoryId" name="Id" />
+
+                    <div class="mb-3">
+                        <label for="editCategoryId" class="form-label fw-bold">Danh mục cha</label>
+                        @if (categories != null && categories.Any())
+                        {
+                            <select name="CategoryId" id="editCategoryId" class="form-control" required>
+                                <option value="">-- Chọn danh mục cha --</option>
+                                @foreach (var category in categories)
+                                {
+                                    <option value="@category.Id">@category.Name</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <select class="form-control" id="editCategoryId" disabled>
+                                <option>Không có danh mục cha nào</option>
+                            </select>
+                            <p class="text-danger">Vui lòng thêm danh mục cha trước khi chỉnh sửa danh mục con.</p>
+                        }
+                        @Html.ValidationMessage("CategoryId", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editName" class="form-label fw-bold">Tên danh mục con</label>
+                        @Html.TextBox("Name", null, new { @class = "form-control", id = "editName", required = "required", maxlength = "100" })
+                        @Html.ValidationMessage("Name", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editDescription" class="form-label fw-bold">Mô tả</label>
+                        @Html.TextArea("Description", null, new { @class = "form-control", id = "editDescription", rows = "3", maxlength = "500" })
+                        @Html.ValidationMessage("Description", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editIsActive" class="form-label fw-bold">Trạng thái</label>
+                        <div class="form-check">
+                            @Html.CheckBox("IsActive", true, new { @class = "form-check-input", id = "editIsActive" })
+                            <label class="form-check-label" for="editIsActive">Hoạt động</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" @(categories != null && categories.Any() ? "" : "disabled")>
+                        <i class="fas fa-save me-1"></i> Lưu thay đổi
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Đóng
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Validation cho form thêm danh mục con
+            $("#addSubcategoryForm").validate({
+                rules: {
+                    CategoryId: { required: true },
+                    Name: { required: true, maxlength: 100 },
+                    Description: { maxlength: 500 }
+                },
+                messages: {
+                    CategoryId: {
+                        required: "Vui lòng chọn danh mục cha"
+                    },
+                    Name: {
+                        required: "Vui lòng nhập tên danh mục con",
+                        maxlength: "Tên danh mục con không được dài quá 100 ký tự"
+                    },
+                    Description: {
+                        maxlength: "Mô tả không được dài quá 500 ký tự"
+                    }
+                },
+                errorClass: "text-danger"
+            });
+
+            // Validation cho form chỉnh sửa danh mục con
+            $("#editSubcategoryForm").validate({
+                rules: {
+                    CategoryId: { required: true },
+                    Name: { required: true, maxlength: 100 },
+                    Description: { maxlength: 500 }
+                },
+                messages: {
+                    CategoryId: {
+                        required: "Vui lòng chọn danh mục cha"
+                    },
+                    Name: {
+                        required: "Vui lòng nhập tên danh mục con",
+                        maxlength: "Tên danh mục con không được dài quá 100 ký tự"
+                    },
+                    Description: {
+                        maxlength: "Mô tả không được dài quá 500 ký tự"
+                    }
+                },
+                errorClass: "text-danger"
+            });
+        });
+
+        // Hàm mở modal chỉnh sửa và điền dữ liệu
+        function editSubcategory(id, categoryId, name, description, isActive) {
+            $("#editSubcategoryId").val(id);
+            $("#editCategoryId").val(categoryId);
+            $("#editName").val(name);
+            $("#editDescription").val(description);
+            $("#editIsActive").prop("checked", isActive === "True");
+            $("#editSubcategoryModal").modal("show");
+        }
+    </script>
+}

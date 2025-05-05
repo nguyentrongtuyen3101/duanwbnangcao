@@ -1,0 +1,302 @@
+﻿@model doanwebnangcao.Models.Product
+@using doanwebnangcao.DTO
+
+@{
+    ViewBag.Title = "Sản Phẩm Biến Thể";
+    ViewBag.ActivePage = "SanPham";
+    var sizes = ViewBag.Sizes as List<doanwebnangcao.Models.Size>;
+    var colors = ViewBag.Colors as List<doanwebnangcao.Models.Color>;
+}
+
+<h2 class="mb-4 text-dark">Sản Phẩm Biến Thể: @Model.Name</h2>
+
+<!-- Danh sách sản phẩm biến thể -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Danh sách biến thể</span>
+        <a href="@Url.Action("SanPham", "Admin")" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Quay lại
+        </a>
+    </div>
+    <div class="card-body p-4">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">ID</th>
+                        <th style="width: 15%;">Kích thước</th>
+                        <th style="width: 15%;">Màu sắc</th>
+                        <th style="width: 15%;">Số lượng</th>
+                        <th style="width: 15%;">Giá biến thể</th>
+                        <th style="width: 20%;">Ảnh biến thể</th>
+                        <th style="width: 15%;">Trạng thái</th>
+                        <th style="width: 20%;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.ProductVariants != null && Model.ProductVariants.Any())
+                    {
+                        foreach (var variant in Model.ProductVariants)
+                        {
+                            List<VariantDto> variants = new List<VariantDto>
+                                            {
+                                new VariantDto
+                                {
+                                    Id = variant.Id,
+                                    SizeId = variant.SizeId,
+                                    ColorId = variant.ColorId,
+                                    StockQuantity = variant.StockQuantity,
+                                    VariantPrice = variant.VariantPrice,
+                                    VariantImageUrl = !string.IsNullOrEmpty(variant.VariantImageUrl) && System.IO.File.Exists(Server.MapPath(variant.VariantImageUrl))
+                                        ? variant.VariantImageUrl
+                                        : (variant.ProductImages != null && variant.ProductImages.Any(pi => pi.IsMain)
+                                            ? (System.IO.File.Exists(Server.MapPath(variant.ProductImages.First(pi => pi.IsMain).ImageUrl))
+                                                ? variant.ProductImages.First(pi => pi.IsMain).ImageUrl
+                                                : null)
+                                            : null),
+                                    IsActive = variant.IsActive
+                                }
+                            };
+                            var variantJson = Newtonsoft.Json.JsonConvert.SerializeObject(variants.First());
+
+                            <tr>
+                                <td>@variant.Id</td>
+                                <td>@(variant.Size != null ? variant.Size.Name : "Không xác định")</td>
+                                <td>@(variant.Color != null ? variant.Color.Name : "Không xác định")</td>
+                                <td>@variant.StockQuantity</td>
+                                <td>@(variant.VariantPrice.HasValue ? variant.VariantPrice.Value.ToString("N0") + " VNĐ" : "N/A")</td>
+                                <td>
+                                    <div class="image-frame" style="border: 1px solid #ddd; border-radius: 5px; overflow: hidden; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; margin: 0 auto;">
+                                        @{
+                                            string imageUrl = variant.VariantImageUrl ?? (variant.ProductImages != null && variant.ProductImages.Any(pi => pi.IsMain)
+                                                ? variant.ProductImages.First(pi => pi.IsMain).ImageUrl
+                                                : null);
+                                        }
+                                        @if (!string.IsNullOrEmpty(imageUrl) && System.IO.File.Exists(Server.MapPath(imageUrl)))
+                                        {
+                                            <img src="@Url.Content(imageUrl)" alt="Ảnh biến thể" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                                        }
+                                        else
+                                        {
+                                            <span style="font-size: 12px; color: #666;">Ảnh biến thể</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge rounded-pill @(variant.IsActive ? "bg-success" : "bg-danger")">
+                                        @(variant.IsActive ? "Hoạt động" : "Ngừng bán")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1" style="flex-wrap: nowrap;">
+                                        <button class="btn btn-sm btn-warning" onclick='editVariant(@variantJson)'>
+                                            <i class="fas fa-edit me-1"></i> Sửa
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteVariant(@variant.Id)">
+                                            <i class="fas fa-trash me-1"></i> Xóa
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">Sản phẩm này chưa có biến thể.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chỉnh sửa biến thể -->
+<div class="modal fade" id="editVariantModal" tabindex="-1" aria-labelledby="editVariantModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editVariantModalLabel">Chỉnh sửa biến thể</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editVariantForm" enctype="multipart/form-data">
+                    <input type="hidden" id="variantId" />
+                    <input type="hidden" id="productId" value="@Model.Id" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Kích thước <span class="text-danger">*</span></label>
+                        <select id="variantSizeId" class="form-control" required>
+                            <option value="">-- Chọn kích thước --</option>
+                            @foreach (var size in sizes)
+                            {
+                                <option value="@size.Id">@size.Name</option>
+                            }
+                        </select>
+                        <span class="text-danger" id="variantSizeId-error"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Màu sắc <span class="text-danger">*</span></label>
+                        <select id="variantColorId" class="form-control" required>
+                            <option value="">-- Chọn màu sắc --</option>
+                            @foreach (var color in colors)
+                            {
+                                <option value="@color.Id">@color.Name</option>
+                            }
+                        </select>
+                        <span class="text-danger" id="variantColorId-error"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Số lượng <span class="text-danger">*</span></label>
+                        <input type="number" id="variantStockQuantity" class="form-control" required min="0" />
+                        <span class="text-danger" id="variantStockQuantity-error"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Ảnh biến thể</label>
+                        <input type="file" id="variantImageFile" class="form-control" accept="image/*" />
+                        <img id="variantImagePreview" src="" style="max-width: 100px; margin-top: 10px; display: none;" alt="Ảnh biến thể" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Lưu
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Đóng
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .table th, .table td {
+            padding: 4px 6px;
+            vertical-align: middle;
+        }
+
+        .image-frame {
+            margin: 0;
+        }
+    </style>
+
+    <script>
+        const sizes = @Html.Raw(Json.Encode(sizes.Select(s => new { s.Id, s.Name }).ToList()));
+        const colors = @Html.Raw(Json.Encode(colors.Select(c => new { c.Id, c.Name }).ToList()));
+
+        $(document).ready(function () {
+            $("#editVariantForm").validate({
+                rules: {
+                    variantSizeId: { required: true },
+                    variantColorId: { required: true },
+                    variantStockQuantity: { required: true, number: true, min: 0 }
+                },
+                messages: {
+                    variantSizeId: { required: "Vui lòng chọn kích thước" },
+                    variantColorId: { required: "Vui lòng chọn màu sắc" },
+                    variantStockQuantity: {
+                        required: "Vui lòng nhập số lượng",
+                        number: "Số lượng phải là một số",
+                        min: "Số lượng không được nhỏ hơn 0"
+                    }
+                },
+                errorClass: "text-danger",
+                errorPlacement: function (error, element) {
+                    error.appendTo(element.parent().find("span[id='" + element.attr('id') + "-error']"));
+                },
+                submitHandler: function (form) {
+                    saveVariantViaAjax();
+                }
+            });
+        });
+
+        function editVariant(variantData) {
+            $("#variantId").val(variantData.Id);
+            $("#variantSizeId").val(variantData.SizeId);
+            $("#variantColorId").val(variantData.ColorId);
+            $("#variantStockQuantity").val(variantData.StockQuantity);
+            if (variantData.VariantImageUrl) {
+                $("#variantImagePreview").attr("src", variantData.VariantImageUrl.startsWith('/') ? variantData.VariantImageUrl : '/' + variantData.VariantImageUrl).show();
+            } else {
+                $("#variantImagePreview").hide();
+            }
+            $("#editVariantModal").modal("show");
+        }
+
+        function saveVariantViaAjax() {
+            const variantId = $("#variantId").val();
+            const sizeId = $("#variantSizeId").val();
+            const colorId = $("#variantColorId").val();
+            const stockQuantity = $("#variantStockQuantity").val();
+            const variantImageFile = $("#variantImageFile")[0].files[0];
+
+            const formData = new FormData();
+            formData.append("variantId", variantId);
+            formData.append("sizeId", sizeId);
+            formData.append("colorId", colorId);
+            formData.append("stockQuantity", stockQuantity);
+            if (variantImageFile) {
+                formData.append("variantImageFile", variantImageFile);
+            }
+
+            $.ajax({
+                url: '@Url.Action("EditProductVariant", "Admin")',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response.success) {
+                        alert("Cập nhật biến thể thành công!");
+                        location.reload(); // Tải lại trang để cập nhật danh sách biến thể
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Đã có lỗi xảy ra khi lưu biến thể.");
+                }
+            });
+        }
+
+        function deleteVariant(variantId) {
+            if (!confirm("Bạn có chắc muốn xóa biến thể này?")) return;
+
+            $.ajax({
+                url: '@Url.Action("DeleteProductVariant", "Admin")',
+                type: 'POST',
+                data: { variantId: variantId },
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload(); // Tải lại trang để cập nhật danh sách biến thể
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert("Đã có lỗi xảy ra khi xóa biến thể.");
+                }
+            });
+        }
+    </script>
+}

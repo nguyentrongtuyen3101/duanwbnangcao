@@ -1,0 +1,685 @@
+﻿@model doanwebnangcao.Controllers.ChatViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Chat Hỗ Trợ - Ludus Shop</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e6f3fa, #f0f9ff);
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .chat-wrapper {
+            display: flex;
+            justify-content: center; /* Căn giữa theo chiều ngang */
+            align-items: flex-start; /* Căn đầu trên */
+            max-width: 1200px;
+            margin: 40px auto; /* Tăng khoảng cách để giao diện thoáng hơn */
+            padding: 0 15px; /* Padding đáp ứng */
+        }
+
+        .back-btn-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .back-btn {
+            color: #4dabf7;
+            font-size: 1.5rem;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s;
+        }
+
+            .back-btn:hover {
+                background: #e9ecef;
+            }
+
+        .user-list {
+            width: 300px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-right: 20px;
+            display: none;
+        }
+
+            .user-list.active {
+                display: block;
+            }
+
+        .user-list-header {
+            background: linear-gradient(90deg, #4dabf7, #74c0fc);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+            .user-list-header h5 {
+                margin: 0;
+                font-size: 1.2rem;
+            }
+
+        .user-list-body {
+            max-height: 450px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+            .user-list-body::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .user-list-body::-webkit-scrollbar-thumb {
+                background: #adb5bd;
+                border-radius: 10px;
+            }
+
+        .user-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: background 0.3s;
+            position: relative;
+        }
+
+            .user-item:hover {
+                background: #f1f5f9;
+            }
+
+            .user-item.active {
+                background: #d1e7ff;
+                border-left: 3px solid #4dabf7;
+            }
+
+            .user-item p {
+                margin: 0;
+                font-size: 0.9rem;
+                font-weight: 500;
+            }
+
+            .user-item small {
+                color: #6c757d;
+                font-size: 0.8rem;
+            }
+
+        .unread-badge {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .chat-container {
+            flex: 1;
+            max-width: 800px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(90deg, #4dabf7, #74c0fc);
+            color: white;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .chat-header .header-content {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-grow: 1;
+            }
+
+            .chat-header img {
+                width: 35px;
+                height: 35px;
+                border-radius: 50%;
+                border: 2px solid #ffffff;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                margin-right: 8px;
+                object-fit: cover;
+            }
+
+            .chat-header h4 {
+                font-size: 1.2rem;
+                margin: 0;
+            }
+
+        .chat-body {
+            height: 450px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f9fafb;
+            position: relative;
+        }
+
+            .chat-body::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .chat-body::-webkit-scrollbar-thumb {
+                background: #adb5bd;
+                border-radius: 10px;
+            }
+
+        .chat-message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .chat-message.sent {
+                align-items: flex-end;
+            }
+
+            .chat-message.received {
+                align-items: flex-start;
+            }
+
+            .chat-message .message-content {
+                padding: 10px 15px;
+                border-radius: 12px;
+                max-width: 65%;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+                font-size: 0.9rem;
+                line-height: 1.4;
+            }
+
+            .chat-message.sent .message-content {
+                background: #51cf66;
+                color: white;
+            }
+
+            .chat-message.received .message-content {
+                background: #ffffff;
+                color: #333;
+                border: 1px solid #e9ecef;
+            }
+
+            .chat-message .message-meta {
+                font-size: 0.75rem;
+                color: #6c757d;
+                margin-top: 4px;
+            }
+
+            .chat-message .message-file {
+                margin-top: 6px;
+                display: flex;
+                align-items: center;
+            }
+
+                .chat-message .message-file a {
+                    color: #4dabf7;
+                    text-decoration: none;
+                    font-size: 0.85rem;
+                    display: flex;
+                    align-items: center;
+                }
+
+                    .chat-message .message-file a:hover {
+                        text-decoration: underline;
+                    }
+
+                .chat-message .message-file i {
+                    margin-right: 4px;
+                }
+
+            .chat-message .message-image {
+                margin-top: 6px;
+            }
+
+                .chat-message .message-image img {
+                    width: 200px; /* Kích thước cố định */
+                    height: 150px; /* Kích thước cố định */
+                    object-fit: cover; /* Đảm bảo ảnh vừa khung */
+                    border-radius: 8px;
+                }
+
+        .chat-footer {
+            padding: 15px;
+            background: #ffffff;
+            border-top: 1px solid #e9ecef;
+        }
+
+            .chat-footer .input-group {
+                flex-wrap: nowrap;
+            }
+
+            .chat-footer .form-control {
+                border-radius: 20px;
+                border: 1px solid #ced4da;
+                box-shadow: none;
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+
+                .chat-footer .form-control:focus {
+                    border-color: #4dabf7;
+                    box-shadow: 0 0 4px rgba(77, 171, 247, 0.3);
+                }
+
+            .chat-footer .btn {
+                border-radius: 20px;
+                padding: 8px 15px;
+                font-size: 0.9rem;
+                transition: all 0.3s;
+            }
+
+            .chat-footer .btn-file {
+                background: #868e96;
+                color: white;
+            }
+
+                .chat-footer .btn-file:hover {
+                    background: #6c757d;
+                }
+
+            .chat-footer .btn-send {
+                background: #4dabf7;
+                color: white;
+            }
+
+                .chat-footer .btn-send:hover {
+                    background: #339af0;
+                }
+
+        .no-more-messages {
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9rem;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Nút trở về được di chuyển ra ngoài chat-wrapper -->
+    <div class="back-btn-container">
+        <a href="@(ViewBag.Role == "Admin" ? Url.Action("SanPham", "Admin") : Url.Action("trangchu", "trangchu"))" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+    </div>
+
+    <div class="chat-wrapper">
+        <!-- Danh sách người dùng (chỉ hiển thị cho admin) -->
+        @if (ViewBag.Role == "Admin")
+        {
+            <div class="user-list active">
+                <div class="user-list-header">
+                    <h5>Danh sách người dùng</h5>
+                </div>
+                <div class="user-list-body" id="userListBody">
+                    @foreach (var user in Model.Users)
+                    {
+                        var selectedUser = Model.Users.FirstOrDefault(u => u.Id == user.Id);
+                        var unreadCount = 0;
+                        if (selectedUser != null && selectedUser.ReceivedMessages != null)
+                        {
+                            unreadCount = selectedUser.ReceivedMessages.Count(m => m.ReceiverId == user.Id && !m.IsRead);
+                        }
+                        <div class="user-item @(Model.SelectedUserId == user.Id ? "active" : "")" onclick="selectUser(@user.Id, '@user.FirstName @user.LastName')" data-user-id="@user.Id">
+                            <p>@user.FirstName @user.LastName</p>
+                            <small>@user.Email</small>
+                            @if (unreadCount > 0)
+                            {
+                                <span class="unread-badge">@unreadCount</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        <!-- Khung chat -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="header-content">
+                    <img src="~/pep/images/brand/Betterimage.ai_1746239847647.jpeg" alt="Ludus Shop Logo">
+                    <h4 id="chatHeaderTitle">
+                        @if (ViewBag.Role == "Admin" && Model.SelectedUserId.HasValue)
+                        {
+                            var selectedUser = Model.Users.FirstOrDefault(u => u.Id == Model.SelectedUserId);
+                            if (selectedUser != null)
+                            {
+                                @(selectedUser.FirstName + " " + selectedUser.LastName)
+                            }
+                            else
+                            {
+                                @:Chọn người dùng để chat
+                            }
+                        }
+                        else
+                        {
+                            @:LUDUS SHOP
+                        }
+                    </h4>
+                </div>
+            </div>
+            <div class="chat-body" id="chatBody">
+                @if (Model.Messages != null && Model.Messages.Any())
+                {
+                    foreach (var message in Model.Messages)
+                    {
+                        var isSentByCurrentUser = message.SenderId == (int)Session["UserId"];
+                        <div class="chat-message @(isSentByCurrentUser ? "sent" : "received")" data-message-id="@message.Id">
+                            <div class="message-content">
+                                @if (!string.IsNullOrEmpty(message.FilePath) && (message.FilePath.EndsWith(".jpg") || message.FilePath.EndsWith(".png")))
+                                {
+                                    <div class="message-image">
+                                        <img src="@message.FilePath" alt="Image" />
+                                    </div>
+                                }
+                                else if (!string.IsNullOrEmpty(message.FilePath))
+                                {
+                                    <div class="message-file">
+                                        <a href="@message.FilePath" target="_blank"><i class="fas fa-file-download"></i> @message.Content</a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    @message.Content
+                                }
+                            </div>
+                            <div class="message-meta">
+                                @message.SentAt.ToString("HH:mm")
+                                @if (isSentByCurrentUser)
+                                {
+                                    <span class="read-status">@(message.IsRead ? " - Đã xem" : "")</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted text-center">Chưa có tin nhắn nào.</p>
+                }
+            </div>
+            <div class="chat-footer">
+                <form id="sendMessageForm" class="input-group" enctype="multipart/form-data">
+                    <input type="text" id="messageInput" class="form-control" placeholder="Nhập tin nhắn hoặc tên file...">
+                    <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
+                    <button class="btn btn-file" type="button" onclick="$('#fileInput').click();"><i class="fas fa-paperclip"></i> File</button>
+                    <button class="btn btn-send" type="submit"><i class="fas fa-paper-plane"></i> Gửi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- SignalR -->
+    <script src="/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="/signalr/hubs"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(function () {
+            var chat = $.connection.chatHub;
+            var userName = '@User.Identity.Name';
+            var role = '@ViewBag.Role';
+            var currentUserId = '@Session["UserId"]';
+            var selectedUserId = '@Model.SelectedUserId' ? '@Model.SelectedUserId' : null;
+            var messagePage = 1;
+            var userPage = 1;
+            var isLoadingMessages = false;
+            var isLoadingUsers = false;
+            var hasMoreMessages = true; // Theo dõi xem còn tin nhắn để tải không
+
+            // Cập nhật badge tin nhắn chưa đọc
+            function updateUnreadBadge(userId, count) {
+                var userItem = $('.user-item[data-user-id="' + userId + '"]');
+                var badge = userItem.find('.unread-badge');
+                if (count > 0) {
+                    if (badge.length) {
+                        badge.text(count);
+                    } else {
+                        userItem.append('<span class="unread-badge">' + count + '</span>');
+                    }
+                } else {
+                    badge.remove();
+                }
+            }
+
+            // Nhận tin nhắn
+            chat.client.receiveMessage = function (message) {
+                var isSentByCurrentUser = message.SenderId == currentUserId;
+                // Hiển thị tin nhắn nếu là người gửi hoặc người nhận trong cuộc trò chuyện hiện tại
+                if ((role === 'Admin' && (message.ReceiverId == currentUserId || message.SenderId == currentUserId) &&
+                     (message.SenderId == selectedUserId || message.ReceiverId == selectedUserId || !selectedUserId)) ||
+                    (role === 'User' && (message.ReceiverId == currentUserId || message.SenderId == currentUserId))) {
+                    var messageHtml = [
+                        '<div class="chat-message ' + (isSentByCurrentUser ? 'sent' : 'received') + '" data-message-id="' + message.Id + '">',
+                        '<div class="message-content">',
+                        message.FilePath && (message.FilePath.endsWith('.jpg') || message.FilePath.endsWith('.png')) ?
+                            '<div class="message-image"><img src="' + message.FilePath + '" alt="Image" /></div>' :
+                            message.FilePath ?
+                                '<div class="message-file"><a href="' + message.FilePath + '" target="_blank"><i class="fas fa-file-download"></i> ' + message.Content + '</a></div>' :
+                                message.Content,
+                        '</div>',
+                        '<div class="message-meta">',
+                        new Date(message.SentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                        isSentByCurrentUser ? '<span class="read-status">' + (message.IsRead ? ' - Đã xem' : '') + '</span>' : '',
+                        '</div>',
+                        '</div>'
+                    ].join('');
+                    $('#chatBody').append(messageHtml);
+                    $('#chatBody').scrollTop($('#chatBody')[0].scrollHeight);
+
+                    // Cập nhật badge nếu là Admin và tin nhắn từ người dùng khác
+                    if (role === 'Admin' && message.ReceiverId == currentUserId && message.SenderId != selectedUserId) {
+                        var currentCount = parseInt($('.user-item[data-user-id="' + message.SenderId + '"] .unread-badge').text()) || 0;
+                        updateUnreadBadge(message.SenderId, currentCount + 1);
+                    }
+                }
+            };
+
+            // Nhận thông báo tin nhắn đã đọc
+            chat.client.messagesRead = function (receiverId) {
+                if (role === 'User' || (role === 'Admin' && selectedUserId == receiverId)) {
+                    $('.chat-message.sent .read-status').text(' - Đã xem');
+                }
+                if (role === 'Admin') {
+                    updateUnreadBadge(receiverId, 0);
+                }
+            };
+
+            // Cập nhật số tin nhắn chưa đọc
+            chat.client.updateUnreadMessagesCount = function (count) {
+                if (role === 'Admin' && selectedUserId) {
+                    updateUnreadBadge(selectedUserId, count);
+                }
+            };
+
+            // Kết nối SignalR
+            $.connection.hub.qs = { 'userId': currentUserId };
+            $.connection.hub.start().done(function () {
+                console.log('SignalR connected');
+                if (role === 'Admin' && selectedUserId) {
+                    chat.server.markMessagesAsRead(currentUserId, selectedUserId);
+                } else if (role === 'User') {
+                    chat.server.markMessagesAsRead(currentUserId, 1); // Giả định AdminId = 1
+                }
+            }).fail(function (error) {
+                console.error('SignalR connection failed: ' + error);
+            });
+
+            // Xử lý chọn file
+            $('#fileInput').on('change', function () {
+                var file = this.files[0];
+                if (file) {
+                    $('#messageInput').val(file.name); // Hiển thị tên file trong input
+                } else {
+                    $('#messageInput').val('');
+                }
+            });
+
+            // Gửi tin nhắn hoặc file
+            $('#sendMessageForm').on('submit', function (e) {
+                e.preventDefault();
+                var message = $('#messageInput').val().trim();
+                var file = $('#fileInput')[0].files[0];
+
+                if (!message && !file) {
+                    alert('Vui lòng nhập nội dung hoặc chọn file.');
+                    return;
+                }
+
+                if (file) {
+                    var formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('receiverId', role === 'Admin' ? selectedUserId : '1'); // Giả định AdminId = 1
+
+                    $.ajax({
+                        url: '@Url.Action("UploadFile", "Chat")',
+                        type: 'POST',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: function (response) {
+                            if (response.success) {
+                                $('#messageInput').val(''); // Xóa input
+                                $('#fileInput').val(''); // Xóa input file
+                            } else {
+                                alert('Gửi file thất bại: ' + response.message);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            alert('Lỗi khi gửi file: ' + error);
+                        }
+                    });
+                } else if (message) {
+                    if (role === 'Admin' && selectedUserId) {
+                        chat.server.sendMessage(currentUserId, selectedUserId, message, null);
+                    } else if (role === 'User') {
+                        chat.server.sendMessage(currentUserId, 1, message, null); // Giả định AdminId = 1
+                    }
+                    $('#messageInput').val(''); // Xóa input
+                }
+            });
+
+            // Chọn người dùng để chat (cho admin)
+            window.selectUser = function (userId, fullName) {
+                selectedUserId = userId;
+                messagePage = 1; // Reset trang tin nhắn khi chọn người dùng mới
+                hasMoreMessages = true; // Reset trạng thái còn tin nhắn
+                $('#chatBody').empty();
+                $('.user-item').removeClass('active');
+                $('.user-item[onclick="selectUser(' + userId + ', \'' + fullName + '\')]').addClass('active');
+                $('#chatHeaderTitle').text(fullName || 'Chọn người dùng để chat');
+                window.location.href = '@Url.Action("chatbox", "Chat")' + '?userId=' + userId;
+            };
+
+            // Load thêm tin nhắn khi cuộn lên trên cùng
+            $('#chatBody').on('scroll', function () {
+                if (!isLoadingMessages && hasMoreMessages && $(this).scrollTop() <= 50) { // Kích hoạt sớm hơn một chút
+                    isLoadingMessages = true;
+                    messagePage++;
+                    $.get('@Url.Action("LoadMoreMessages", "Chat")', { userId: selectedUserId || 1, page: messagePage }, function (response) {
+                        if (response.success) {
+                            if (response.messages.length > 0) {
+                                var messagesHtml = '';
+                                response.messages.forEach(function (msg) {
+                                    var isSentByCurrentUser = msg.SenderId == currentUserId;
+                                    messagesHtml += [
+                                        '<div class="chat-message ' + (isSentByCurrentUser ? 'sent' : 'received') + '" data-message-id="' + msg.Id + '">',
+                                        '<div class="message-content">',
+                                        msg.FilePath && (msg.FilePath.endsWith('.jpg') || msg.FilePath.endsWith('.png')) ?
+                                            '<div class="message-image"><img src="' + msg.FilePath + '" alt="Image" /></div>' :
+                                            msg.FilePath ?
+                                                '<div class="message-file"><a href="' + msg.FilePath + '" target="_blank"><i class="fas fa-file-download"></i> ' + msg.Content + '</a></div>' :
+                                                msg.Content,
+                                        '</div>',
+                                        '<div class="message-meta">',
+                                        msg.SentAt,
+                                        isSentByCurrentUser ? '<span class="read-status">' + (msg.IsRead ? ' - Đã xem' : '') + '</span>' : '',
+                                        '</div>',
+                                        '</div>'
+                                    ].join('');
+                                });
+                                var previousHeight = $('#chatBody')[0].scrollHeight;
+                                $('#chatBody').prepend(messagesHtml);
+                                // Điều chỉnh vị trí cuộn để giữ nguyên tin nhắn đang xem
+                                $('#chatBody').scrollTop($('#chatBody')[0].scrollHeight - previousHeight);
+                            } else {
+                                // Không còn tin nhắn để tải
+                                hasMoreMessages = false;
+                                $('#chatBody').prepend('<div class="no-more-messages">Đã tải hết tin nhắn.</div>');
+                            }
+                        } else {
+                            hasMoreMessages = false;
+                            $('#chatBody').prepend('<div class="no-more-messages">Không thể tải thêm tin nhắn: ' + response.message + '</div>');
+                        }
+                        isLoadingMessages = false;
+                    }).fail(function () {
+                        hasMoreMessages = false;
+                        $('#chatBody').prepend('<div class="no-more-messages">Lỗi khi tải tin nhắn.</div>');
+                        isLoadingMessages = false;
+                    });
+                }
+            });
+
+            // Load thêm người dùng khi cuộn xuống dưới cùng (cho Admin)
+            $('#userListBody').on('scroll', function () {
+                if (!isLoadingUsers && $(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 10) {
+                    isLoadingUsers = true;
+                    userPage++;
+                    $.get('@Url.Action("LoadMoreUsers", "Chat")', { page: userPage }, function (response) {
+                        if (response.success && response.users.length > 0) {
+                            var usersHtml = '';
+                            response.users.forEach(function (user) {
+                                var isActive = selectedUserId == user.Id ? 'active' : '';
+                                var unreadCount = user.UnreadMessagesCount || 0;
+                                usersHtml += [
+                                    '<div class="user-item ' + isActive + '" onclick="selectUser(' + user.Id + ', \'' + user.FullName + '\')" data-user-id="' + user.Id + '">',
+                                    '<p>' + user.FullName + '</p>',
+                                    '<small>' + user.Email + '</small>',
+                                    unreadCount > 0 ? '<span class="unread-badge">' + unreadCount + '</span>' : '',
+                                    '</div>'
+                                ].join('');
+                            });
+                            $('#userListBody').append(usersHtml);
+                        }
+                        isLoadingUsers = false;
+                    }).fail(function () {
+                        isLoadingUsers = false;
+                    });
+                }
+            });
+
+            // Cuộn xuống cuối khung chat khi tải trang
+            $('#chatBody').scrollTop($('#chatBody')[0].scrollHeight);
+        });
+    </script>
+</body>
+</html>

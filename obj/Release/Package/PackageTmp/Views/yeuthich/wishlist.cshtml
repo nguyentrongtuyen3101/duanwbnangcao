@@ -1,0 +1,319 @@
+﻿@model List<doanwebnangcao.Models.Wishlist>
+
+@{
+    ViewBag.Title = "Danh Sách Yêu Thích";
+}
+
+<main>
+    <!--====== App Content ======-->
+    <div class="app-content">
+        <!--====== Section 1 ======-->
+        <div class="u-s-p-y-60">
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="container">
+                    <div class="breadcrumb">
+                        <div class="breadcrumb__wrap">
+                            <ul class="breadcrumb__list">
+                                <li class="has-separator">
+                                    <a href="@Url.Action("trangchu", "trangchu")">Trang Chủ</a>
+                                </li>
+                                <li class="is-marked">
+                                    <a href="@Url.Action("Wishlist", "yeuthich")">Danh Sách Yêu Thích</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--====== End - Section 1 ======-->
+        <!--====== Section 2 ======-->
+        <div class="u-s-p-b-60">
+            <!--====== Section Intro ======-->
+            <div class="section__intro u-s-m-b-60">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="section__text-wrap">
+                                <h1 class="section__heading u-c-secondary">Danh Sách Yêu Thích</h1>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Section Intro ======-->
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    var product = item.Product;
+                                    var imageUrl = !string.IsNullOrEmpty(product.ImageUrl) ? product.ImageUrl : "/images/placeholder.jpg";
+                                    var price = product.DiscountedPrice.HasValue ? product.DiscountedPrice.Value : product.Price;
+                                    var originalPrice = product.DiscountedPrice.HasValue ? product.Price : (decimal?)null;
+
+                                    <!--====== Wishlist Product ======-->
+                                    <div class="w-r u-s-m-b-30">
+                                        <div class="w-r__container">
+                                            <div class="w-r__wrap-1">
+                                                <div class="w-r__img-wrap">
+                                                    <img class="u-img-fluid" src="@imageUrl" alt="@product.Name" onerror="this.src='/images/placeholder.jpg'" />
+                                                </div>
+                                                <div class="w-r__info">
+                                                    <span class="w-r__name">
+                                                        <a href="@Url.Action("sanphamdetailt", "HangMoiVe", new { id = product.Id })">@product.Name</a>
+                                                    </span>
+                                                    <span class="w-r__category">
+                                                        <a href="@Url.Action("hangmoive", "HangMoiVe", new { subcategoryId = product.SubcategoryId })">@product.Subcategory.Name</a>
+                                                    </span>
+                                                    <span class="w-r__price">
+                                                        $@price.ToString("F2")
+                                                        @if (originalPrice.HasValue)
+                                                        {
+                                                            <span class="w-r__discount">$@originalPrice.Value.ToString("F2")</span>
+                                                        }
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="w-r__wrap-2">
+                                                <a class="w-r__link btn--e-brand-b-2" href="javascript:void(0)" onclick="openAddToCartModal(@product.Id)">THÊM VÀO GIỎ HÀNG</a>
+                                                <a class="w-r__link btn--e-transparent-platinum-b-2" href="@Url.Action("sanphamdetailt", "HangMoiVe", new { id = product.Id })">XEM</a>
+                                                <a class="w-r__link btn--e-transparent-platinum-b-2" href="@Url.Action("Remove", "yeuthich", new { id = item.Id })">XÓA</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--====== End - Wishlist Product ======-->
+                                }
+                            }
+                            else
+                            {
+                                <p>Danh sách yêu thích của bạn hiện đang trống.</p>
+                            }
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="route-box">
+                                <div class="route-box__g">
+                                    <a class="route-box__link" href="@Url.Action("hangmoive", "HangMoiVe")">
+                                        <i class="fas fa-long-arrow-alt-left"></i>
+                                        <span>TIẾP TỤC MUA SẮM</span>
+                                    </a>
+                                </div>
+                                @if (Model != null && Model.Any())
+                                {
+                                    <div class="route-box__g">
+                                        <a class="route-box__link" href="@Url.Action("ClearWishlist", "yeuthich")">
+                                            <i class="fas fa-trash"></i>
+                                            <span>XÓA TẤT CẢ DANH SÁCH YÊU THÍCH</span>
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Section Content ======-->
+        </div>
+        <!--====== End - Section 2 ======-->
+    </div>
+    <!--====== End - App Content ======-->
+</main>
+
+<!-- Add to Cart Modal -->
+<div class="modal fade" id="add-to-cart-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm vào giỏ hàng</h5>
+                <button type="button" class="close custom-close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-product-info"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn--e-brand-b-2 custom-btn" onclick="submitAddToCart()">Thêm vào giỏ hàng</button>
+                <button type="button" class="btn btn--e-transparent-platinum-b-2 custom-btn-cancel" data-dismiss="modal">Hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /* Tùy chỉnh nút đóng modal (X) */
+        .custom-close {
+            font-size: 30px; /* Tăng kích thước nút X */
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border-radius: 50%; /* Bo tròn nút */
+            background-color: #f5f5f5; /* Màu nền nhẹ */
+            color: #333; /* Màu chữ */
+            transition: background-color 0.3s ease; /* Hiệu ứng chuyển màu */
+        }
+
+            .custom-close:hover {
+                background-color: #e0e0e0; /* Màu nền khi hover */
+                color: #000;
+            }
+
+        /* Tùy chỉnh nút "Thêm vào giỏ hàng" */
+        .custom-btn {
+            font-size: 16px; /* Tăng kích thước chữ */
+            padding: 12px 30px; /* Tăng padding để nút lớn hơn */
+            border-radius: 25px; /* Bo tròn góc nút */
+            text-transform: uppercase; /* Chữ in hoa */
+            font-weight: bold; /* Chữ đậm */
+            background-color: #ff6f61; /* Màu nền nổi bật (hồng cam) */
+            border: none; /* Bỏ viền mặc định */
+            transition: background-color 0.3s ease; /* Hiệu ứng chuyển màu */
+        }
+
+            .custom-btn:hover {
+                background-color: #ff4f41; /* Màu khi hover */
+            }
+
+        /* Tùy chỉnh nút "Hủy" */
+        .custom-btn-cancel {
+            font-size: 16px; /* Tăng kích thước chữ */
+            padding: 12px 30px; /* Tăng padding để nút lớn hơn */
+            border-radius: 25px; /* Bo tròn góc nút */
+            text-transform: uppercase; /* Chữ in hoa */
+            font-weight: bold; /* Chữ đậm */
+            background-color: #e0e0e0; /* Màu nền xám nhạt */
+            color: #333; /* Màu chữ */
+            border: none; /* Bỏ viền mặc định */
+            transition: background-color 0.3s ease; /* Hiệu ứng chuyển màu */
+        }
+
+            .custom-btn-cancel:hover {
+                background-color: #d0d0d0; /* Màu khi hover */
+                color: #000;
+            }
+
+        /* Đảm bảo modal footer không bị lệch */
+        .modal-footer {
+            justify-content: space-between; /* Căn đều các nút */
+            padding: 20px; /* Tăng khoảng cách bên trong */
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        function openAddToCartModal(productId) {
+            $.ajax({
+                url: '@Url.Action("GetProductDetail", "HangMoiVe")',
+                type: 'GET',
+                data: { id: productId },
+                success: function (response) {
+                    if (response.success) {
+                        var product = response.data;
+                        var html = `
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <img class="u-img-fluid" src="${product.imageUrl}" alt="${product.name}" onerror="this.src='/images/placeholder.jpg'" />
+                                </div>
+                                <div class="col-lg-8">
+                                    <h4>${product.name}</h4>
+                                    <p><strong>Danh mục:</strong> ${product.categoryName} > ${product.subcategoryName}</p>
+                                    <form id="add-to-cart-form">
+                                        <input type="hidden" name="productId" value="${product.id}" />
+                                        <div class="u-s-m-b-15">
+                                            <label for="variant-id">Kích thước & Màu sắc:</label>
+                                            <select name="variantId" id="variant-id" class="select-box select-box--primary-style">
+                                                ${product.productVariants.map(variant => `
+                                                    <option value="${variant.id}" data-price="${variant.variantDiscountedPrice || variant.variantPrice || product.discountedPrice || product.price}" data-stock="${variant.stockQuantity}">
+                                                        ${variant.sizeName} - ${variant.colorName} (Tồn kho: ${variant.stockQuantity})
+                                                    </option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+                                        <div class="u-s-m-b-15">
+                                            <label>Số lượng:</label>
+                                            <div class="input-counter">
+                                                <span class="input-counter__minus fas fa-minus"></span>
+                                                <input class="input-counter__text input-counter--text-primary-style" type="text" name="quantity" value="1" data-min="1" data-max="1000">
+                                                <span class="input-counter__plus fas fa-plus"></span>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    <p><strong>Giá:</strong> <span id="modal-price">$${product.productVariants[0].variantDiscountedPrice || product.productVariants[0].variantPrice || product.discountedPrice || product.price}</span></p>
+                                </div>
+                            </div>
+                        `;
+                        $('#modal-product-info').html(html);
+                        $('#add-to-cart-modal').modal('show');
+
+                        // Bind sự kiện tăng/giảm số lượng
+                        $(".input-counter__plus").on("click", function () {
+                            var input = $(this).siblings(".input-counter__text");
+                            var max = parseInt(input.data("max")) || 1000;
+                            var current = parseInt(input.val()) || 0;
+                            if (current < max) {
+                                input.val(current + 1);
+                            }
+                        });
+
+                        $(".input-counter__minus").on("click", function () {
+                            var input = $(this).siblings(".input-counter__text");
+                            var min = parseInt(input.data("min")) || 1;
+                            var current = parseInt(input.val()) || 1;
+                            if (current > min) {
+                                input.val(current - 1);
+                            }
+                        });
+
+                        // Cập nhật giá khi chọn biến thể
+                        $("#variant-id").change(function () {
+                            var selectedOption = $(this).find("option:selected");
+                            var price = selectedOption.data("price");
+                            $("#modal-price").text('$' + price.toFixed(2));
+                        });
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            });
+        }
+
+        function submitAddToCart() {
+            var form = $('#add-to-cart-form');
+            var productId = form.find('input[name="productId"]').val();
+            var variantId = form.find('select[name="variantId"]').val();
+            var quantity = form.find('input[name="quantity"]').val();
+
+            $.ajax({
+                url: '@Url.Action("AddToCart", "GioHang")',
+                type: 'POST',
+                data: {
+                    productId: productId,
+                    variantId: variantId,
+                    quantity: quantity
+                },
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        $('#add-to-cart-modal').modal('hide');
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                }
+            });
+        }
+    </script>
+}

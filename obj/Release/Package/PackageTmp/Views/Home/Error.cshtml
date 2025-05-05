@@ -1,0 +1,15 @@
+﻿@{
+    ViewBag.Title = "Lỗi";
+}
+
+<h2>Lỗi</h2>
+
+<div class="alert alert-danger">
+    <strong>Đã xảy ra lỗi:</strong> @ViewBag.ErrorMessage
+</div>
+
+<p>
+    Vui lòng thử lại hoặc liên hệ với quản trị viên nếu vấn đề vẫn tiếp diễn.
+</p>
+
+<a href="@Url.Action("DangNhap", "Home")" class="btn btn-primary">Quay lại trang đăng nhập</a>

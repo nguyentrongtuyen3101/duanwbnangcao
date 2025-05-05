@@ -1,0 +1,408 @@
+﻿@model doanwebnangcao.Models.Order
+
+@{
+    ViewBag.Title = "quanlychitietdonhang";
+
+    // Lấy thông tin người dùng từ session
+    string userName = "Khách";
+    if (Session["FullName"] != null)
+    {
+        userName = Session["FullName"].ToString();
+    }
+
+    // Truy vấn số lượng wishlist
+    int userId = 0;
+    if (Session["UserId"] != null)
+    {
+        userId = (int)Session["UserId"];
+    }
+
+    int wishlistCount = 0;
+    int orderCount = 0;
+    int canceledOrderCount = 0;
+
+    if (userId != 0)
+    {
+        var dbContext = new doanwebnangcao.Models.ApplicationDbContext();
+        wishlistCount = dbContext.Wishlists.Count(w => w.UserId == userId);
+        var orders = dbContext.Orders.Where(o => o.UserId == userId).ToList();
+        orderCount = orders.Count;
+        canceledOrderCount = orders.Count(o => o.Status == doanwebnangcao.Models.OrderStatus.Cancelled);
+    }
+}
+
+<main>
+    <!--====== App Content ======-->
+    <div class="app-content">
+        <!--====== Section 1 ======-->
+        <div class="u-s-p-y-60">
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="container">
+                    <div class="breadcrumb">
+                        <div class="breadcrumb__wrap">
+                            <ul class="breadcrumb__list">
+                                <li class="has-separator">
+                                    <a href="@Url.Action("trangchu", "trangchu")">Home</a>
+                                </li>
+                                <li class="is-marked">
+                                    <a href="@Url.Action("quanlydonhang", "muahang")">My Orders</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--====== End - Section 1 ======-->
+        <!--====== Section 2 ======-->
+        <div class="u-s-p-b-60">
+            <!--====== Section Content ======-->
+            <div class="section__content">
+                <div class="dash">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-3 col-md-12">
+                                <!--====== Dashboard Features ======-->
+                                <div class="dash__box dash__box--bg-white dash__box--shadow u-s-m-b-30">
+                                    <div class="dash__pad-1">
+                                        <span class="dash__text u-s-m-b-16">Hello, @userName</span>
+                                        <ul class="dash__f-list">
+                                            <li>
+                                                <a href="@Url.Action("trangcanhan", "profile")">Manage My Account</a>
+                                            </li>
+                                            <li>
+                                                <a href="@Url.Action("myprofile", "profile")">My Profile</a>
+                                            </li>
+                                            <li>
+                                                <a href="@Url.Action("editaddress", "profile")">Address Book</a>
+                                            </li>
+                                            <li>
+                                                <a class="dash-active" href="@Url.Action("quanlydonhang", "muahang")">My Orders</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="dash__box dash__box--bg-white dash__box--shadow dash__box--w">
+                                    <div class="dash__pad-1">
+                                        <ul class="dash__w-list">
+                                            <li>
+                                                <div class="dash__w-wrap">
+                                                    <span class="dash__w-icon dash__w-icon-style-1"><i class="fas fa-cart-arrow-down"></i></span>
+                                                    <span class="dash__w-text">@orderCount</span>
+                                                    <span class="dash__w-name">Orders Placed</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="dash__w-wrap">
+                                                    <span class="dash__w-icon dash__w-icon-style-2"><i class="fas fa-times"></i></span>
+                                                    <span class="dash__w-text">@canceledOrderCount</span>
+                                                    <span class="dash__w-name">Cancel Orders</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="dash__w-wrap">
+                                                    <span class="dash__w-icon dash__w-icon-style-3"><i class="far fa-heart"></i></span>
+                                                    <span class="dash__w-text">@wishlistCount</span>
+                                                    <span class="dash__w-name">Wishlist</span>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <!--====== End - Dashboard Features ======-->
+                            </div>
+                            <div class="col-lg-9 col-md-12">
+                                <h1 class="dash__h1 u-s-m-b-30">Order Details</h1>
+                                <div class="dash__box dash__box--shadow dash__box--radius dash__box--bg-white u-s-m-b-30">
+                                    <div class="dash__pad-2">
+                                        <div class="dash-l-r">
+                                            <div>
+                                                <div class="manage-o__text-2 u-c-secondary">Order #@Model.Id</div>
+                                                <div class="manage-o__text u-c-silver">Placed on @Model.OrderDate.ToString("dd MMM yyyy HH:mm:ss")</div>
+                                            </div>
+                                            <div>
+                                                <div class="manage-o__text-2 u-c-silver">
+                                                    Total:
+                                                    <span class="manage-o__text-2 u-c-secondary">$@Model.TotalAmount.ToString("F2")</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Thêm nút Hủy đơn hàng với validate -->
+                                        @if (Model.Status != doanwebnangcao.Models.OrderStatus.Delivered && Model.Status != doanwebnangcao.Models.OrderStatus.Cancelled)
+                                        {
+                                            using (Html.BeginForm("CancelOrder", "muahang", new { orderId = Model.Id }, FormMethod.Post, new { id = "cancelOrderForm", @onsubmit = "return validateCancelOrder();" }))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn--e-transparent-platinum-b-2" style="background-color: #ff4444; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-top: 10px;">
+                                                    Hủy đơn hàng
+                                                </button>
+                                            }
+                                        }
+                                        else if (Model.Status == doanwebnangcao.Models.OrderStatus.Shipped)
+                                        {
+                                            <p class="text-danger" style="margin-top: 10px;">Không thể hủy đơn hàng vì đang trong trạng thái vận chuyển.</p>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="dash__box dash__box--shadow dash__box--radius dash__box--bg-white u-s-m-b-30">
+                                    <div class="dash__pad-2">
+                                        <div class="manage-o">
+                                            <div class="manage-o__header u-s-m-b-30">
+                                                <div class="manage-o__icon">
+                                                    <i class="fas fa-box u-s-m-r-5"></i>
+                                                    <span class="manage-o__text">Package 1</span>
+                                                </div>
+                                            </div>
+                                            <div class="dash-l-r">
+                                                <div class="manage-o__text u-c-secondary">
+                                                    @if (@Model.Status == doanwebnangcao.Models.OrderStatus.Delivered)
+                                                    {
+                                                        <text>Delivered on @Model.OrderDate.AddDays(3).ToString("dd MMM yyyy")</text>
+                                                    }
+                                                    else if (@Model.Status == doanwebnangcao.Models.OrderStatus.Cancelled)
+                                                    {
+                                                        <text>Cancelled on @Model.OrderDate.AddDays(1).ToString("dd MMM yyyy")</text>
+                                                    }
+                                                    else
+                                                    {
+                                                        <text>Expected delivery by @Model.OrderDate.AddDays(3).ToString("dd MMM yyyy")</text>
+                                                    }
+                                                </div>
+                                                <div class="manage-o__icon">
+                                                    <i class="fas fa-truck u-s-m-r-5"></i>
+                                                    <span class="manage-o__text">Standard</span>
+                                                </div>
+                                            </div>
+                                            <div class="manage-o__timeline">
+                                                <div class="timeline-row">
+                                                    <!-- Pending -->
+                                                    <div class="col-lg-4 u-s-m-b-30">
+                                                        <div class="timeline-step">
+                                                            <div class="@(Model.Status >= doanwebnangcao.Models.OrderStatus.Pending ? "timeline-l-i timeline-l-i--finish" : "timeline-l-i")">
+                                                                <span class="timeline-circle"></span>
+                                                            </div>
+                                                            <span class="timeline-text">Pending</span>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Confirmed -->
+                                                    <div class="col-lg-4 u-s-m-b-30">
+                                                        <div class="timeline-step">
+                                                            <div class="@(Model.Status >= doanwebnangcao.Models.OrderStatus.Confirmed ? "timeline-l-i timeline-l-i--finish" : "timeline-l-i")">
+                                                                <span class="timeline-circle"></span>
+                                                            </div>
+                                                            <span class="timeline-text">Confirmed</span>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Processing -->
+                                                    <div class="col-lg-4 u-s-m-b-30">
+                                                        <div class="timeline-step">
+                                                            <div class="@(Model.Status >= doanwebnangcao.Models.OrderStatus.Processing ? "timeline-l-i timeline-l-i--finish" : "timeline-l-i")">
+                                                                <span class="timeline-circle"></span>
+                                                            </div>
+                                                            <span class="timeline-text">Processing</span>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Shipped -->
+                                                    <div class="col-lg-4 u-s-m-b-30">
+                                                        <div class="timeline-step">
+                                                            <div class="@(Model.Status >= doanwebnangcao.Models.OrderStatus.Shipped ? "timeline-l-i timeline-l-i--finish" : "timeline-l-i")">
+                                                                <span class="timeline-circle"></span>
+                                                            </div>
+                                                            <span class="timeline-text">Shipped</span>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Delivered -->
+                                                    <div class="col-lg-4 u-s-m-b-30">
+                                                        <div class="timeline-step">
+                                                            <div class="@(Model.Status == doanwebnangcao.Models.OrderStatus.Delivered ? "timeline-l-i timeline-l-i--finish" : "timeline-l-i")">
+                                                                <span class="timeline-circle"></span>
+                                                            </div>
+                                                            <span class="timeline-text">Delivered</span>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Cancelled -->
+                                                    <div class="col-lg-4 u-s-m-b-30">
+                                                        <div class="timeline-step">
+                                                            <div class="@(Model.Status == doanwebnangcao.Models.OrderStatus.Cancelled ? "timeline-l-i timeline-l-i--finish" : "timeline-l-i")">
+                                                                <span class="timeline-circle"></span>
+                                                            </div>
+                                                            <span class="timeline-text">Cancelled</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @if (Model.OrderDetails != null && Model.OrderDetails.Any())
+                                            {
+                                                foreach (var detail in Model.OrderDetails)
+                                                {
+                                                    var variant = detail.ProductVariant;
+                                                    var product = (variant != null) ? variant.Product : null;
+                                                    string imageUrl = (variant != null) ? variant.VariantImageUrl : null;
+
+                                                    // Nếu biến thể không có ảnh, lấy ảnh từ sản phẩm
+                                                    if (string.IsNullOrEmpty(imageUrl) && product != null)
+                                                    {
+                                                        imageUrl = product.ImageUrl;
+                                                    }
+
+                                                    // Nếu có ProductImages, ưu tiên lấy ảnh chính (IsMain = true)
+                                                    if (variant != null && variant.ProductImages != null && variant.ProductImages.Any())
+                                                    {
+                                                        var mainImage = variant.ProductImages.FirstOrDefault(img => img.IsMain);
+                                                        if (mainImage != null)
+                                                        {
+                                                            imageUrl = mainImage.ImageUrl;
+                                                        }
+                                                        else
+                                                        {
+                                                            imageUrl = variant.ProductImages.First().ImageUrl;
+                                                        }
+                                                    }
+
+                                                    // Nếu không có ảnh, sử dụng ảnh mặc định
+                                                    if (string.IsNullOrEmpty(imageUrl))
+                                                    {
+                                                        imageUrl = "/images/placeholder.jpg";
+                                                    }
+
+                                                    <div class="manage-o__description" style="margin-bottom: 30px;">
+                                                        <div class="description__container">
+                                                            <div class="description__img-wrap" style="width: 100px; height: 100px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                                                <img style="width: 100%; height: 100%; object-fit: cover;" src="@imageUrl" alt="@((product != null) ? product.Name : "Product Image")" onerror="this.src='/images/placeholder.jpg'" />
+                                                            </div>
+                                                            <div class="description-title">@((product != null) ? product.Name : "Unknown Product")</div>
+                                                        </div>
+                                                        <div class="description__info-wrap">
+                                                            <div>
+                                                                <span class="manage-o__text-2 u-c-silver">
+                                                                    Quantity:
+                                                                    <span class="manage-o__text-2 u-c-secondary">@detail.Quantity</span>
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <span class="manage-o__text-2 u-c-silver">
+                                                                    Total:
+                                                                    <span class="manage-o__text-2 u-c-secondary">$@detail.Subtotal.ToString("F2")</span>
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <div class="manage-o__description">
+                                                    <div class="description__container">
+                                                        <div class="description-title">No items in this order.</div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="dash__box dash__box--bg-white dash__box--shadow u-s-m-b-30">
+                                            <div class="dash__pad-3">
+                                                <h2 class="dash__h2 u-s-m-b-8">Shipping Address</h2>
+                                                <h2 class="dash__h2 u-s-m-b-8">@(Model.ShippingAddress != null ? Model.ShippingAddress.FullName : "N/A")</h2>
+                                                <span class="dash__text-2">
+                                                    @(Model.ShippingAddress != null ? Model.ShippingAddress.AddressLine + ", " + Model.ShippingAddress.City + ", " + Model.ShippingAddress.Country : "N/A")
+                                                </span>
+                                                <span class="dash__text-2">@(Model.ShippingAddress != null ? Model.ShippingAddress.PhoneNumber : "N/A")</span>
+                                            </div>
+                                        </div>
+                                        <div class="dash__box dash__box--bg-white dash__box--shadow dash__box--w">
+                                            <div class="dash__pad-3">
+                                                <h2 class="dash__h2 u-s-m-b-8">Billing Address</h2>
+                                                <h2 class="dash__h2 u-s-m-b-8">@(Model.ShippingAddress != null ? Model.ShippingAddress.FullName : "N/A")</h2>
+                                                <span class="dash__text-2">
+                                                    @(Model.ShippingAddress != null ? Model.ShippingAddress.AddressLine + ", " + Model.ShippingAddress.City + ", " + Model.ShippingAddress.Country : "N/A")
+                                                </span>
+                                                <span class="dash__text-2">@(Model.ShippingAddress != null ? Model.ShippingAddress.PhoneNumber : "N/A")</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="dash__box dash__box--bg-white dash__box--shadow u-h-100">
+                                            <div class="dash__pad-3">
+                                                <h2 class="dash__h2 u-s-m-b-8">Total Summary</h2>
+                                                <div class="dash-l-r u-s-m-b-8">
+                                                    <div class="manage-o__text-2 u-c-secondary">Subtotal</div>
+                                                    <div class="manage-o__text-2 u-c-secondary">
+                                                        @if (Model.OrderDetails != null)
+                                                        {
+                                                            var subtotal = Model.OrderDetails.Sum(od => od.Subtotal);
+                                                            <text>$@subtotal.ToString("F2")</text>
+                                                        }
+                                                        else
+                                                        {
+                                                            <text>$0.00</text>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="dash-l-r u-s-m-b-8">
+                                                    <div class="manage-o__text-2 u-c-secondary">Shipping Fee</div>
+                                                    <div class="manage-o__text-2 u-c-secondary">$@Model.ShippingCost.ToString("F2")</div>
+                                                </div>
+                                                <div class="dash-l-r u-s-m-b-8">
+                                                    <div class="manage-o__text-2 u-c-secondary">Total</div>
+                                                    <div class="manage-o__text-2 u-c-secondary">$@Model.TotalAmount.ToString("F2")</div>
+                                                </div>
+                                                <span class="dash__text-2">
+                                                    Paid by @(Model.PaymentMethod != null ? Model.PaymentMethod.Name : "Unknown Payment Method")
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--====== End - Section Content ======-->
+        </div>
+        <!--====== End - Section 2 ======-->
+    </div>
+    <!--====== End - App Content ======-->
+</main>
+
+@section Scripts {
+    <script>
+        function validateCancelOrder() {
+            var form = document.getElementById('cancelOrderForm');
+            if (form) {
+                var status = '@Model.Status';
+                if (status === 'Shipped') {
+                    alert('Không thể hủy đơn hàng vì đang trong trạng thái vận chuyển.');
+                    return false;
+                }
+                if (confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')) {
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+
+        // Hiển thị thông báo khi hủy thành công (nếu có TempData)
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+                setTimeout(function() {
+                    alert('@TempData["SuccessMessage"]');
+                }, 100);
+            </text>
+        }
+        else if (TempData["ErrorMessage"] != null)
+        {
+            <text>
+                setTimeout(function() {
+                    alert('@TempData["ErrorMessage"]');
+                }, 100);
+            </text>
+        }
+    </script>
+}

@@ -1,0 +1,282 @@
+﻿@using doanwebnangcao.Models
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Thống kê";
+    ViewBag.ActivePage = "ThongKe";
+}
+
+@section Styles {
+    <style>
+        .chart-container {
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .table-responsive {
+            margin-top: 20px;
+        }
+
+        .month-select, .export-section {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .month-select .form-control, .export-section .form-control {
+                width: 200px;
+            }
+
+            .month-select .btn, .export-section .btn {
+                padding: 6px 20px;
+            }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
+    </style>
+}
+
+<h2 class="mb-4 text-dark">Thống kê</h2>
+
+@using (Html.BeginForm("thongke", "thongke", FormMethod.Get))
+{
+    <div class="month-select">
+        <label for="monthSelect">Chọn tháng: </label>
+        @Html.DropDownList("month", ViewBag.Months as SelectList, "Tất cả", new { @id = "monthSelect", @class = "form-control" })
+        @Html.Hidden("month", (int?)ViewBag.SelectedMonth, new { @id = "hiddenMonth" })
+        <button type="submit" class="btn btn-primary">Xem</button>
+    </div>
+}
+
+<!-- Phần xuất Excel -->
+<div class="export-section">
+    <label for="exportYear">Chọn năm: </label>
+    @{
+        var years = Enumerable.Range(2020, DateTime.Now.Year - 2019).OrderByDescending(y => y).Select(y => new { Value = y, Text = y.ToString() }).ToList();
+    }
+    @Html.DropDownList("exportYear", new SelectList(years, "Value", "Text", DateTime.Now.Year), new { @id = "exportYear", @class = "form-control" })
+    <button type="button" class="btn btn-success" onclick="exportExcel('yearly')">Xuất theo năm</button>
+</div>
+
+<!-- Bảng đơn hàng -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h4>Tổng hợp đơn hàng theo tháng</h4>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Tháng/Năm</th>
+                        <th>Đơn đã đặt</th>
+                        <th>Đơn hủy</th>
+                        <th>Tổng số đơn</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.OrderStats != null)
+                    {
+                        var orderStats = ViewBag.OrderStats as List<OrderStatsViewModel>;
+                        if (orderStats != null && orderStats.Any())
+                        {
+                            foreach (var stat in orderStats)
+                            {
+                                <tr>
+                                    <td>@stat.MonthYear</td>
+                                    <td>@stat.PlacedOrders</td>
+                                    <td>@stat.CancelledOrders</td>
+                                    <td>@stat.TotalOrders</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="no-data">Không có dữ liệu cho tháng này</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="no-data">Không có dữ liệu</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Bảng doanh thu -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h4>Tổng hợp doanh thu theo tháng</h4>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Tháng/Năm</th>
+                        <th>Doanh thu (Đã thanh toán)</th>
+                        <th>Doanh thu (Chưa thanh toán)</th>
+                        <th>Tổng doanh thu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.RevenueStats != null)
+                    {
+                        var revenueStats = ViewBag.RevenueStats as List<OrderStatsViewModel>;
+                        if (revenueStats != null && revenueStats.Any())
+                        {
+                            foreach (var stat in revenueStats)
+                            {
+                                <tr>
+                                    <td>@stat.MonthYear</td>
+                                    <td>@string.Format("{0:N0}", stat.PaidRevenue) VNĐ</td>
+                                    <td>@string.Format("{0:N0}", stat.UnpaidRevenue) VNĐ</td>
+                                    <td>@string.Format("{0:N0}", stat.TotalRevenue) VNĐ</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="no-data">Không có dữ liệu cho tháng này</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="no-data">Không có dữ liệu</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="chart-container">
+            <h4 class="text-center">Biểu đồ cột: Doanh thu theo tháng</h4>
+            <canvas id="revenueBarChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="chart-container">
+            <h4 class="text-center">Biểu đồ tròn: Tỷ lệ đơn hàng theo trạng thái</h4>
+            <canvas id="orderPieChart"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        // Cập nhật giá trị hidden khi chọn tháng
+        document.getElementById('monthSelect').addEventListener('change', function () {
+            document.getElementById('hiddenMonth').value = this.value || null;
+        });
+
+        // Hàm xuất file Excel
+        function exportExcel(type) {
+            var year = document.getElementById('exportYear').value;
+            var url = '@Url.Action("ExportToExcel", "thongke")?type=' + type + '&year=' + year;
+            window.location.href = url;
+        }
+
+        // Data for bar chart (revenue per month)
+        var revenueData = @Html.Raw(Json.Encode(ViewBag.RevenueChartData ?? new List<object>()));
+        var labels = revenueData.map(item => 'Tháng ' + item.Month);
+        var paidValues = revenueData.map(item => item.PaidRevenue);
+        var unpaidValues = revenueData.map(item => item.UnpaidRevenue);
+
+        var revenueBarChart = new Chart(document.getElementById('revenueBarChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Đã thanh toán (VNĐ)',
+                        data: paidValues,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Chưa thanh toán (VNĐ)',
+                        data: unpaidValues,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Doanh thu (VNĐ)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Tháng'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                }
+            }
+        });
+
+        // Data for pie chart (order status distribution: Placed vs Cancelled)
+        var orderData = @Html.Raw(Json.Encode(ViewBag.OrderChartData ?? new { PlacedCount = 0, CancelledCount = 0 }));
+        var hasData = orderData.PlacedCount > 0 || orderData.CancelledCount > 0;
+        var orderPieChart = new Chart(document.getElementById('orderPieChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Đơn đã đặt', 'Đơn hủy'],
+                datasets: [{
+                    data: [orderData.PlacedCount, orderData.CancelledCount],
+                    backgroundColor: hasData ? [
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(255, 99, 132, 0.6)'
+                    ] : [
+                        'rgba(0, 128, 0, 0.6)', // Green if no data
+                        'rgba(0, 128, 0, 0.6)'
+                    ],
+                    borderColor: hasData ? [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ] : [
+                        'rgba(0, 128, 0, 1)',
+                        'rgba(0, 128, 0, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                }
+            }
+        });
+    </script>
+}

@@ -485,16 +485,6 @@
     <Content Include="pep\images\slider\Betterimage.ai_1745379434649.jpeg" />
     <Content Include="pep\images\slider\Betterimage.ai_1745379979208.jpeg" />
     <Content Include="pep\images\slider\Betterimage.ai_1745379991055.jpeg" />
-    <Content Include="pep\images\slider\images %2810%29.jpg" />
-    <Content Include="pep\images\slider\slide-1.jpg" />
-    <Content Include="pep\images\slider\slide-2.jpg" />
-    <Content Include="pep\images\slider\slide-3.jpg" />
-    <Content Include="pep\images\slider\slide-4.jpg" />
-    <Content Include="pep\images\slider\slide-5.jpg" />
-    <Content Include="pep\images\slider\slide-6.jpg" />
-    <Content Include="pep\images\slider\slide-7.jpg" />
-    <Content Include="pep\images\slider\slide-8.jpg" />
-    <Content Include="pep\images\slider\slide-9.jpg" />
     <Content Include="pep\js\app.js" />
     <Content Include="pep\js\dangky.js" />
     <Content Include="pep\js\jquery.shopnav.js" />
@@ -617,6 +607,8 @@
     <Content Include="Scripts\bootstrap.esm.min.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <None Include="Properties\PublishProfiles\nguyenxuangiang-001-site1 - FTP.pubxml" />
+    <None Include="Properties\PublishProfiles\nguyenxuangiang-001-site1 - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />
     <Content Include="Scripts\jquery-3.4.1.min.js" />

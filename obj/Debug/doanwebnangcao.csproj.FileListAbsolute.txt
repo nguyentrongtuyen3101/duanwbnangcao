@@ -54,6 +54,7 @@ C:\Users\admin\Desktop\doanwebnangcao\bin\Antlr3.Runtime.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\BCrypt.Net-Next.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\EntityFramework.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\EntityFramework.SqlServer.dll
+C:\Users\admin\Desktop\doanwebnangcao\bin\EPPlus.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.Identity.Core.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.Identity.Owin.dll
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.SignalR.Client.dll
@@ -98,6 +99,7 @@ C:\Users\admin\Desktop\doanwebnangcao\bin\Antlr3.Runtime.pdb
 C:\Users\admin\Desktop\doanwebnangcao\bin\BCrypt.Net-Next.xml
 C:\Users\admin\Desktop\doanwebnangcao\bin\EntityFramework.xml
 C:\Users\admin\Desktop\doanwebnangcao\bin\EntityFramework.SqlServer.xml
+C:\Users\admin\Desktop\doanwebnangcao\bin\EPPlus.xml
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.Identity.Core.xml
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.Identity.Owin.xml
 C:\Users\admin\Desktop\doanwebnangcao\bin\Microsoft.AspNet.SignalR.Client.pdb
@@ -147,11 +149,9 @@ C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.Migrat
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.AddSizeColorProductVariantAndUpdateModels.resources
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.AddProductImagesToProductVariant.resources
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.UpdateOrderStatusToEnum.resources
+C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.AddChatMessagesTable.resources
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.csproj.GenerateResource.cache
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.csproj.CoreCompileInputs.cache
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.csproj.CopyComplete
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.dll
 C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.pdb
-C:\Users\admin\Desktop\doanwebnangcao\obj\Debug\doanwebnangcao.Migrations.AddChatMessagesTable.resources
-C:\Users\admin\Desktop\doanwebnangcao\bin\EPPlus.dll
-C:\Users\admin\Desktop\doanwebnangcao\bin\EPPlus.xml
